@@ -15,8 +15,8 @@ interface EnvConfig {
 function validateEnv(): EnvConfig {
   const nodeEnv = process.env.NODE_ENV || 'development';
   
-  if (!['development', 'staging', 'production'].includes(nodeEnv)) {
-    throw new Error(`Invalid NODE_ENV: ${nodeEnv}. Must be development, staging, or production`);
+  if (!['development', 'staging', 'production', 'test'].includes(nodeEnv)) {
+    throw new Error(`Invalid NODE_ENV: ${nodeEnv}. Must be development, staging, production, or test`);
   }
 
   const port = parseInt(process.env.PORT || '3000', 10);
