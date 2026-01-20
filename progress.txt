@@ -91,3 +91,36 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Status transitions defined in STATUS_TRANSITIONS map for validation
   - [INTEGRATION]: Domain layer structure: models/ and repositories/ subdirectories under src/domain/
 ---
+
+## 2026-01-20T22:43:30.000Z - US-005
+- Integrated FirestoreAdapter with Express server startup
+- Added database connection initialization in src/index.ts
+- Enhanced health check endpoint to include database connectivity status
+- Database connects on application startup with proper error handling
+- Typecheck passes successfully
+- All unit tests pass (13/13 tests)
+- Files changed:
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Initialize database adapter early in startup sequence before starting HTTP server
+  - [PATTERN]: Use async start() function to handle database connection errors gracefully
+  - [INTEGRATION]: Health check endpoint now reports both server and database status
+---
+
+## 2026-01-20T22:45:45.000Z - US-006
+- Created Ticket interface with all required fields
+- Implemented TicketRepository extending Repository<Ticket>
+- Added create, findById, findByOrganization, update, delete methods
+- Implemented status enum validation with isValidStatusTransition function
+- Implemented priority enum validation with isValidPriority function
+- Documented required indexes: organizationId, status, createdAt
+- Typecheck passes successfully
+- Files changed:
+  - src/domain/models/Ticket.ts (existing)
+  - src/domain/repositories/TicketRepository.ts (existing)
+- **Learnings for future iterations:**
+  - [PATTERN]: Use STATUS_TRANSITIONS map to validate state transitions
+  - [PATTERN]: Repository validates business rules (status transitions, priority values)
+  - [PATTERN]: Set default timestamps and status in create method
+  - [INTEGRATION]: Ticket model includes SLATimer interface for SLA tracking
+---
