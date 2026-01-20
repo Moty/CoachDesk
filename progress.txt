@@ -1,0 +1,33 @@
+# Ralph Progress Log
+Started: Tue Jan 20 10:59:07 PST 2026
+---
+
+## 2026-01-20T21:51:17.035Z - US-001
+- Initialized npm project with TypeScript 5.x
+- Installed Express.js, cors, helmet, express-rate-limit
+- Configured tsconfig.json with strict mode and ES2022 target
+- Set up ESLint and Prettier
+- Created Express server in src/index.ts
+- Added scripts: dev (tsx watch), build (tsc), start, lint, typecheck
+- Server starts on configurable port (default 3000)
+- Health check endpoint GET /health returns 200
+- Updated README.md with quick start and API documentation
+- **Learnings for future iterations:**
+  - ESLint 9 requires .mjs extension for ES module config files
+  - Use tsx watch for hot reload during development
+  - [PATTERN]: Express middleware order: helmet → cors → json → rate limiting → routes
+---
+
+## 2026-01-20T21:56:39.000Z - US-002
+- Installed dotenv package
+- Created .env.example with all required environment variables
+- Created src/shared/config/env.config.ts with validation for NODE_ENV, PORT, and other config
+- Validates NODE_ENV supports development, staging, production
+- Validates required env vars on startup with proper error messages
+- Logs configuration (excluding secrets) on startup via logConfig() function
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use .js extensions in imports for ESM module resolution with NodeNext
+  - [PATTERN]: Validate env vars in a central config module that exports validated config object
+  - Environment configuration should be loaded early in application startup
+---
