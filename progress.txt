@@ -100,3 +100,20 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [GOTCHA]: Must support 'test' NODE_ENV for running tests with vitest
   - [PATTERN]: Mock firebase-admin modules with vi.mock() for unit testing
 ---
+
+## 2026-01-20T22:13:22.000Z - US-005
+- Implemented FirestoreAdapter with connection pooling
+- Connection established successfully on startup
+- Uses firebase-admin SDK with modular imports
+- Supports both service account and default credentials
+- Health check implemented via listCollections()
+- Transaction support with ITransaction wrapper
+- All tests pass (13/13)
+- Files changed:
+  - src/shared/database/adapters/FirestoreAdapter.ts (already existed, verified implementation)
+  - src/shared/database/adapters/__tests__/FirestoreAdapter.test.ts (fixed test assertion)
+- **Learnings for future iterations:**
+  - [PATTERN]: FirestoreAdapter uses getApps() to check for existing Firebase app
+  - [PATTERN]: Firestore CollectionReference doesn't have .name or .id property in tests
+  - [GOTCHA]: Transaction wrapper must bind `this` context for getCollection method
+---
