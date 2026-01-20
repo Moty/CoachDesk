@@ -31,3 +31,18 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Validate env vars in a central config module that exports validated config object
   - Environment configuration should be loaded early in application startup
 ---
+
+## 2026-01-20T21:59:45.000Z - US-003
+- Installed Winston for structured logging
+- Created logger utility with debug, info, warn, error levels
+- Created AppError base class with error codes (INTERNAL_ERROR, VALIDATION_ERROR, NOT_FOUND, etc.)
+- Created error handler middleware that returns consistent JSON format
+- Log format includes timestamp, level, message, context
+- Errors include stack traces in development mode
+- Updated README.md with logging and error handling documentation
+- **Learnings for future iterations:**
+  - [PATTERN]: Winston logger with custom format for timestamp and context
+  - [PATTERN]: AppError extends Error with code, statusCode, details fields
+  - [PATTERN]: Error handler middleware checks instanceof AppError for custom errors
+  - [GOTCHA]: Express type definitions require @types/express package
+---
