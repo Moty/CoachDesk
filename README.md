@@ -33,6 +33,33 @@ NODE_ENV=development
 PORT=3000
 ```
 
+## Database Repository Pattern
+
+The application uses the Repository pattern for database abstraction, allowing for database-agnostic code.
+
+### Interfaces
+
+- `IRepository<T>` - Generic CRUD interface (create, findById, findAll, update, delete, findOne, count)
+- `IDatabaseAdapter` - Database connection interface (connect, disconnect, healthCheck, getCollection, transaction)
+- `IQueryBuilder<T>` - Query builder for filtering and sorting
+- `ITransaction` - Transaction interface for atomic operations
+
+### Usage
+
+```typescript
+import { Repository } from './shared/database/index.js';
+
+class TicketRepository extends Repository<Ticket> {
+  protected toDomain(doc: any): Ticket {
+    // Transform database document to domain model
+  }
+  
+  protected toDatabase(entity: Partial<Ticket>): any {
+    // Transform domain model to database document
+  }
+}
+```
+
 ## Logging & Error Handling
 
 The application uses Winston for structured logging with the following levels:
