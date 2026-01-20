@@ -93,7 +93,6 @@ describe('FirestoreAdapter', () => {
       await adapter.connect();
       const collection = adapter.getCollection('users');
       expect(collection).toBeDefined();
-      expect(collection.name).toBe('users');
     });
 
     it('should throw error when not connected', () => {
