@@ -68,3 +68,35 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Transaction interface allows getCollection within transaction context
   - [PATTERN]: Query operators support Firestore-style filtering (array-contains, in, not-in)
 ---
+
+## 2026-01-20T22:06:00.000Z - US-005
+- Installed firebase-admin package
+- Created FirestoreAdapter implementing IDatabaseAdapter interface
+- Implemented connect() with connection pooling support (reuses existing Firebase app)
+- Implemented disconnect() using deleteApp
+- Implemented healthCheck() by listing collections
+- Implemented getCollection() returning Firestore collection reference
+- Implemented transaction() wrapping Firestore runTransaction
+- Added getFirestore() helper method
+- Configured Firestore settings with ignoreUndefinedProperties
+- Added FIREBASE_SERVICE_ACCOUNT_PATH to .env.example
+- Installed vitest and @vitest/ui for testing
+- Created vitest.config.ts with node environment
+- Added test, test:watch, test:ui scripts to package.json
+- Created comprehensive unit tests for FirestoreAdapter (13 tests, all passing)
+- Updated env.config.ts to accept 'test' as valid NODE_ENV
+- Files changed:
+  - src/shared/database/adapters/FirestoreAdapter.ts (new)
+  - src/shared/database/adapters/__tests__/FirestoreAdapter.test.ts (new)
+  - src/shared/database/index.ts (export FirestoreAdapter)
+  - src/shared/config/env.config.ts (support test environment)
+  - .env.example (add FIREBASE_SERVICE_ACCOUNT_PATH)
+  - package.json (add vitest and test scripts)
+  - vitest.config.ts (new)
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK uses getApps() to check for existing app instances
+  - [PATTERN]: Use deleteApp() instead of app.delete() for Firebase Admin SDK v11+
+  - [PATTERN]: Firestore connection pooling handled automatically by reusing app instance
+  - [GOTCHA]: Must support 'test' NODE_ENV for running tests with vitest
+  - [PATTERN]: Mock firebase-admin modules with vi.mock() for unit testing
+---
