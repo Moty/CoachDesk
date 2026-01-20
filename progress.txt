@@ -68,3 +68,26 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Transaction interface allows getCollection within transaction context
   - [PATTERN]: Query operators support Firestore-style filtering (array-contains, in, not-in)
 ---
+
+## 2026-01-20T22:09:00.000Z - US-006
+- Created Ticket interface with all fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)
+- Created TicketStatus enum (NEW, OPEN, PENDING, RESOLVED, CLOSED) and TicketPriority enum (LOW, MEDIUM, HIGH, URGENT)
+- Created SLATimer interface with firstResponseAt, firstResponseDue, resolvedAt, resolutionDue, breached fields
+- Implemented TicketRepository extending Repository<Ticket>
+- Implemented methods: create, findById, findByOrganization, update, delete
+- Added status transition validation using isValidStatusTransition function
+- Added priority validation using isValidPriority function
+- Documented required Firestore indexes: organizationId, status, createdAt
+- Files created:
+  - src/domain/models/Ticket.ts
+  - src/domain/repositories/TicketRepository.ts
+  - src/domain/models/index.ts
+  - src/domain/repositories/index.ts
+  - src/domain/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Domain models use enums for status and priority with validation functions
+  - [PATTERN]: Repository toDomain/toDatabase handle Firestore timestamp conversion (_seconds field)
+  - [PATTERN]: AppError requires ErrorCode enum and statusCode parameter (code, message, statusCode, details)
+  - [PATTERN]: Status transitions defined in STATUS_TRANSITIONS map for validation
+  - [INTEGRATION]: Domain layer structure: models/ and repositories/ subdirectories under src/domain/
+---
