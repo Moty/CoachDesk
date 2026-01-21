@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 interface EnvConfig {
-  nodeEnv: 'development' | 'staging' | 'production';
+  nodeEnv: 'development' | 'staging' | 'production' | 'test';
   port: number;
   logLevel: string;
   dbType: string;
@@ -25,7 +25,7 @@ function validateEnv(): EnvConfig {
   }
 
   const config: EnvConfig = {
-    nodeEnv: nodeEnv as 'development' | 'staging' | 'production',
+    nodeEnv: nodeEnv as 'development' | 'staging' | 'production' | 'test',
     port,
     logLevel: process.env.LOG_LEVEL || 'info',
     dbType: process.env.DB_TYPE || 'firestore',
