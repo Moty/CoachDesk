@@ -342,8 +342,12 @@ get_current_story() {
     if [ "$CONTEXT_SYSTEM_ENABLED" = true ]; then
       local ready_tasks=$(get_ready_tasks 2>/dev/null || echo "")
       if [ -n "$ready_tasks" ]; then
-        echo "$ready_tasks" | head -n 1
-        return
+        local first_ready_task
+        first_ready_task=$(echo "$ready_tasks" | jq -r 'if length > 0 then .[0] | "\(.id): \(.title)" else empty end' 2>/dev/null)
+        if [ -n "$first_ready_task" ]; then
+          echo "$first_ready_task"
+          return
+        fi
       fi
     fi
     
