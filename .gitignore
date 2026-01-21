@@ -6,3 +6,4 @@ progress.txt
 ralph.log
 .ralph-models-cache.json
 archive/
+node_modules/

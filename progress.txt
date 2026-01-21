@@ -1,0 +1,119 @@
+# Ralph Progress Log
+Started: Tue Jan 20 10:59:07 PST 2026
+---
+
+## 2026-01-20T21:51:17.035Z - US-001
+- Initialized npm project with TypeScript 5.x
+- Installed Express.js, cors, helmet, express-rate-limit
+- Configured tsconfig.json with strict mode and ES2022 target
+- Set up ESLint and Prettier
+- Created Express server in src/index.ts
+- Added scripts: dev (tsx watch), build (tsc), start, lint, typecheck
+- Server starts on configurable port (default 3000)
+- Health check endpoint GET /health returns 200
+- Updated README.md with quick start and API documentation
+- **Learnings for future iterations:**
+  - ESLint 9 requires .mjs extension for ES module config files
+  - Use tsx watch for hot reload during development
+  - [PATTERN]: Express middleware order: helmet → cors → json → rate limiting → routes
+---
+
+## 2026-01-20T21:56:39.000Z - US-002
+- Installed dotenv package
+- Created .env.example with all required environment variables
+- Created src/shared/config/env.config.ts with validation for NODE_ENV, PORT, and other config
+- Validates NODE_ENV supports development, staging, production
+- Validates required env vars on startup with proper error messages
+- Logs configuration (excluding secrets) on startup via logConfig() function
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use .js extensions in imports for ESM module resolution with NodeNext
+  - [PATTERN]: Validate env vars in a central config module that exports validated config object
+  - Environment configuration should be loaded early in application startup
+---
+
+## 2026-01-20T21:59:45.000Z - US-003
+- Installed Winston for structured logging
+- Created logger utility with debug, info, warn, error levels
+- Created AppError base class with error codes (INTERNAL_ERROR, VALIDATION_ERROR, NOT_FOUND, etc.)
+- Created error handler middleware that returns consistent JSON format
+- Log format includes timestamp, level, message, context
+- Errors include stack traces in development mode
+- Updated README.md with logging and error handling documentation
+- **Learnings for future iterations:**
+  - [PATTERN]: Winston logger with custom format for timestamp and context
+  - [PATTERN]: AppError extends Error with code, statusCode, details fields
+  - [PATTERN]: Error handler middleware checks instanceof AppError for custom errors
+  - [GOTCHA]: Express type definitions require @types/express package
+---
+
+## 2026-01-20T22:00:16.000Z - US-004
+- Created IRepository<T> interface with CRUD methods (create, findById, findAll, update, delete, findOne, count)
+- Created IDatabaseAdapter interface with connect, disconnect, healthCheck, getCollection, transaction methods
+- Created ITransaction interface for atomic operations with commit, rollback, getCollection methods
+- Created Repository<T> abstract base class implementing IRepository<T>
+- Created IQueryBuilder<T> interface with where, and, or, orderBy, limit, offset, execute, first, count methods
+- Created QueryOptions interface for filtering, sorting, pagination
+- Created query operators type: ==, !=, >, >=, <, <=, in, not-in, array-contains, array-contains-any
+- Created index.ts for database module exports
+- Files created:
+  - src/shared/database/interfaces/IRepository.ts
+  - src/shared/database/interfaces/IDatabaseAdapter.ts
+  - src/shared/database/interfaces/IQueryBuilder.ts
+  - src/shared/database/base/Repository.ts
+  - src/shared/database/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Repository pattern uses adapter pattern for database abstraction
+  - [PATTERN]: Base Repository class expects subclasses to implement toDomain() and toDatabase() for entity mapping
+  - [PATTERN]: Transaction interface allows getCollection within transaction context
+  - [PATTERN]: Query operators support Firestore-style filtering (array-contains, in, not-in)
+---
+
+## 2026-01-20T22:06:00.000Z - US-005
+- Installed firebase-admin package
+- Created FirestoreAdapter implementing IDatabaseAdapter interface
+- Implemented connect() with connection pooling support (reuses existing Firebase app)
+- Implemented disconnect() using deleteApp
+- Implemented healthCheck() by listing collections
+- Implemented getCollection() returning Firestore collection reference
+- Implemented transaction() wrapping Firestore runTransaction
+- Added getFirestore() helper method
+- Configured Firestore settings with ignoreUndefinedProperties
+- Added FIREBASE_SERVICE_ACCOUNT_PATH to .env.example
+- Installed vitest and @vitest/ui for testing
+- Created vitest.config.ts with node environment
+- Added test, test:watch, test:ui scripts to package.json
+- Created comprehensive unit tests for FirestoreAdapter (13 tests, all passing)
+- Updated env.config.ts to accept 'test' as valid NODE_ENV
+- Files changed:
+  - src/shared/database/adapters/FirestoreAdapter.ts (new)
+  - src/shared/database/adapters/__tests__/FirestoreAdapter.test.ts (new)
+  - src/shared/database/index.ts (export FirestoreAdapter)
+  - src/shared/config/env.config.ts (support test environment)
+  - .env.example (add FIREBASE_SERVICE_ACCOUNT_PATH)
+  - package.json (add vitest and test scripts)
+  - vitest.config.ts (new)
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK uses getApps() to check for existing app instances
+  - [PATTERN]: Use deleteApp() instead of app.delete() for Firebase Admin SDK v11+
+  - [PATTERN]: Firestore connection pooling handled automatically by reusing app instance
+  - [GOTCHA]: Must support 'test' NODE_ENV for running tests with vitest
+  - [PATTERN]: Mock firebase-admin modules with vi.mock() for unit testing
+---
+
+## 2026-01-20T22:13:22.000Z - US-005
+- Implemented FirestoreAdapter with connection pooling
+- Connection established successfully on startup
+- Uses firebase-admin SDK with modular imports
+- Supports both service account and default credentials
+- Health check implemented via listCollections()
+- Transaction support with ITransaction wrapper
+- All tests pass (13/13)
+- Files changed:
+  - src/shared/database/adapters/FirestoreAdapter.ts (already existed, verified implementation)
+  - src/shared/database/adapters/__tests__/FirestoreAdapter.test.ts (fixed test assertion)
+- **Learnings for future iterations:**
+  - [PATTERN]: FirestoreAdapter uses getApps() to check for existing Firebase app
+  - [PATTERN]: Firestore CollectionReference doesn't have .name or .id property in tests
+  - [GOTCHA]: Transaction wrapper must bind `this` context for getCollection method
+---
