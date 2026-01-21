@@ -100,15 +100,138 @@ story_branch_exists() {
   git show-ref --verify --quiet "refs/heads/$branch_name" 2>/dev/null
 }
 
+# Find a story sub-branch even if agent used wrong naming
+# Usage: found_branch=$(find_story_branch <feature_branch> <story_id>)
+# Returns: The actual branch name if found, empty if not
+find_story_branch() {
+  local feature_branch="$1"
+  local story_id="$2"
+
+  # First, check the expected name
+  local expected_branch="${feature_branch}/${story_id}"
+  if story_branch_exists "$expected_branch"; then
+    echo "$expected_branch"
+    return 0
+  fi
+
+  # Search for branches ending with the story ID
+  # This catches cases like: ralph/wrong-name/US-003, wrong-prefix/US-003, etc.
+  local found_branch
+  found_branch=$(git branch --list "*/${story_id}" 2>/dev/null | sed 's/^[* ]*//' | head -1)
+
+  if [ -n "$found_branch" ]; then
+    echo "$found_branch"
+    return 0
+  fi
+
+  # Also try with hyphen separator (e.g., feature-branch-US-003)
+  found_branch=$(git branch --list "*-${story_id}" 2>/dev/null | sed 's/^[* ]*//' | head -1)
+
+  if [ -n "$found_branch" ]; then
+    echo "$found_branch"
+    return 0
+  fi
+
+  return 1
+}
+
+# Validate and report branch naming issues
+# Usage: validate_story_branch <feature_branch> <story_id>
+# Returns: 0 if valid branch found, 1 if no branch, 2 if misnamed branch found
+validate_story_branch() {
+  local feature_branch="$1"
+  local story_id="$2"
+
+  local expected_branch="${feature_branch}/${story_id}"
+  local found_branch
+
+  # Check expected name first
+  if story_branch_exists "$expected_branch"; then
+    return 0
+  fi
+
+  # Try to find misnamed branch
+  found_branch=$(find_story_branch "$feature_branch" "$story_id")
+
+  if [ -n "$found_branch" ]; then
+    log_warn "Branch naming mismatch for $story_id"
+    log_warn "  Expected: $expected_branch"
+    log_warn "  Found:    $found_branch"
+    echo -e "${YELLOW}⚠ Branch naming mismatch for ${story_id}${NC}"
+    echo -e "  Expected: ${CYAN}$expected_branch${NC}"
+    echo -e "  Found:    ${CYAN}$found_branch${NC}"
+    return 2
+  fi
+
+  return 1
+}
+
+# ---- PRD State Functions -----------------------------------------
+
+# Get story passes status from a branch's prd.json
+# Usage: status=$(get_story_passes_from_branch <branch_name> <story_id>)
+# Returns: "true" or "false" (or empty if not found)
+get_story_passes_from_branch() {
+  local branch="$1"
+  local story_id="$2"
+  local prd_file="${PRD_FILE:-prd.json}"
+
+  # Get prd.json content from specified branch without switching
+  git show "$branch:$prd_file" 2>/dev/null | \
+    jq -r --arg id "$story_id" \
+      '.userStories[] | select(.id == $id) | .passes // false'
+}
+
+# Preserve story completion status after merge conflict
+# Usage: preserve_story_completion <story_id>
+# Updates prd.json on current branch to mark story as complete
+preserve_story_completion() {
+  local story_id="$1"
+  local prd_file="${PRD_FILE:-prd.json}"
+
+  if [ ! -f "$prd_file" ]; then
+    log_error "PRD file not found: $prd_file"
+    return 1
+  fi
+
+  # Update prd.json on current branch to mark story as complete
+  local temp_file=$(mktemp)
+  if jq --arg id "$story_id" \
+    '(.userStories[] | select(.id == $id)).passes = true' \
+    "$prd_file" > "$temp_file"; then
+    mv "$temp_file" "$prd_file"
+  else
+    rm -f "$temp_file"
+    log_error "Failed to update prd.json for $story_id"
+    return 1
+  fi
+
+  # Commit the prd.json update
+  git add "$prd_file"
+  git commit -m "chore: Preserve $story_id completion after merge conflict"
+
+  log_info "Preserved completion status for $story_id"
+  echo -e "${GREEN}✓ Preserved ${story_id} completion status${NC}"
+  return 0
+}
+
 # ---- Merge Functions ---------------------------------------------
 
 # Merge a story sub-branch into the feature branch
 # Usage: merge_story_branch <feature_branch> <story_branch> <story_id> [story_title]
+# Returns:
+#   0 = merge succeeded
+#   1 = merge failed, story was NOT marked complete on sub-branch
+#   2 = merge failed, story WAS marked complete on sub-branch (needs preservation)
 merge_story_branch() {
   local feature_branch="$1"
   local story_branch="$2"
   local story_id="$3"
   local story_title="${4:-$story_id}"
+
+  # BEFORE merge: check if story is marked complete on sub-branch
+  local story_passes=$(get_story_passes_from_branch "$story_branch" "$story_id")
+  log_debug "Story $story_id passes status on $story_branch: $story_passes"
 
   log_info "Merging $story_branch into $feature_branch"
 
@@ -129,6 +252,12 @@ merge_story_branch() {
     echo -e "${RED}✗ Merge conflict for ${story_id}${NC}"
     echo -e "${YELLOW}Attempting to abort merge and continue...${NC}"
     git merge --abort 2>/dev/null || true
+
+    # Return 2 if story was marked complete (needs preservation)
+    if [ "$story_passes" = "true" ]; then
+      log_info "Story $story_id was complete on sub-branch, needs preservation"
+      return 2
+    fi
     return 1
   fi
 }
