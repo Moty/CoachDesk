@@ -1056,7 +1056,14 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   # ---- Post-iteration Git Workflow ----
   # Check for story sub-branch, merge it to feature branch, optionally push
   if [ "$GIT_LIBRARY_LOADED" = true ] && [ -n "$BRANCH_NAME" ] && [ -n "$CURRENT_TASK_ID" ]; then
-    STORY_BRANCH=$(get_story_branch_name "$BRANCH_NAME" "$CURRENT_TASK_ID" 2>/dev/null || echo "")
+    COMPUTED_STORY_BRANCH=$(get_story_branch_name "$BRANCH_NAME" "$CURRENT_TASK_ID" 2>/dev/null || echo "")
+    DETECTED_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
+    echo -e "${BLUE}Story branch (computed): ${COMPUTED_STORY_BRANCH:-unknown} | Detected branch: ${DETECTED_BRANCH:-unknown}${NC}"
+
+    STORY_BRANCH="$COMPUTED_STORY_BRANCH"
+    if [ -n "$DETECTED_BRANCH" ] && [ "$DETECTED_BRANCH" != "$BRANCH_NAME" ] && [[ "$DETECTED_BRANCH" == "$BRANCH_NAME"/US-* ]]; then
+      STORY_BRANCH="$DETECTED_BRANCH"
+    fi
 
     if [ -n "$STORY_BRANCH" ] && story_branch_exists "$STORY_BRANCH" 2>/dev/null; then
       echo ""
