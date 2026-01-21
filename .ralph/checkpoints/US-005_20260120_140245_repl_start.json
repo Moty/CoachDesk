@@ -1,0 +1,25 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260120_140245",
+    "created_at": "2026-01-20T14:02:45-08:00"
+  },
+  "task": {
+    "id": "US-005",
+    "title": "Firestore Adapter Implementation",
+    "description": "As a developer, I need Firestore database adapter implementation.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "64793e52a85a35a77d977077903734159499f59b",
+    "dirty_files": 4,
+    "staged_files": [],
+    "modified_files": [
+      ".DS_Store",
+      ".ralph/.DS_Store",
+      ".ralph/repl/US-004_state.json"
+    ]
+  }
+}

@@ -17,8 +17,9 @@ The server will start on port 3000 by default (configurable via `PORT` environme
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run typecheck` - Run TypeScript type checking
-- `npm test` - Run tests
+- `npm test` - Run unit tests
 - `npm run test:watch` - Run tests in watch mode
+- `npm run test:ui` - Run tests with UI
 
 ## API Endpoints
 
@@ -45,25 +46,24 @@ FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/service-account.json
 CORS_ORIGIN=http://localhost:3000
 ```
 
-## Database
+## Database Configuration
 
-### Firestore Adapter
+### Firestore Setup
 
-The application includes a Firestore database adapter for Google Cloud Firestore.
+The application uses Firebase Admin SDK for Firestore integration:
 
-**Setup:**
+1. Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+2. Generate a service account key:
+   - Go to Project Settings → Service Accounts
+   - Click "Generate New Private Key"
+   - Save the JSON file securely
+3. Set `FIREBASE_SERVICE_ACCOUNT_PATH` in `.env` to the path of your service account JSON file
+4. Alternatively, for Cloud Functions/Firebase environments, omit `FIREBASE_SERVICE_ACCOUNT_PATH` to use default credentials
 
-1. Create a Firebase/GCP project
-2. Download service account credentials JSON file
-3. Set `FIREBASE_SERVICE_ACCOUNT_PATH` in `.env` to the credentials file path
-4. Or use Application Default Credentials in GCP environments (omit the path)
-
-**Features:**
-- Connection pooling via Firebase Admin SDK
-- Health check monitoring
-- Transaction support
-- Collection-based operations (create, read, update, delete)
-- Query filtering, sorting, and pagination
+The `FirestoreAdapter` implements the `IDatabaseAdapter` interface with connection pooling:
+- Automatically reuses existing Firebase app instances
+- Supports service account authentication or default credentials
+- Provides health checks and transaction support
 
 ## Database Repository Pattern
 
@@ -79,7 +79,11 @@ The application uses the Repository pattern for database abstraction, allowing f
 ### Usage
 
 ```typescript
-import { Repository } from './shared/database/index.js';
+import { Repository, FirestoreAdapter } from './shared/database/index.js';
+
+// Initialize the database adapter
+const dbAdapter = new FirestoreAdapter();
+await dbAdapter.connect();
 
 class TicketRepository extends Repository<Ticket> {
   protected toDomain(doc: any): Ticket {
@@ -90,6 +94,9 @@ class TicketRepository extends Repository<Ticket> {
     // Transform domain model to database document
   }
 }
+
+// Create repository instance
+const ticketRepo = new TicketRepository(dbAdapter, 'tickets');
 ```
 
 ## Logging & Error Handling
