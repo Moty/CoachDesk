@@ -109,3 +109,25 @@ All errors return a consistent JSON format:
 }
 ```
 
+
+## Domain Models
+
+### Ticket
+Represents a customer support ticket with the following properties:
+- Status tracking (NEW, OPEN, PENDING, RESOLVED, CLOSED)
+- Priority levels (LOW, MEDIUM, HIGH, URGENT)
+- SLA timer tracking
+- Organization and user associations
+
+### User
+Represents a user in the system with roles:
+- CUSTOMER - Can create and view their tickets
+- AGENT - Can respond to and manage tickets
+- ADMIN - Full system access
+
+### Comment
+Represents a comment/conversation on a ticket:
+- Public/private visibility control
+- Author tracking
+- Optional file attachments
+- Timestamp-based ordering
