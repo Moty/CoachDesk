@@ -17,6 +17,8 @@ The server will start on port 3000 by default (configurable via `PORT` environme
 - `npm run build` - Build for production
 - `npm start` - Start production server
 - `npm run typecheck` - Run TypeScript type checking
+- `npm test` - Run tests
+- `npm run test:watch` - Run tests in watch mode
 
 ## API Endpoints
 
@@ -31,7 +33,37 @@ Create a `.env` file based on `.env.example`:
 ```
 NODE_ENV=development
 PORT=3000
+LOG_LEVEL=info
+
+# Database
+DB_TYPE=firestore
+FIRESTORE_PROJECT_ID=your-project-id
+FIRESTORE_DATABASE_ID=(default)
+FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/service-account.json
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
 ```
+
+## Database
+
+### Firestore Adapter
+
+The application includes a Firestore database adapter for Google Cloud Firestore.
+
+**Setup:**
+
+1. Create a Firebase/GCP project
+2. Download service account credentials JSON file
+3. Set `FIREBASE_SERVICE_ACCOUNT_PATH` in `.env` to the credentials file path
+4. Or use Application Default Credentials in GCP environments (omit the path)
+
+**Features:**
+- Connection pooling via Firebase Admin SDK
+- Health check monitoring
+- Transaction support
+- Collection-based operations (create, read, update, delete)
+- Query filtering, sorting, and pagination
 
 ## Database Repository Pattern
 
