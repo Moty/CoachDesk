@@ -34,8 +34,16 @@ Create a `.env` file based on `.env.example`:
 ```
 NODE_ENV=development
 PORT=3000
+LOG_LEVEL=info
+
+# Database
 DB_TYPE=firestore
-FIREBASE_SERVICE_ACCOUNT_PATH=path/to/serviceAccount.json
+FIRESTORE_PROJECT_ID=your-project-id
+FIRESTORE_DATABASE_ID=(default)
+FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/service-account.json
+
+# CORS
+CORS_ORIGIN=http://localhost:3000
 ```
 
 ## Database Configuration
@@ -108,3 +116,25 @@ All errors return a consistent JSON format:
 }
 ```
 
+
+## Domain Models
+
+### Ticket
+Represents a customer support ticket with the following properties:
+- Status tracking (NEW, OPEN, PENDING, RESOLVED, CLOSED)
+- Priority levels (LOW, MEDIUM, HIGH, URGENT)
+- SLA timer tracking
+- Organization and user associations
+
+### User
+Represents a user in the system with roles:
+- CUSTOMER - Can create and view their tickets
+- AGENT - Can respond to and manage tickets
+- ADMIN - Full system access
+
+### Comment
+Represents a comment/conversation on a ticket:
+- Public/private visibility control
+- Author tracking
+- Optional file attachments
+- Timestamp-based ordering

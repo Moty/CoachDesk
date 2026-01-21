@@ -228,6 +228,10 @@ fi
 if [ -f "$SCRIPT_DIR/lib/context.sh" ]; then
   source "$SCRIPT_DIR/lib/context.sh"
   CONTEXT_SYSTEM_ENABLED=true
+  # Initialize context from PRD if available
+  if [ -f "$PRD_FILE" ]; then
+    import_prd "$PRD_FILE" 2>/dev/null || true
+  fi
 else
   CONTEXT_SYSTEM_ENABLED=false
 fi
@@ -340,27 +344,53 @@ get_current_story() {
   if [ -f "$PRD_FILE" ]; then
     # Use context system if available
     if [ "$CONTEXT_SYSTEM_ENABLED" = true ]; then
-      local ready_tasks=$(get_ready_tasks 2>/dev/null || echo "")
-      if [ -n "$ready_tasks" ]; then
-        local first_ready_task
-        first_ready_task=$(echo "$ready_tasks" | jq -r 'if length > 0 then .[0] | "\(.id): \(.title)" else empty end' 2>/dev/null)
-        if [ -n "$first_ready_task" ]; then
-          echo "$first_ready_task"
+      local ready_tasks=$(get_ready_tasks 2>/dev/null || echo "[]")
+      if [ "$ready_tasks" != "[]" ] && [ -n "$ready_tasks" ]; then
+        local first_task=$(echo "$ready_tasks" | jq -r '.[0] | "\(.id): \(.title)"' 2>/dev/null)
+        if [ -n "$first_task" ] && [ "$first_task" != "null: null" ]; then
+          echo "$first_task"
           return
         fi
       fi
     fi
-
+    
     # Fallback to traditional PRD-based selection
-    local ready_story_json=$(get_ready_story_json)
-    if [ -n "$ready_story_json" ]; then
-      echo "$ready_story_json" | jq -r '"\(.id): \(.title)"'
+    # Get all incomplete stories
+    local incomplete_stories=$(jq -r '.userStories[] | select(.passes == false) | @json' "$PRD_FILE" 2>/dev/null)
+    
+    if [ -z "$incomplete_stories" ]; then
+      echo "All stories complete"
       return
     fi
-
-    local incomplete_count=$(jq -r '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE" 2>/dev/null)
-    if [ "$incomplete_count" -eq 0 ]; then
-      echo "All stories complete"
+    
+    # Find first ready story (incomplete with all dependencies met)
+    local ready_story=""
+    while IFS= read -r story_json; do
+      local story_id=$(echo "$story_json" | jq -r '.id')
+      local blockedBy=$(echo "$story_json" | jq -r '.blockedBy[]?' 2>/dev/null)
+      
+      # Check if all dependencies are complete
+      local is_ready=true
+      if [ -n "$blockedBy" ]; then
+        while IFS= read -r dep_id; do
+          if [ -n "$dep_id" ]; then
+            local dep_passes=$(jq -r ".userStories[] | select(.id == \"$dep_id\") | .passes" "$PRD_FILE" 2>/dev/null)
+            if [ "$dep_passes" != "true" ]; then
+              is_ready=false
+              break
+            fi
+          fi
+        done <<< "$blockedBy"
+      fi
+      
+      if [ "$is_ready" = true ]; then
+        ready_story=$(echo "$story_json" | jq -r '"\(.id): \(.title)"')
+        break
+      fi
+    done <<< "$incomplete_stories"
+    
+    if [ -n "$ready_story" ]; then
+      echo "$ready_story"
     else
       # No ready stories but incomplete stories exist - all are blocked
       echo -e "${YELLOW}Warning: All incomplete stories are blocked by dependencies${NC}" >&2
@@ -369,45 +399,6 @@ get_current_story() {
   else
     echo "No PRD found"
   fi
-}
-
-get_ready_story_json() {
-  if [ ! -f "$PRD_FILE" ]; then
-    return
-  fi
-
-  local incomplete_stories=$(jq -r '
-    [.userStories[] | select(.passes == false)] |
-    sort_by(.priority) |
-    .[] | @json
-  ' "$PRD_FILE" 2>/dev/null)
-
-  if [ -z "$incomplete_stories" ]; then
-    return
-  fi
-
-  while IFS= read -r story_json; do
-    local blockedBy=$(echo "$story_json" | jq -r '.blockedBy // empty | .[]' 2>/dev/null)
-
-    # Check if all dependencies are complete
-    local is_ready=true
-    if [ -n "$blockedBy" ]; then
-      while IFS= read -r dep_id; do
-        if [ -n "$dep_id" ]; then
-          local dep_passes=$(jq -r ".userStories[] | select(.id == \"$dep_id\") | .passes" "$PRD_FILE" 2>/dev/null)
-          if [ "$dep_passes" != "true" ]; then
-            is_ready=false
-            break
-          fi
-        fi
-      done <<< "$blockedBy"
-    fi
-
-    if [ "$is_ready" = true ]; then
-      echo "$story_json"
-      return
-    fi
-  done <<< "$incomplete_stories"
 }
 
 get_story_progress() {
@@ -843,9 +834,14 @@ get_current_task_details() {
     return
   fi
 
-  # Get the highest priority ready story (incomplete with dependencies met)
-  local task_json=$(get_ready_story_json)
-  if [ -z "$task_json" ]; then
+  # Get the highest priority incomplete story that's not blocked
+  local task_json=$(jq -r '
+    [.userStories[] | select(.passes == false)] |
+    sort_by(.priority) |
+    .[0] // empty
+  ' "$PRD_FILE" 2>/dev/null)
+
+  if [ -z "$task_json" ] || [ "$task_json" = "null" ]; then
     echo "||0"
     return
   fi
@@ -1004,6 +1000,11 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     fi
   fi
 
+  # Sync context system from PRD (captures agent's prd.json updates from previous iteration)
+  if [ "$CONTEXT_SYSTEM_ENABLED" = true ] && [ -f "$PRD_FILE" ]; then
+    import_prd "$PRD_FILE" 2>/dev/null || true
+  fi
+
   # Run pre-iteration compaction if enabled
   if [ "$COMPACTION_ENABLED" = true ]; then
     pre_iteration_compact "$PROGRESS_FILE" 2>/dev/null || true
@@ -1056,16 +1057,21 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   # ---- Post-iteration Git Workflow ----
   # Check for story sub-branch, merge it to feature branch, optionally push
   if [ "$GIT_LIBRARY_LOADED" = true ] && [ -n "$BRANCH_NAME" ] && [ -n "$CURRENT_TASK_ID" ]; then
-    COMPUTED_STORY_BRANCH=$(get_story_branch_name "$BRANCH_NAME" "$CURRENT_TASK_ID" 2>/dev/null || echo "")
-    DETECTED_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "")
-    echo -e "${BLUE}Story branch (computed): ${COMPUTED_STORY_BRANCH:-unknown} | Detected branch: ${DETECTED_BRANCH:-unknown}${NC}"
+    # Try to find the story branch (handles both correct and misnamed branches)
+    EXPECTED_BRANCH=$(get_story_branch_name "$BRANCH_NAME" "$CURRENT_TASK_ID" 2>/dev/null || echo "")
+    STORY_BRANCH=$(find_story_branch "$BRANCH_NAME" "$CURRENT_TASK_ID" 2>/dev/null || echo "")
 
-    STORY_BRANCH="$COMPUTED_STORY_BRANCH"
-    if [ -n "$DETECTED_BRANCH" ] && [ "$DETECTED_BRANCH" != "$BRANCH_NAME" ] && [[ "$DETECTED_BRANCH" == "$BRANCH_NAME"/US-* ]]; then
-      STORY_BRANCH="$DETECTED_BRANCH"
+    # Validate branch naming and warn if misnamed
+    if [ -n "$STORY_BRANCH" ] && [ "$STORY_BRANCH" != "$EXPECTED_BRANCH" ]; then
+      echo ""
+      echo -e "${YELLOW}⚠ Branch naming mismatch detected${NC}"
+      echo -e "  Expected: ${CYAN}$EXPECTED_BRANCH${NC}"
+      echo -e "  Found:    ${CYAN}$STORY_BRANCH${NC}"
+      echo -e "  ${YELLOW}Will merge the found branch, but agent should use correct naming.${NC}"
+      log_warn "Branch naming mismatch: expected $EXPECTED_BRANCH, found $STORY_BRANCH"
     fi
 
-    if [ -n "$STORY_BRANCH" ] && story_branch_exists "$STORY_BRANCH" 2>/dev/null; then
+    if [ -n "$STORY_BRANCH" ]; then
       echo ""
       echo -e "${CYAN}Git workflow: merging story branch...${NC}"
 
@@ -1073,7 +1079,12 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
       STORY_TITLE=$(jq -r ".userStories[] | select(.id == \"$CURRENT_TASK_ID\") | .title // \"$CURRENT_TASK_ID\"" "$PRD_FILE" 2>/dev/null)
 
       # Merge sub-branch into feature branch
-      if merge_story_branch "$BRANCH_NAME" "$STORY_BRANCH" "$CURRENT_TASK_ID" "$STORY_TITLE"; then
+      # Return codes: 0=success, 1=failed/not complete, 2=failed/was complete (needs preservation)
+      merge_result=0
+      merge_story_branch "$BRANCH_NAME" "$STORY_BRANCH" "$CURRENT_TASK_ID" "$STORY_TITLE" || merge_result=$?
+
+      if [ "$merge_result" -eq 0 ]; then
+        # MERGE SUCCESS
         # Push if enabled and timing is "iteration"
         if should_push; then
           PUSH_TIMING=$(get_git_push_timing 2>/dev/null || echo "iteration")
@@ -1084,13 +1095,44 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
 
         # Cleanup the story sub-branch
         cleanup_story_branch "$STORY_BRANCH" false
+
+      elif [ "$merge_result" -eq 2 ]; then
+        # MERGE FAILED but story was marked complete on sub-branch
+        # Preserve the completion status to prevent re-implementation
+        echo -e "${YELLOW}Preserving story completion despite merge conflict...${NC}"
+        preserve_story_completion "$CURRENT_TASK_ID"
+
+        echo -e "${YELLOW}Sub-branch ${STORY_BRANCH} preserved for manual code resolution${NC}"
+        # Append recovery instructions to progress file
+        {
+          echo ""
+          echo "## $(date '+%Y-%m-%d %H:%M') - MERGE CONFLICT (completion preserved)"
+          echo "- Story: $CURRENT_TASK_ID"
+          echo "- Branch: $STORY_BRANCH"
+          echo "- prd.json updated: passes=true"
+          echo "- Recovery: git checkout $BRANCH_NAME && git merge $STORY_BRANCH"
+        } >> "$PROGRESS_FILE"
+
+      else
+        # MERGE FAILED, story was not marked complete
+        echo -e "${RED}Merge conflict for ${CURRENT_TASK_ID}${NC}"
+        echo -e "${YELLOW}Sub-branch ${STORY_BRANCH} preserved for manual resolution${NC}"
+
+        # Append recovery instructions to progress file
+        {
+          echo ""
+          echo "## $(date '+%Y-%m-%d %H:%M') - MERGE CONFLICT"
+          echo "- Story: $CURRENT_TASK_ID"
+          echo "- Branch: $STORY_BRANCH"
+          echo "- Recovery: git checkout $BRANCH_NAME && git merge $STORY_BRANCH"
+        } >> "$PROGRESS_FILE"
       fi
     fi
   fi
 
   # Check for RALPH_COMPLETE - must be a standalone line, not part of the prompt
-  # The prompt contains "output: RALPH_COMPLETE" so we need to match it as standalone
-  if echo "$OUTPUT" | grep -qE '^RALPH_COMPLETE$|^[^:]*RALPH_COMPLETE[^"]*$'; then
+  # The prompt contains "output: RALPH_COMPLETE" so we need to match only standalone occurrence
+  if echo "$OUTPUT" | grep -qxE '\s*RALPH_COMPLETE\s*'; then
     # Double-check: verify all stories in PRD are marked as passing
     ALL_PASS=$(jq '[.userStories[].passes] | all' "$PRD_FILE" 2>/dev/null || echo "false")
     if [ "$ALL_PASS" = "true" ]; then
@@ -1103,21 +1145,30 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
       # ---- Final Git Workflow ----
       if [ "$GIT_LIBRARY_LOADED" = true ] && [ -n "$BRANCH_NAME" ]; then
         echo ""
+        local push_succeeded=true
 
         # Final push (if timing is "end" or we haven't pushed yet)
         if should_push; then
           PUSH_TIMING=$(get_git_push_timing 2>/dev/null || echo "iteration")
           if [ "$PUSH_TIMING" = "end" ]; then
             echo -e "${CYAN}Pushing final changes...${NC}"
-            push_branch "$BRANCH_NAME"
+            if ! push_branch "$BRANCH_NAME"; then
+              push_succeeded=false
+              echo -e "${YELLOW}Push failed - PR creation skipped${NC}"
+            fi
           fi
         fi
 
-        # Create PR if enabled
+        # Create PR if enabled (only if push succeeded)
         if should_create_pr; then
-          echo -e "${CYAN}Creating pull request...${NC}"
-          BASE_BRANCH=$(get_git_base_branch 2>/dev/null || echo "main")
-          create_pr "$BRANCH_NAME" "$BASE_BRANCH"
+          if [ "$push_succeeded" = true ]; then
+            echo -e "${CYAN}Creating pull request...${NC}"
+            BASE_BRANCH=$(get_git_base_branch 2>/dev/null || echo "main")
+            create_pr "$BRANCH_NAME" "$BASE_BRANCH"
+          else
+            echo -e "${YELLOW}Skipping PR creation due to push failure${NC}"
+            echo -e "${YELLOW}Push manually: git push -u origin $BRANCH_NAME${NC}"
+          fi
         fi
       fi
 

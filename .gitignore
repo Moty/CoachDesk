@@ -6,4 +6,23 @@ progress.txt
 ralph.log
 .ralph-models-cache.json
 archive/
+
+# Node.js
 node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+.npm
+.yarn/cache
+.yarn/unplugged
+.yarn/install-state.gz
+dist/
+build/
+.next/
+.nuxt/
+.output/
+.cache/
+coverage/
+.env.local
+.env.*.local
