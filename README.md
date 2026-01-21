@@ -146,6 +146,35 @@ The middleware:
 - Attaches user context to `req.user`
 - Returns 401 for missing/invalid tokens
 
+## Authorization (RBAC)
+
+The application supports role-based access control (RBAC) using the `requireRole` middleware factory.
+
+### Using RBAC Middleware
+
+Restrict routes to specific user roles:
+
+```typescript
+import { authMiddleware, requireRole } from './shared/middleware/index.js';
+import { UserRole } from './domain/models/User.js';
+
+// Single role requirement
+app.get('/admin', authMiddleware, requireRole(UserRole.ADMIN), handler);
+
+// Multiple roles (OR logic - user needs at least one role)
+app.post('/tickets', 
+  authMiddleware, 
+  requireRole(UserRole.AGENT, UserRole.ADMIN), 
+  handler
+);
+```
+
+The middleware:
+- Checks if authenticated user has one of the required roles
+- Returns 403 for insufficient permissions
+- Logs authorization failures for security auditing
+- Supports multiple role requirements with OR logic
+
 
 ## Domain Models
 

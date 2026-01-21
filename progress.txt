@@ -253,3 +253,8 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Extend Express.Request type with user property for authenticated user context
   - [GOTCHA]: AppError constructor takes (code, message, statusCode, details) not (message, statusCode, code)
 ---
+
+## 2026-01-20 23:29 - MERGE CONFLICT
+- Story: US-010
+- Branch: ralph-helpdesk-ticketing-system/US-010
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-010
