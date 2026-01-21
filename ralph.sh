@@ -346,44 +346,17 @@ get_current_story() {
         return
       fi
     fi
-    
+
     # Fallback to traditional PRD-based selection
-    # Get all incomplete stories
-    local incomplete_stories=$(jq -r '.userStories[] | select(.passes == false) | @json' "$PRD_FILE" 2>/dev/null)
-    
-    if [ -z "$incomplete_stories" ]; then
-      echo "All stories complete"
+    local ready_story_json=$(get_ready_story_json)
+    if [ -n "$ready_story_json" ]; then
+      echo "$ready_story_json" | jq -r '"\(.id): \(.title)"'
       return
     fi
-    
-    # Find first ready story (incomplete with all dependencies met)
-    local ready_story=""
-    while IFS= read -r story_json; do
-      local story_id=$(echo "$story_json" | jq -r '.id')
-      local blockedBy=$(echo "$story_json" | jq -r '.blockedBy // empty | .[]' 2>/dev/null)
-      
-      # Check if all dependencies are complete
-      local is_ready=true
-      if [ -n "$blockedBy" ]; then
-        while IFS= read -r dep_id; do
-          if [ -n "$dep_id" ]; then
-            local dep_passes=$(jq -r ".userStories[] | select(.id == \"$dep_id\") | .passes" "$PRD_FILE" 2>/dev/null)
-            if [ "$dep_passes" != "true" ]; then
-              is_ready=false
-              break
-            fi
-          fi
-        done <<< "$blockedBy"
-      fi
-      
-      if [ "$is_ready" = true ]; then
-        ready_story=$(echo "$story_json" | jq -r '"\(.id): \(.title)"')
-        break
-      fi
-    done <<< "$incomplete_stories"
-    
-    if [ -n "$ready_story" ]; then
-      echo "$ready_story"
+
+    local incomplete_count=$(jq -r '[.userStories[] | select(.passes == false)] | length' "$PRD_FILE" 2>/dev/null)
+    if [ "$incomplete_count" -eq 0 ]; then
+      echo "All stories complete"
     else
       # No ready stories but incomplete stories exist - all are blocked
       echo -e "${YELLOW}Warning: All incomplete stories are blocked by dependencies${NC}" >&2
@@ -392,6 +365,45 @@ get_current_story() {
   else
     echo "No PRD found"
   fi
+}
+
+get_ready_story_json() {
+  if [ ! -f "$PRD_FILE" ]; then
+    return
+  fi
+
+  local incomplete_stories=$(jq -r '
+    [.userStories[] | select(.passes == false)] |
+    sort_by(.priority) |
+    .[] | @json
+  ' "$PRD_FILE" 2>/dev/null)
+
+  if [ -z "$incomplete_stories" ]; then
+    return
+  fi
+
+  while IFS= read -r story_json; do
+    local blockedBy=$(echo "$story_json" | jq -r '.blockedBy // empty | .[]' 2>/dev/null)
+
+    # Check if all dependencies are complete
+    local is_ready=true
+    if [ -n "$blockedBy" ]; then
+      while IFS= read -r dep_id; do
+        if [ -n "$dep_id" ]; then
+          local dep_passes=$(jq -r ".userStories[] | select(.id == \"$dep_id\") | .passes" "$PRD_FILE" 2>/dev/null)
+          if [ "$dep_passes" != "true" ]; then
+            is_ready=false
+            break
+          fi
+        fi
+      done <<< "$blockedBy"
+    fi
+
+    if [ "$is_ready" = true ]; then
+      echo "$story_json"
+      return
+    fi
+  done <<< "$incomplete_stories"
 }
 
 get_story_progress() {
@@ -827,14 +839,9 @@ get_current_task_details() {
     return
   fi
 
-  # Get the highest priority incomplete story that's not blocked
-  local task_json=$(jq -r '
-    [.userStories[] | select(.passes == false)] |
-    sort_by(.priority) |
-    .[0] // empty
-  ' "$PRD_FILE" 2>/dev/null)
-
-  if [ -z "$task_json" ] || [ "$task_json" = "null" ]; then
+  # Get the highest priority ready story (incomplete with dependencies met)
+  local task_json=$(get_ready_story_json)
+  if [ -z "$task_json" ]; then
     echo "||0"
     return
   fi
