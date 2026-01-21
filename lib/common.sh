@@ -144,6 +144,16 @@ validate_prd_json() {
     return 1
   fi
 
+  # Warn about oversized acceptance criteria lists
+  for i in $(jq -r '.userStories | keys[]' "$prd_file"); do
+    local story_id=$(jq -r ".userStories[$i].id" "$prd_file")
+    local criteria_count=$(jq -r ".userStories[$i].acceptanceCriteria | length" "$prd_file")
+    if [ "$criteria_count" -gt 3 ]; then
+      log_warn "Story $story_id has $criteria_count acceptance criteria (expected ≤ 3)"
+      echo -e "${YELLOW}Warning: Story $story_id has $criteria_count acceptance criteria (expected ≤ 3)${NC}"
+    fi
+  done
+
   # Validate blockedBy dependencies if present
   local all_story_ids=$(jq -r '.userStories[].id' "$prd_file")
   

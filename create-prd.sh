@@ -475,7 +475,7 @@ fi
 # Convert PRD to prd.json using the detected agent with the Ralph skill
 run_agent "Load the ralph skill from $SCRIPT_DIR/skills/ralph/SKILL.md and convert tasks/prd-draft.md to prd.json.
 
-Make sure each story is small and completable in one iteration. Save the output to prd.json in the current directory."
+Make sure each story is small and completable in one iteration. Each story must have ≤3 acceptance criteria; split stories further if needed. Save the output to prd.json in the current directory."
 
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
