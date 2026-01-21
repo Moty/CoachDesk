@@ -238,3 +238,18 @@ Started: Tue Jan 20 10:59:07 PST 2026
 - Story: US-011
 - Branch: ralph-helpdesk-ticketing-system/US-011
 - Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-011
+
+## 2026-01-21T07:28:50.000Z - US-010
+- Installed Firebase Admin SDK
+- Created auth middleware to verify Firebase JWT tokens
+- Extract user claims (userId, email, role, organizationId)
+- Attach user context to request object
+- Return 401 for missing/invalid tokens
+- Support Bearer token format
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK must be initialized before use
+  - [PATTERN]: Use ErrorCode enum for AppError constructor
+  - [PATTERN]: Extend Express.Request type with user property for authenticated user context
+  - [GOTCHA]: AppError constructor takes (code, message, statusCode, details) not (message, statusCode, code)
+---

@@ -116,6 +116,36 @@ All errors return a consistent JSON format:
 }
 ```
 
+## Authentication
+
+The application uses Firebase Admin SDK for JWT-based authentication.
+
+### Setup
+
+1. Install Firebase Admin SDK (already included)
+2. Initialize Firebase in your application (automatically handled)
+3. Set up Firebase Authentication in your Firebase project
+
+### Using Auth Middleware
+
+Protect routes with the `authMiddleware`:
+
+```typescript
+import { authMiddleware } from './shared/middleware/auth.middleware.js';
+
+app.get('/protected', authMiddleware, (req, res) => {
+  // req.user contains authenticated user context
+  const { userId, email, role, organizationId } = req.user;
+  res.json({ message: 'Authenticated!' });
+});
+```
+
+The middleware:
+- Verifies Firebase JWT tokens in the `Authorization: Bearer <token>` header
+- Extracts user claims (userId, email, role, organizationId)
+- Attaches user context to `req.user`
+- Returns 401 for missing/invalid tokens
+
 
 ## Domain Models
 
