@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260120_143737",
+    "created_at": "2026-01-20T14:37:37-08:00"
+  },
+  "task": {
+    "id": "US-006",
+    "title": "Ticket Model & Repository",
+    "description": "As a developer, I need the Ticket data model and repository implementation.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph-helpdesk-US-005",
+    "commit": "9342e8e81e4b01f9c054d58feb17becb7a2e2408",
+    "dirty_files": 2,
+    "staged_files": [],
+    "modified_files": [
+      ".DS_Store"
+    ]
+  }
+}
