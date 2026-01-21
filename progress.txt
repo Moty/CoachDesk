@@ -258,3 +258,24 @@ Started: Tue Jan 20 10:59:07 PST 2026
 - Story: US-010
 - Branch: ralph-helpdesk-ticketing-system/US-010
 - Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-010
+
+## 2026-01-21T07:29:00.000Z - US-011
+- Created requireRole middleware factory for RBAC
+- Supports multiple roles with OR logic
+- Returns 403 for insufficient permissions
+- Logs authorization failures with user context
+- Created middleware index.ts for exports
+- Updated README.md with RBAC documentation
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/middleware/rbac.middleware.ts
+  - src/shared/middleware/index.ts
+- Files updated:
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Middleware factory pattern for parameterized middleware (requireRole takes ...roles)
+  - [PATTERN]: Always check req.user exists before accessing properties in authorization middleware
+  - [PATTERN]: Log authorization failures with context for security auditing
+  - [INTEGRATION]: RBAC middleware requires authMiddleware to run first to populate req.user
+---
