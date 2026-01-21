@@ -8,3 +8,4 @@ export {
   QueryOperator,
 } from './interfaces/IQueryBuilder.js';
 export { Repository } from './base/Repository.js';
+export { FirestoreAdapter } from './adapters/firestore/index.js';

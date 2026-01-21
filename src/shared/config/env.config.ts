@@ -3,7 +3,7 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 interface EnvConfig {
-  nodeEnv: 'development' | 'staging' | 'production';
+  nodeEnv: 'development' | 'staging' | 'production' | 'test';
   port: number;
   logLevel: string;
   dbType: string;
@@ -15,8 +15,8 @@ interface EnvConfig {
 function validateEnv(): EnvConfig {
   const nodeEnv = process.env.NODE_ENV || 'development';
   
-  if (!['development', 'staging', 'production'].includes(nodeEnv)) {
-    throw new Error(`Invalid NODE_ENV: ${nodeEnv}. Must be development, staging, or production`);
+  if (!['development', 'staging', 'production', 'test'].includes(nodeEnv)) {
+    throw new Error(`Invalid NODE_ENV: ${nodeEnv}. Must be development, staging, production, or test`);
   }
 
   const port = parseInt(process.env.PORT || '3000', 10);
@@ -25,7 +25,7 @@ function validateEnv(): EnvConfig {
   }
 
   const config: EnvConfig = {
-    nodeEnv: nodeEnv as 'development' | 'staging' | 'production',
+    nodeEnv: nodeEnv as 'development' | 'staging' | 'production' | 'test',
     port,
     logLevel: process.env.LOG_LEVEL || 'info',
     dbType: process.env.DB_TYPE || 'firestore',
