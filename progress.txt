@@ -198,3 +198,24 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Timestamp conversion uses same helper as TicketRepository
   - [INTEGRATION]: User repository will be used by authentication and RBAC middleware
 ---
+
+## 2026-01-21T06:09:00.000Z - US-008
+- Created Comment interface with id, ticketId, authorId, isPublic, body, attachments, createdAt
+- Implemented CommentRepository extending Repository<Comment>
+- Added methods: create, findByTicket, findById (via base class)
+- Implemented filtering by isPublic flag in findByTicket method
+- Comments sorted by createdAt in ascending order
+- Documented required indexes: ticketId, createdAt
+- Typecheck passes successfully
+- Files created:
+  - src/domain/models/Comment.ts
+  - src/domain/repositories/CommentRepository.ts
+- Updated files:
+  - src/domain/models/index.ts (exported Comment)
+  - src/domain/repositories/index.ts (exported CommentRepository)
+- **Learnings for future iterations:**
+  - [PATTERN]: Same timestamp conversion pattern as TicketRepository and UserRepository
+  - [PATTERN]: Repository create method sets default timestamp if not provided
+  - [PATTERN]: findByTicket uses QueryOptions with orderBy for consistent sorting
+  - [INTEGRATION]: Comment model will be used for ticket conversation threads
+---
