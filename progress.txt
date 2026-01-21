@@ -124,3 +124,24 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Set default timestamps and status in create method
   - [INTEGRATION]: Ticket model includes SLATimer interface for SLA tracking
 ---
+
+## 2026-01-21T00:10:59.000Z - US-006
+- Created Ticket interface with all required fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)
+- Implemented TicketStatus enum (NEW, OPEN, PENDING, RESOLVED, CLOSED)
+- Implemented TicketPriority enum (LOW, MEDIUM, HIGH, URGENT)
+- Created SLATimer interface for tracking SLA metrics
+- Implemented TicketRepository extending Repository<Ticket>
+- Added methods: create, findById, findByOrganization, update, delete (via base class)
+- Implemented status transition validation with STATUS_TRANSITIONS map
+- Implemented priority validation with isValidPriority function
+- Documented required indexes: organizationId, status, createdAt
+- Typecheck passes successfully
+- Files created:
+  - src/domain/models/Ticket.ts
+  - src/domain/repositories/TicketRepository.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Status transitions enforced via map of valid transitions
+  - [PATTERN]: Timestamp conversion handles both Date and Firestore Timestamp formats
+  - [PATTERN]: Repository validates business rules (priority, status transitions) before persisting
+  - [GOTCHA]: Firestore timestamps can be either Date objects or {_seconds, _nanoseconds} objects
+---
