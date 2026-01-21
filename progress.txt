@@ -68,3 +68,33 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Transaction interface allows getCollection within transaction context
   - [PATTERN]: Query operators support Firestore-style filtering (array-contains, in, not-in)
 ---
+
+## 2026-01-20T16:10:00.000Z - US-005
+- Installed firebase-admin package
+- Created FirestoreAdapter implementing IDatabaseAdapter
+- Implemented FirestoreCollection wrapper with create, findById, findAll, update, delete, findOne, count methods
+- Implemented FirestoreTransaction wrapper for transaction support
+- Connection pooling via Firebase Admin SDK initialization
+- Health check implementation using dummy collection query
+- Updated env.config.ts to support 'test' environment
+- Created vitest.config.ts for test framework setup
+- Created comprehensive unit tests for Firestore adapter with mocks
+- All tests passing (6/6)
+- Typecheck passes
+- Files created:
+  - src/shared/database/adapters/firestore/FirestoreAdapter.ts
+  - src/shared/database/adapters/firestore/index.ts
+  - tests/database/FirestoreAdapter.test.ts
+  - vitest.config.ts
+- Updated files:
+  - src/shared/database/index.ts (exported FirestoreAdapter)
+  - src/shared/config/env.config.ts (added 'test' to NODE_ENV validation)
+  - .env.example (added FIREBASE_SERVICE_ACCOUNT_PATH)
+  - package.json (added test and test:watch scripts)
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK uses singleton pattern - check admin.apps before re-initializing
+  - [PATTERN]: Firestore FieldValue.serverTimestamp() for consistent timestamps across clients
+  - [PATTERN]: Use vitest for testing with vi.mock for mocking external dependencies
+  - [GOTCHA]: Mock structure needs to match actual firebase-admin module structure exactly
+  - [INTEGRATION]: FirestoreAdapter requires FIREBASE_SERVICE_ACCOUNT_PATH env var or uses application default credentials
+---
