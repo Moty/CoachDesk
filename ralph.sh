@@ -1080,7 +1080,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
 
       # Merge sub-branch into feature branch
       # Return codes: 0=success, 1=failed/not complete, 2=failed/was complete (needs preservation)
-      local merge_result=0
+      merge_result=0
       merge_story_branch "$BRANCH_NAME" "$STORY_BRANCH" "$CURRENT_TASK_ID" "$STORY_TITLE" || merge_result=$?
 
       if [ "$merge_result" -eq 0 ]; then
