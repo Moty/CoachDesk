@@ -325,3 +325,22 @@ Automatically compacted on 2026-01-22 17:22:41
   - [PATTERN]: Filter comments based on user role (customers see only public)
   - [INTEGRATION]: Pagination metadata includes page, limit, total, totalPages
 ---
+
+## 2026-01-23T01:36:52.299Z - US-022
+- Created POST /api/v1/users endpoint for user creation
+- Implemented email validation utility in src/shared/utils/validation.ts
+- Created user.controller.ts with createUser function
+- Created user.routes.ts with admin-only POST / endpoint
+- Validates email format, uniqueness within organization
+- Validates role enum (customer, agent, admin)
+- Creates user in Firebase Auth with custom claims
+- Creates user record in database with organizationId
+- Returns 201 with created user (excludes password)
+- Returns 400 for validation errors, 409 for duplicate email, 403 for non-admin
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Auth createUser can be called from admin SDK
+  - [PATTERN]: Use setCustomUserClaims to store role and organizationId in Firebase
+  - [PATTERN]: Email validation uses simple regex pattern
+  - [INTEGRATION]: UserRepository already validates email uniqueness within organization
+---

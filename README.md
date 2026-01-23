@@ -33,6 +33,8 @@ The server will start on port 3000 by default (configurable via `PORT` environme
 | PATCH  | /api/v1/tickets/:id/assign    | Assign ticket to agent (requires agent/admin)  |
 | POST   | /api/v1/tickets/:id/comments  | Add comment to ticket (requires auth)          |
 | GET    | /api/v1/tickets/:id/comments  | List comments for ticket (requires auth)       |
+| POST   | /api/v1/users                 | Create a new user (requires admin role)        |
+| GET    | /api/v1/users                 | List users in organization (requires admin)    |
 
 ## Environment Variables
 

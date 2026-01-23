@@ -138,3 +138,75 @@ export async function createUser(
     next(error);
   }
 }
+
+export async function listUsers(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    // Require admin role
+    if (req.user?.role !== UserRole.ADMIN) {
+      throw new AppError(
+        ErrorCode.FORBIDDEN,
+        'Admin role required',
+        403
+      );
+    }
+
+    const organizationId = req.user.organizationId;
+    const roleFilter = req.query.role as string | undefined;
+
+    // Parse pagination params
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = (page - 1) * limit;
+
+    // Build query options
+    const where: Record<string, unknown> = {};
+    
+    // Apply role filter if provided
+    if (roleFilter) {
+      if (!isValidRole(roleFilter)) {
+        throw new AppError(
+          ErrorCode.VALIDATION_ERROR,
+          'Invalid role',
+          400,
+          { role: roleFilter, validRoles: Object.values(UserRole) }
+        );
+      }
+      where.role = roleFilter;
+    }
+
+    // Fetch users with pagination
+    const users = await userRepository.findByOrganization(organizationId, {
+      where,
+      limit,
+      offset,
+    });
+
+    // Get total count
+    const totalUsers = await userRepository.findByOrganization(organizationId, { where });
+    const total = totalUsers.length;
+
+    // Exclude sensitive fields
+    const sanitizedUsers = users.map(user => ({
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.role,
+      organizationId: user.organizationId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    }));
+
+    res.status(200).json({
+      users: sanitizedUsers,
+      total,
+      page,
+      limit,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
