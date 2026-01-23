@@ -50,12 +50,164 @@ Started: Tue Jan 20 10:59:07 PST 2026
 ## 2026-01-20T22:00:16.000Z - US-004
 
 ## Compacted History Summary
-Automatically compacted on 2026-01-22 17:48:18
+Automatically compacted on 2026-01-22 17:22:41
 
 
 **Key Learnings from compacted section:**
 
 ---
+  - [INTEGRATION]: Comment model will be used for ticket conversation threads
+---
+
+## 2026-01-21T07:03:00.000Z - US-009
+- Created SLARule interface with id, organizationId, priority, firstResponseMinutes, resolutionMinutes, createdAt
+- Created SLATimer interface with firstResponseAt, firstResponseDue, resolvedAt, resolutionDue, breached
+- Implemented SLARuleRepository extending Repository base class
+- Added methods: create (with validation), findByOrganizationAndPriority, update
+- Support for default SLA rules per organization via findByOrganizationAndPriority
+- Added index exports for SLARule model and repository
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: SLARuleRepository uses the same Repository pattern as other entities
+  - [PATTERN]: Priority field uses TicketPriority enum for type safety
+  - [INTEGRATION]: SLATimer interface is used with tickets to track SLA compliance
+---
+
+## 2026-01-20 23:19 - MERGE CONFLICT
+- Story: US-011
+- Branch: ralph-helpdesk-ticketing-system/US-011
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-011
+
+## 2026-01-21T07:28:50.000Z - US-010
+- Installed Firebase Admin SDK
+- Created auth middleware to verify Firebase JWT tokens
+- Extract user claims (userId, email, role, organizationId)
+- Attach user context to request object
+- Return 401 for missing/invalid tokens
+- Support Bearer token format
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK must be initialized before use
+  - [PATTERN]: Use ErrorCode enum for AppError constructor
+  - [PATTERN]: Extend Express.Request type with user property for authenticated user context
+  - [GOTCHA]: AppError constructor takes (code, message, statusCode, details) not (message, statusCode, code)
+---
+
+## 2026-01-20 23:29 - MERGE CONFLICT
+- Story: US-010
+- Branch: ralph-helpdesk-ticketing-system/US-010
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-010
+
+## 2026-01-21T07:29:00.000Z - US-011
+- Created requireRole middleware factory for RBAC
+- Supports multiple roles with OR logic
+- Returns 403 for insufficient permissions
+- Logs authorization failures with user context
+- Created middleware index.ts for exports
+- Updated README.md with RBAC documentation
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/middleware/rbac.middleware.ts
+  - src/shared/middleware/index.ts
+- Files updated:
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Middleware factory pattern for parameterized middleware (requireRole takes ...roles)
+  - [PATTERN]: Always check req.user exists before accessing properties in authorization middleware
+  - [PATTERN]: Log authorization failures with context for security auditing
+  - [INTEGRATION]: RBAC middleware requires authMiddleware to run first to populate req.user
+---
+
+## 2026-01-20 23:33 - MERGE CONFLICT
+- Story: US-012
+- Branch: ralph-helpdesk-ticketing-system/US-012
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-012
+
+## 2026-01-23T00:34:04Z - US-012
+- Created organizationIsolation middleware factory
+- Validates organizationId in request matches authenticated user's organization
+- Returns 403 for organization mismatches
+- Supports admin role override capability
+- Checks body, query, and params for organizationId
+- Updated middleware index exports
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: Organization isolation middleware checks body, query, and params for organizationId
+  - [PATTERN]: Admin role can bypass organization isolation
+  - [INTEGRATION]: organizationIsolation middleware depends on authMiddleware (requires req.user)
+---
+
+## 2026-01-23T00:36:50Z - US-013
+- Implemented POST /api/v1/tickets endpoint
+- Created ticket.controller.ts with createTicket handler
+- Created ticket.routes.ts with authentication and RBAC middleware
+- Validates subject (1-200 chars), description (1-5000 chars), priority enum
+- Defaults priority to 'medium' if not provided
+- Sets requesterId from authenticated user, organizationId from user context
+- Sets status to 'new' on creation
+- Returns 201 with created ticket JSON
+- Returns 400 for validation errors, 401 for unauthenticated requests
+- Integrated ticket routes into Express app in src/index.ts
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/ticket.controller.ts
+  - src/api/routes/ticket.routes.ts
+  - src/api/controllers/ (directory)
+  - src/api/routes/ (directory)
+- Files updated:
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: API structure: controllers handle business logic, routes define endpoints with middleware
+  - [PATTERN]: Validation follows pattern: check required + type, then check length/enum constraints
+  - [PATTERN]: Use trim() on string inputs to clean whitespace
+  - [INTEGRATION]: Controllers instantiate repository with FirestoreAdapter singleton
+  - [INTEGRATION]: Routes chain middleware: authMiddleware → requireRole → controller
+---
+
+## 2026-01-23T00:38:50Z - US-014
+- Created SLAService with calculateTimers method
+- Loads SLA rules for organization and priority using SLARuleRepository
+- Calculates firstResponseDue = createdAt + firstResponseMinutes
+- Calculates resolutionDue = createdAt + resolutionMinutes
+- Modified ticket.controller.ts to initialize SLA timers on ticket creation
+- Sets SLA timers before creating ticket with calculated due dates
+- Typecheck passes
+- All tests pass
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA service calculates timers using milliseconds (minutes * 60 * 1000)
+  - [INTEGRATION]: SLAService depends on SLARuleRepository and domain models
+  - [PATTERN]: Services belong in src/domain/services/
+  - Controllers instantiate services at module level for dependency injection
+---
+
+
+## 2026-01-23T00:38:50Z - US-014
+- Created SLAService with calculateTimers method
+- Loads SLA rules for organization and priority using SLARuleRepository
+- Calculates firstResponseDue = createdAt + firstResponseMinutes
+- Calculates resolutionDue = createdAt + resolutionMinutes
+- Modified ticket.controller.ts to initialize SLA timers on ticket creation
+- Sets SLA timers before creating ticket with calculated due dates
+- Typecheck passes
+- All tests pass
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA service calculates timers using milliseconds (minutes * 60 * 1000)
+  - [INTEGRATION]: SLAService depends on SLARuleRepository and domain models
+  - [PATTERN]: Services belong in src/domain/services/
+  - Controllers instantiate services at module level for dependency injection
+---
+
+## 2026-01-23T00:41:30.000Z - US-015
+- Implemented GET /api/v1/tickets endpoint with pagination
+- Added listTickets controller with role-based filtering
+- Customers see only their own tickets (requesterId filter)
+- Agents/admins see all organization tickets
+- Supports ?page= and ?limit= query parameters (default limit 50, max 100)
+- Returns { tickets: [], total: number, page: number, limit: number }
+- Returns empty array when no tickets exist
+- Typecheck passes
 - Files changed:
   - src/api/controllers/ticket.controller.ts (added listTickets function)
   - src/api/routes/ticket.routes.ts (added GET / route)
@@ -255,24 +407,4 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: Jobs should handle errors gracefully and log extensively for monitoring
   - [INTEGRATION]: Jobs require database adapter injection for repository access
   - [GOTCHA]: FirestoreAdapter doesn't support 'in' operator, need to query each status separately
----
-
-## 2026-01-23T01:50:00.000Z - US-027
-- Created INotificationProvider interface with sendEmail method
-- Created NotificationService class using provider abstraction
-- Implemented email templates for ticket events (created, replied, resolved)
-- Templates support HTML and plain text
-- Added convenience methods: sendTicketCreatedEmail, sendTicketRepliedEmail, sendTicketResolvedEmail
-- Typecheck passes
-- All tests pass (19/19)
-- Updated README.md with notification service documentation
-- Files changed:
-  - src/shared/notifications/interfaces/INotificationProvider.ts (new)
-  - src/shared/notifications/templates.ts (new)
-  - src/shared/notifications/NotificationService.ts (new)
-  - README.md
-- **Learnings for future iterations:**
-  - [PATTERN]: Use provider interface pattern for external services (email, SMS, etc.)
-  - [PATTERN]: Template functions return EmailTemplate objects with subject, body, isHtml
-  - [INTEGRATION]: NotificationService takes INotificationProvider in constructor
 ---
