@@ -288,3 +288,21 @@ Automatically compacted on 2026-01-22 17:22:41
   - [PATTERN]: Status transitions happen automatically (new → open on assignment)
   - The ticket update pattern validates assignee role and organization match
 ---
+
+## 2026-01-23T01:30:00.000Z - US-020
+- Created POST /api/v1/tickets/:id/comments endpoint
+- Accepts body (required, 1-10000 chars) and isPublic (optional boolean)
+- Validates ticket exists and user has access
+- Customers can only comment on their own tickets
+- Default isPublic to true for customers, false for agents
+- Agents can explicitly set isPublic field
+- Updates ticket firstResponseAt when agent adds first public comment
+- Returns 201 with created comment
+- Updated README.md with new endpoint documentation
+- Files changed: src/api/controllers/comment.controller.ts (created), src/api/routes/ticket.routes.ts, README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: CommentRepository already exists with create method and timestamp handling
+  - [PATTERN]: Controllers validate ticket access before creating related entities
+  - [INTEGRATION]: firstResponseAt in slaTimers is updated when agent posts first public comment
+  - [PATTERN]: Customer role checks use strict equality comparison (requesterId !== userId)
+---

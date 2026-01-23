@@ -1,0 +1,25 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260122_173045",
+    "created_at": "2026-01-22T17:30:46-08:00"
+  },
+  "task": {
+    "id": "US-021",
+    "title": "List Comments Endpoint",
+    "description": "As a user, I want to view ticket comments via GET /api/v1/tickets/:id/comments.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "c3fb1b246ce22be6fcf5dd89d70634999590ce91",
+    "dirty_files": 3,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      "prd.json",
+      "progress.txt"
+    ]
+  }
+}
