@@ -7,12 +7,15 @@ import { SLARuleRepository } from '../../domain/repositories/SLARuleRepository.j
 import { SLAService } from '../../domain/services/SLAService.js';
 import { UserRole } from '../../domain/models/User.js';
 import { UserRepository } from '../../domain/repositories/UserRepository.js';
+import { AuditLogRepository } from '../../domain/repositories/AuditLogRepository.js';
+import { eventBus } from '../../shared/events/EventBus.js';
 
 const firestoreAdapter = new FirestoreAdapter();
 const ticketRepository = new TicketRepository(firestoreAdapter);
 const slaRuleRepository = new SLARuleRepository(firestoreAdapter);
 const slaService = new SLAService(slaRuleRepository);
 const userRepository = new UserRepository(firestoreAdapter);
+const auditLogRepository = new AuditLogRepository(firestoreAdapter);
 
 interface CreateTicketRequest {
   subject: string;
@@ -288,8 +291,9 @@ export async function updateTicket(
       );
     }
 
-    // Build update object
+    // Build update object and track changes
     const updates: Partial<typeof ticket> = {};
+    const changes: Record<string, { before: any; after: any }> = {};
 
     // Validate and set status
     if (status !== undefined) {
@@ -314,6 +318,7 @@ export async function updateTicket(
       }
 
       updates.status = status as TicketStatus;
+      changes.status = { before: ticket.status, after: status };
     }
 
     // Validate and set priority
@@ -328,6 +333,7 @@ export async function updateTicket(
         );
       }
       updates.priority = priority as TicketPriority;
+      changes.priority = { before: ticket.priority, after: priority };
     }
 
     // Validate and set assigneeId
@@ -364,6 +370,7 @@ export async function updateTicket(
       }
 
       updates.assigneeId = assigneeId;
+      changes.assigneeId = { before: ticket.assigneeId, after: assigneeId };
     }
 
     // Set tags
@@ -377,10 +384,32 @@ export async function updateTicket(
         );
       }
       updates.tags = tags;
+      changes.tags = { before: ticket.tags, after: tags };
     }
 
     // Update the ticket
     const updatedTicket = await ticketRepository.update(ticketId, updates);
+
+    // Create audit log entry
+    await auditLogRepository.create({
+      userId: user.userId,
+      action: 'ticket.updated',
+      resourceType: 'ticket',
+      resourceId: ticketId,
+      changes,
+      organizationId: user.organizationId,
+    });
+
+    // Emit ticket.updated event
+    const requester = await userRepository.findById(ticket.requesterId);
+    eventBus.emit('ticket.updated', {
+      ticketId: ticket.id,
+      subject: ticket.subject,
+      oldStatus: changes.status?.before,
+      newStatus: changes.status?.after,
+      requesterId: ticket.requesterId,
+      requesterEmail: requester?.email || '',
+    });
 
     res.status(200).json(updatedTicket);
   } catch (error) {
