@@ -53,13 +53,13 @@ git:
   base-branch: main
   # Push settings
   push:
-    # Enable automatic push after each story merge (disabled by default for backward compatibility)
+    # Enable automatic push after each iteration
     enabled: true
     # When to push: "iteration" (after each story) or "end" (after RALPH_COMPLETE)
     timing: iteration
   # Pull Request settings
   pr:
-    # Enable automatic PR creation when all stories complete (disabled by default)
+    # Enable automatic PR creation when all stories complete
     enabled: true
     # Create as draft PR
     draft: false
