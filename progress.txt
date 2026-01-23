@@ -85,3 +85,17 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: RoleGuard shows access denied state for unauthorized roles
   - [INTEGRATION]: firebaseUser is separate from backend user with role
 ---
+
+## 2026-01-23T09:16 - US-007
+- Created Ticket and PaginatedResponse types
+- Implemented Tickets page that calls GET /api/v1/tickets with pagination
+- Renders ticket rows with subject (as link), status, priority, requester, and updatedAt
+- Shows empty-state message when no tickets match
+- Pagination controls (Previous/Next buttons)
+- Typecheck passes
+- Files changed: web/src/types/ticket.ts, web/src/pages/TicketsPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Pagination uses page and pageSize query params
+  - [PATTERN]: Empty state shows friendly message when no data
+  - [INTEGRATION]: Ticket list links to detail pages via /ticket/:id
+---
