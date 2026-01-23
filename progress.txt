@@ -313,3 +313,29 @@ Automatically compacted on 2026-01-22 17:48:18
   - [GOTCHA]: Errors in individual ticket processing should not fail the entire job
   - [PATTERN]: Export job classes from jobs/index.ts for easy imports
 ---
+
+## 2026-01-23T01:54:00.000Z - US-028
+- Installed nodemailer and @types/nodemailer
+- Implemented SMTPProvider class with INotificationProvider interface
+- Created asynchronous email queue with in-memory processing
+- Implemented retry logic with exponential backoff (2^retries seconds)
+- Max retries set to 3 attempts
+- Logs delivery status (queued, sent, failed, retry attempts)
+- Added SMTP config to env.config.ts (smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom)
+- Updated .env.example with SMTP configuration
+- Updated README.md with SMTP environment variables documentation
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/notifications/providers/SMTPProvider.ts
+  - src/shared/notifications/providers/index.ts
+- Files modified:
+  - src/shared/config/env.config.ts
+  - .env.example
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Email queue uses in-memory array with async processing
+  - [PATTERN]: Exponential backoff: Math.pow(2, retries) * 1000 for delay
+  - [PATTERN]: Logger.info for successful sends, logger.error for failures with context
+  - [GOTCHA]: Set secure=true only for port 465, use false for 587 (STARTTLS)
+---
