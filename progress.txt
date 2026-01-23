@@ -291,3 +291,25 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: SLA breach logic checks both firstResponseDue and resolutionDue
   - [GOTCHA]: Only check breach if response/resolution has not been set (firstResponseAt/resolvedAt null)
 ---
+
+## 2026-01-23T01:52:00.000Z - US-026
+- SLA monitoring background job already implemented
+- Created SLAMonitoringJob class with cron scheduling
+- Runs every 5 minutes using node-cron (*/5 * * * *)
+- Queries tickets with status in (new, open, pending)
+- Checks SLA timers using SLAService.checkBreach for each ticket
+- Updates breached flag if changed
+- Logs job execution with metrics (duration, totalTickets, breachedCount, updatedCount, errorCount)
+- Handles errors gracefully with try-catch per ticket (doesn't fail entire job)
+- Logs warnings for breached tickets with context
+- Typecheck passes
+- All tests pass (19/19)
+- Files verified:
+  - src/jobs/sla-monitoring.job.ts
+  - src/jobs/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Background jobs use node-cron with cron expression format
+  - [PATTERN]: Job execution logging includes startTime, duration, and result metrics
+  - [GOTCHA]: Errors in individual ticket processing should not fail the entire job
+  - [PATTERN]: Export job classes from jobs/index.ts for easy imports
+---
