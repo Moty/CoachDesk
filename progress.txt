@@ -99,3 +99,16 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Empty state shows friendly message when no data
   - [INTEGRATION]: Ticket list links to detail pages via /ticket/:id
 ---
+
+## 2026-01-23T09:17 - US-008
+- Added filters for status, priority, assignee, and tags to Tickets page
+- Added sorting controls for createdAt, updatedAt, and priority
+- Filters and sorting update API query params
+- Resetting page to 1 when filters change
+- Typecheck passes
+- Files changed: web/src/pages/TicketsPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Filters are passed as query params to API
+  - [PATTERN]: Page resets to 1 when filters change to avoid empty results
+  - [INTEGRATION]: Sorting uses sortBy and sortOrder query params
+---
