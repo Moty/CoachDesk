@@ -45,6 +45,7 @@ The server will start on port 3000 by default (configurable via `PORT` environme
 | GET    | /api/v1/tickets/:id/comments  | List comments for ticket (requires auth)       |
 | POST   | /api/v1/users                 | Create a new user (requires admin role)        |
 | GET    | /api/v1/users                 | List users in organization (requires admin)    |
+| GET    | /api/v1/admin/audit-logs      | List audit logs with filters (requires admin)  |
 
 ## Environment Variables
 

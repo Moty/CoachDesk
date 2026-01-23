@@ -330,3 +330,26 @@ Automatically compacted on 2026-01-22 18:06:48
   - [INTEGRATION]: AuditLogRepository.create stores audit logs with changes object
   - [INTEGRATION]: EventBus.emit('ticket.updated') requires oldStatus/newStatus from changes
 ---
+
+## 2026-01-23T02:18:00.000Z - US-040
+- Implemented GET /api/v1/admin/audit-logs endpoint
+- Created AuditLogController with listAuditLogs handler
+- Created audit-log.routes.ts with admin-only access
+- Supports filtering by ticketId, userId, action
+- Supports date range filters (startDate, endDate)
+- Supports pagination (page, pageSize, limit)
+- Returns audit logs sorted by timestamp descending
+- Returns 200 with logs array
+- Returns 403 for non-admin users (via requireRole middleware)
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/admin/audit-log.controller.ts
+  - src/api/routes/admin/audit-log.routes.ts
+- Files modified:
+  - src/index.ts (added audit log routes)
+- **Learnings for future iterations:**
+  - [PATTERN]: QueryOptions.orderBy is an array, not an object
+  - [PATTERN]: Admin routes follow pattern: authMiddleware → organizationIsolation → requireRole(ADMIN)
+  - [INTEGRATION]: Audit log endpoint uses existing AuditLogRepository with filtering capabilities
+---
