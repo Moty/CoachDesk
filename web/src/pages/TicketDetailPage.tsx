@@ -13,6 +13,9 @@ function TicketDetailPage() {
   const [error, setError] = useState('')
   const [commentsPage, setCommentsPage] = useState(1)
   const [commentsTotalPages, setCommentsTotalPages] = useState(1)
+  const [newComment, setNewComment] = useState('')
+  const [isInternal, setIsInternal] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   useEffect(() => {
     const loadTicket = async () => {
@@ -50,7 +53,29 @@ function TicketDetailPage() {
   if (!ticket) return <div>Ticket not found</div>
 
   const isCustomer = user?.role === 'customer'
+  const canUseInternal = user?.role === 'agent' || user?.role === 'admin'
   const visibleComments = comments.filter(c => !isCustomer || !c.isInternal)
+
+  const handleSubmitComment = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!newComment.trim() || !id) return
+
+    try {
+      setSubmitting(true)
+      const newCommentData = await apiClient.post<Comment>(`/api/v1/tickets/${id}/comments`, {
+        content: newComment,
+        isInternal: canUseInternal ? isInternal : false
+      })
+      setComments(prev => [...prev, newCommentData])
+      setNewComment('')
+      setIsInternal(false)
+    } catch (err) {
+      console.error('Failed to post comment:', err)
+      alert('Failed to post comment')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div>
@@ -136,6 +161,34 @@ function TicketDetailPage() {
             )}
           </>
         )}
+        <div style={{ marginTop: '2rem', padding: '1rem', border: '1px solid #ddd', background: '#f9f9f9' }}>
+          <h4>Add Comment</h4>
+          <form onSubmit={handleSubmitComment}>
+            <textarea
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Write your comment..."
+              style={{ width: '100%', minHeight: '100px', padding: '0.5rem', marginBottom: '0.5rem' }}
+              disabled={submitting}
+            />
+            {canUseInternal && (
+              <div style={{ marginBottom: '0.5rem' }}>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={isInternal}
+                    onChange={(e) => setIsInternal(e.target.checked)}
+                    disabled={submitting}
+                  />
+                  {' '}Internal comment (not visible to customers)
+                </label>
+              </div>
+            )}
+            <button type="submit" disabled={!newComment.trim() || submitting}>
+              {submitting ? 'Posting...' : 'Post Comment'}
+            </button>
+          </form>
+        </div>
       </div>
     </div>
   )

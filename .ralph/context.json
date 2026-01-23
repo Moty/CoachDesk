@@ -16,7 +16,7 @@
       ],
       "priority": 1,
       "blockedBy": [],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -35,7 +35,7 @@
       "blockedBy": [
         "US-001"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -54,7 +54,7 @@
       "blockedBy": [
         "US-001"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -73,7 +73,7 @@
         "US-002",
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -93,7 +93,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -112,7 +112,7 @@
         "US-004",
         "US-005"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -130,7 +130,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -148,7 +148,7 @@
       "blockedBy": [
         "US-007"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -166,7 +166,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -184,7 +184,7 @@
       "blockedBy": [
         "US-009"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

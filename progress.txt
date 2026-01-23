@@ -124,3 +124,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Conditional rendering for optional fields like firstResponseAt
   - [INTEGRATION]: Ticket detail shows all metadata in a grid layout
 ---
+
+## 2026-01-23T09:18 - US-010
+- Created Comment type
+- Load comments via GET /api/v1/tickets/:id/comments with pagination
+- Render comments timeline with author, timestamp, and visibility label
+- Hide internal comments from customers
+- Yellow background for internal comments
+- Pagination controls for comments
+- Typecheck passes
+- Files changed: web/src/types/comment.ts, web/src/pages/TicketDetailPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Comments filtered client-side to hide internal comments from customers
+  - [PATTERN]: Internal comments have yellow background (#fff3cd)
+  - [INTEGRATION]: Comments loaded separately with their own pagination state
+---
