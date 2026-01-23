@@ -1,7 +1,7 @@
 import { Repository } from '../../shared/database/base/Repository.js';
 import { IDatabaseAdapter } from '../../shared/database/interfaces/IDatabaseAdapter.js';
 import { QueryOptions } from '../../shared/database/interfaces/IRepository.js';
-import { Comment } from '../models/Comment.js';
+import { Comment, Attachment } from '../models/Comment.js';
 
 interface CommentDocument {
   id: string;
@@ -9,7 +9,7 @@ interface CommentDocument {
   authorId: string;
   isPublic: boolean;
   body: string;
-  attachments?: string[];
+  attachments?: Attachment[];
   createdAt: Date | { _seconds: number; _nanoseconds: number };
 }
 

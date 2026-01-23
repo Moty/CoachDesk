@@ -5,6 +5,7 @@ import { UserRole } from '../../domain/models/User.js';
 import { createTicket, listTickets, getTicketById, updateTicket, assignTicket } from '../controllers/ticket.controller.js';
 import { addComment } from '../controllers/comment.controller.js';
 import { listComments } from '../controllers/comment-list.controller.js';
+import { uploadAttachment, uploadMiddleware } from '../controllers/attachment.controller.js';
 
 const router = Router();
 
@@ -55,6 +56,14 @@ router.get(
   authMiddleware,
   requireRole(UserRole.CUSTOMER, UserRole.AGENT, UserRole.ADMIN),
   listComments
+);
+
+router.post(
+  '/:id/attachments',
+  authMiddleware,
+  requireRole(UserRole.CUSTOMER, UserRole.AGENT, UserRole.ADMIN),
+  uploadMiddleware,
+  uploadAttachment
 );
 
 export default router;
