@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260122_172829",
+    "created_at": "2026-01-22T17:28:29-08:00"
+  },
+  "task": {
+    "id": "US-020",
+    "title": "Add Comment Endpoint",
+    "description": "As a user, I want to add comments to tickets via POST /api/v1/tickets/:id/comments.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "501cb9bac7447048395b9502cfd3099c1db79d26",
+    "dirty_files": 1,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json"
+    ]
+  }
+}
