@@ -1,0 +1,1170 @@
+openapi: 3.0.3
+info:
+  title: HelpDesk API
+  description: Cloud-agnostic enterprise-ready customer support and ticketing platform
+  version: 1.0.0
+  contact:
+    name: HelpDesk API Support
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Development server
+  - url: https://api.helpdesk.example.com/api/v1
+    description: Production server
+
+tags:
+  - name: Tickets
+    description: Ticket management operations
+  - name: Users
+    description: User management operations
+  - name: Comments
+    description: Comment operations on tickets
+  - name: Attachments
+    description: File attachment operations
+  - name: Admin - SLA Rules
+    description: SLA rule management (admin only)
+  - name: Admin - Audit Logs
+    description: Audit log access (admin only)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    Error:
+      type: object
+      required:
+        - code
+        - message
+      properties:
+        code:
+          type: string
+          description: Error code
+          example: VALIDATION_ERROR
+        message:
+          type: string
+          description: Human-readable error message
+          example: Invalid request data
+        details:
+          type: object
+          description: Additional error details
+          additionalProperties: true
+
+    User:
+      type: object
+      required:
+        - id
+        - role
+        - organizationId
+        - email
+        - displayName
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique user identifier
+          example: user_123
+        role:
+          type: string
+          enum: [customer, agent, admin]
+          description: User role
+          example: customer
+        organizationId:
+          type: string
+          description: Organization identifier
+          example: org_456
+        email:
+          type: string
+          format: email
+          description: User email address
+          example: user@example.com
+        displayName:
+          type: string
+          description: User display name
+          example: John Doe
+        createdAt:
+          type: string
+          format: date-time
+          description: Timestamp when user was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: Timestamp when user was last updated
+
+    CreateUserRequest:
+      type: object
+      required:
+        - role
+        - organizationId
+        - email
+        - displayName
+      properties:
+        role:
+          type: string
+          enum: [customer, agent, admin]
+          example: customer
+        organizationId:
+          type: string
+          example: org_456
+        email:
+          type: string
+          format: email
+          example: user@example.com
+        displayName:
+          type: string
+          example: John Doe
+
+    SLATimer:
+      type: object
+      properties:
+        firstResponseAt:
+          type: string
+          format: date-time
+          description: When first response was provided
+        firstResponseDue:
+          type: string
+          format: date-time
+          description: When first response is due
+        resolvedAt:
+          type: string
+          format: date-time
+          description: When ticket was resolved
+        resolutionDue:
+          type: string
+          format: date-time
+          description: When resolution is due
+        breached:
+          type: boolean
+          description: Whether SLA has been breached
+          example: false
+
+    Ticket:
+      type: object
+      required:
+        - id
+        - organizationId
+        - requesterId
+        - status
+        - priority
+        - subject
+        - description
+        - tags
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          description: Unique ticket identifier
+          example: ticket_123
+        organizationId:
+          type: string
+          description: Organization identifier
+          example: org_456
+        requesterId:
+          type: string
+          description: User who created the ticket
+          example: user_123
+        assigneeId:
+          type: string
+          description: Agent assigned to the ticket
+          example: agent_789
+        status:
+          type: string
+          enum: [new, open, pending, resolved, closed]
+          description: Current ticket status
+          example: open
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          description: Ticket priority
+          example: high
+        subject:
+          type: string
+          description: Ticket subject/title
+          example: Cannot login to account
+        description:
+          type: string
+          description: Detailed ticket description
+          example: I've been unable to login for the past hour
+        tags:
+          type: array
+          items:
+            type: string
+          description: Tags for categorization
+          example: [login, authentication]
+        createdAt:
+          type: string
+          format: date-time
+          description: When ticket was created
+        updatedAt:
+          type: string
+          format: date-time
+          description: When ticket was last updated
+        slaTimers:
+          $ref: '#/components/schemas/SLATimer'
+
+    CreateTicketRequest:
+      type: object
+      required:
+        - subject
+        - description
+      properties:
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: Cannot login to account
+        description:
+          type: string
+          minLength: 1
+          example: I've been unable to login for the past hour
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          default: medium
+          example: high
+        tags:
+          type: array
+          items:
+            type: string
+          example: [login, authentication]
+
+    UpdateTicketRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [new, open, pending, resolved, closed]
+          example: resolved
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          example: high
+        tags:
+          type: array
+          items:
+            type: string
+          example: [login, authentication]
+
+    AssignTicketRequest:
+      type: object
+      required:
+        - assigneeId
+      properties:
+        assigneeId:
+          type: string
+          example: agent_789
+
+    Comment:
+      type: object
+      required:
+        - id
+        - ticketId
+        - authorId
+        - content
+        - isInternal
+        - createdAt
+      properties:
+        id:
+          type: string
+          description: Unique comment identifier
+          example: comment_123
+        ticketId:
+          type: string
+          description: Associated ticket ID
+          example: ticket_123
+        authorId:
+          type: string
+          description: User who wrote the comment
+          example: user_123
+        content:
+          type: string
+          description: Comment content
+          example: I tried resetting my password but didn't receive the email
+        isInternal:
+          type: boolean
+          description: Whether comment is internal (visible only to agents)
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: When comment was created
+
+    AddCommentRequest:
+      type: object
+      required:
+        - content
+      properties:
+        content:
+          type: string
+          minLength: 1
+          example: I tried resetting my password but didn't receive the email
+        isInternal:
+          type: boolean
+          default: false
+          example: false
+
+    SLARule:
+      type: object
+      required:
+        - id
+        - name
+        - organizationId
+        - priority
+        - firstResponseMinutes
+        - resolutionMinutes
+        - isActive
+        - createdAt
+        - updatedAt
+      properties:
+        id:
+          type: string
+          example: sla_123
+        name:
+          type: string
+          example: Standard Support SLA
+        organizationId:
+          type: string
+          example: org_456
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          example: high
+        firstResponseMinutes:
+          type: integer
+          minimum: 1
+          example: 60
+        resolutionMinutes:
+          type: integer
+          minimum: 1
+          example: 480
+        isActive:
+          type: boolean
+          example: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateSLARuleRequest:
+      type: object
+      required:
+        - name
+        - organizationId
+        - priority
+        - firstResponseMinutes
+        - resolutionMinutes
+      properties:
+        name:
+          type: string
+          example: Standard Support SLA
+        organizationId:
+          type: string
+          example: org_456
+        priority:
+          type: string
+          enum: [low, medium, high, urgent]
+          example: high
+        firstResponseMinutes:
+          type: integer
+          minimum: 1
+          example: 60
+        resolutionMinutes:
+          type: integer
+          minimum: 1
+          example: 480
+
+    UpdateSLARuleRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          example: Premium Support SLA
+        firstResponseMinutes:
+          type: integer
+          minimum: 1
+          example: 30
+        resolutionMinutes:
+          type: integer
+          minimum: 1
+          example: 240
+        isActive:
+          type: boolean
+          example: true
+
+    AuditLog:
+      type: object
+      required:
+        - id
+        - organizationId
+        - userId
+        - action
+        - resourceType
+        - resourceId
+        - timestamp
+      properties:
+        id:
+          type: string
+          example: audit_123
+        organizationId:
+          type: string
+          example: org_456
+        userId:
+          type: string
+          example: user_123
+        action:
+          type: string
+          example: ticket.created
+        resourceType:
+          type: string
+          example: ticket
+        resourceId:
+          type: string
+          example: ticket_123
+        changes:
+          type: object
+          additionalProperties: true
+          example: { status: "new" }
+        metadata:
+          type: object
+          additionalProperties: true
+          example: { ip: "192.168.1.1" }
+        timestamp:
+          type: string
+          format: date-time
+
+security:
+  - bearerAuth: []
+
+paths:
+  /users:
+    post:
+      tags:
+        - Users
+      summary: Create a new user
+      description: Creates a new user (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateUserRequest'
+      responses:
+        '201':
+          description: User created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: VALIDATION_ERROR
+                message: Invalid email format
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: UNAUTHORIZED
+                message: Authentication required
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: FORBIDDEN
+                message: Admin role required
+
+    get:
+      tags:
+        - Users
+      summary: List all users
+      description: Lists all users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /users/me:
+    get:
+      tags:
+        - Users
+      summary: Get current user
+      description: Returns the currently authenticated user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Current user details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tickets:
+    post:
+      tags:
+        - Tickets
+      summary: Create a new ticket
+      description: Creates a new support ticket
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTicketRequest'
+      responses:
+        '201':
+          description: Ticket created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - Tickets
+      summary: List tickets
+      description: Lists tickets with optional filtering
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [new, open, pending, resolved, closed]
+          description: Filter by ticket status
+        - name: priority
+          in: query
+          schema:
+            type: string
+            enum: [low, medium, high, urgent]
+          description: Filter by ticket priority
+        - name: assigneeId
+          in: query
+          schema:
+            type: string
+          description: Filter by assigned agent ID
+      responses:
+        '200':
+          description: List of tickets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Ticket'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tickets/{id}:
+    get:
+      tags:
+        - Tickets
+      summary: Get ticket by ID
+      description: Returns a specific ticket
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticket ID
+      responses:
+        '200':
+          description: Ticket details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                code: NOT_FOUND
+                message: Ticket not found
+
+    patch:
+      tags:
+        - Tickets
+      summary: Update ticket
+      description: Updates ticket properties (agents and admins only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticket ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTicketRequest'
+      responses:
+        '200':
+          description: Ticket updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Agent or Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tickets/{id}/assign:
+    patch:
+      tags:
+        - Tickets
+      summary: Assign ticket to agent
+      description: Assigns a ticket to an agent (agents and admins only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticket ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AssignTicketRequest'
+      responses:
+        '200':
+          description: Ticket assigned successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Ticket'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Agent or Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tickets/{id}/comments:
+    post:
+      tags:
+        - Comments
+      summary: Add comment to ticket
+      description: Adds a comment to a ticket
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticket ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AddCommentRequest'
+      responses:
+        '201':
+          description: Comment added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Comment'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - Comments
+      summary: List comments on ticket
+      description: Returns all comments on a ticket
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticket ID
+      responses:
+        '200':
+          description: List of comments
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Comment'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /tickets/{id}/attachments:
+    post:
+      tags:
+        - Attachments
+      summary: Upload attachment to ticket
+      description: Uploads a file attachment to a ticket
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Ticket ID
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: File to upload
+      responses:
+        '201':
+          description: Attachment uploaded successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  url:
+                    type: string
+                    example: https://storage.example.com/attachments/file_123.pdf
+                  filename:
+                    type: string
+                    example: document.pdf
+                  size:
+                    type: integer
+                    example: 1024000
+                  contentType:
+                    type: string
+                    example: application/pdf
+        '400':
+          description: Invalid file or request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Ticket not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/sla-rules:
+    post:
+      tags:
+        - Admin - SLA Rules
+      summary: Create SLA rule
+      description: Creates a new SLA rule (admin only)
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSLARuleRequest'
+      responses:
+        '201':
+          description: SLA rule created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SLARule'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    get:
+      tags:
+        - Admin - SLA Rules
+      summary: List SLA rules
+      description: Lists all SLA rules (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of SLA rules
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SLARule'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/sla-rules/{id}:
+    get:
+      tags:
+        - Admin - SLA Rules
+      summary: Get SLA rule by ID
+      description: Returns a specific SLA rule (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: SLA rule ID
+      responses:
+        '200':
+          description: SLA rule details
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SLARule'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: SLA rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    patch:
+      tags:
+        - Admin - SLA Rules
+      summary: Update SLA rule
+      description: Updates an SLA rule (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: SLA rule ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateSLARuleRequest'
+      responses:
+        '200':
+          description: SLA rule updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SLARule'
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: SLA rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+    delete:
+      tags:
+        - Admin - SLA Rules
+      summary: Delete SLA rule
+      description: Deletes an SLA rule (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: SLA rule ID
+      responses:
+        '204':
+          description: SLA rule deleted successfully
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: SLA rule not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+  /admin/audit-logs:
+    get:
+      tags:
+        - Admin - Audit Logs
+      summary: List audit logs
+      description: Lists audit logs with optional filtering (admin only)
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: userId
+          in: query
+          schema:
+            type: string
+          description: Filter by user ID
+        - name: resourceType
+          in: query
+          schema:
+            type: string
+          description: Filter by resource type
+        - name: action
+          in: query
+          schema:
+            type: string
+          description: Filter by action
+        - name: startDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs from this date
+        - name: endDate
+          in: query
+          schema:
+            type: string
+            format: date-time
+          description: Filter logs until this date
+      responses:
+        '200':
+          description: List of audit logs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AuditLog'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden - Admin role required
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
