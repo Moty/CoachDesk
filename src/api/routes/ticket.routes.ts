@@ -4,6 +4,7 @@ import { requireRole } from '../../shared/middleware/rbac.middleware.js';
 import { UserRole } from '../../domain/models/User.js';
 import { createTicket, listTickets, getTicketById, updateTicket, assignTicket } from '../controllers/ticket.controller.js';
 import { addComment } from '../controllers/comment.controller.js';
+import { listComments } from '../controllers/comment-list.controller.js';
 
 const router = Router();
 
@@ -47,6 +48,13 @@ router.post(
   authMiddleware,
   requireRole(UserRole.CUSTOMER, UserRole.AGENT, UserRole.ADMIN),
   addComment
+);
+
+router.get(
+  '/:id/comments',
+  authMiddleware,
+  requireRole(UserRole.CUSTOMER, UserRole.AGENT, UserRole.ADMIN),
+  listComments
 );
 
 export default router;
