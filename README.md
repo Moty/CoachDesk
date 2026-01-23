@@ -185,6 +185,30 @@ The middleware:
 - Supports multiple role requirements with OR logic
 
 
+## Background Jobs
+
+### SLA Monitoring Job
+
+The application includes an automated SLA monitoring job that periodically checks for SLA breaches:
+
+**Schedule**: Runs every 5 minutes
+
+**Functionality**:
+- Queries all tickets with status NEW, OPEN, or PENDING
+- Checks SLA timers using the SLAService
+- Updates the `breached` flag when SLA violations are detected
+- Logs all breach events with ticket details for tracking
+- Handles errors gracefully with retry on next cycle
+
+**Logging**:
+- Execution start/completion with duration
+- Number of tickets checked and breaches detected
+- Individual breach warnings with ticket context
+- Error summary for failed ticket checks
+
+The job is automatically started when the application server starts and requires no manual configuration.
+
+
 ## Domain Models
 
 ### Ticket
