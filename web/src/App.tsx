@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Layout from './components/Layout'
 import ProtectedRoute from './components/ProtectedRoute'
+import RoleGuard from './components/RoleGuard'
 import LoginPage from './pages/LoginPage'
 import TicketsPage from './pages/TicketsPage'
 import TicketDetailPage from './pages/TicketDetailPage'
@@ -22,7 +23,11 @@ function App() {
                   <Route path="/" element={<TicketsPage />} />
                   <Route path="/ticket/:id" element={<TicketDetailPage />} />
                   <Route path="/ticket/new" element={<CreateTicketPage />} />
-                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="/admin" element={
+                    <RoleGuard allowedRoles={['agent', 'admin']}>
+                      <AdminPage />
+                    </RoleGuard>
+                  } />
                   <Route path="*" element={<NotFoundPage />} />
                 </Routes>
               </Layout>

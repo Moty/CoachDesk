@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
 
 function Layout({ children }: { children: React.ReactNode }) {
-  const { user, signOut } = useAuth()
+  const { firebaseUser, signOut } = useAuth()
 
   const handleSignOut = async () => {
     await signOut()
@@ -12,9 +12,9 @@ function Layout({ children }: { children: React.ReactNode }) {
     <div>
       <header style={{ background: '#333', color: '#fff', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>HelpDesk</h1>
-        {user && (
+        {firebaseUser && (
           <div>
-            <span style={{ marginRight: '1rem' }}>{user.email}</span>
+            <span style={{ marginRight: '1rem' }}>{firebaseUser.email}</span>
             <button onClick={handleSignOut} style={{ padding: '0.5rem 1rem' }}>Sign Out</button>
           </div>
         )}
