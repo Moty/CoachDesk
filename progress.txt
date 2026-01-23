@@ -43,3 +43,16 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Firebase Auth state is managed via onAuthStateChanged listener
   - [INTEGRATION]: AuthProvider wraps entire app to provide auth context
 ---
+
+## 2026-01-23T09:13 - US-004
+- Created LoginPage with email/password form
+- Created ProtectedRoute component that redirects unauthenticated users to /login
+- Updated routing to protect all routes except /login
+- Added sign-out button in header user menu showing current user email
+- Typecheck passes
+- Files changed: web/src/pages/LoginPage.tsx, web/src/components/ProtectedRoute.tsx, web/src/App.tsx, web/src/components/Layout.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: ProtectedRoute checks auth state and redirects if not authenticated
+  - [PATTERN]: Header shows user email and sign-out button when authenticated
+  - [INTEGRATION]: Login page is public, all other routes are protected
+---
