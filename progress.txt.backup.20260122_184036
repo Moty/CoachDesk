@@ -50,12 +50,206 @@ Started: Tue Jan 20 10:59:07 PST 2026
 ## 2026-01-20T22:00:16.000Z - US-004
 
 ## Compacted History Summary
-Automatically compacted on 2026-01-22 18:40:36
+Automatically compacted on 2026-01-22 18:06:48
 
 
 **Key Learnings from compacted section:**
 
 ---
+## 2026-01-23T01:54:00.000Z - US-028
+- Installed nodemailer and @types/nodemailer
+- Implemented SMTPProvider class with INotificationProvider interface
+- Created asynchronous email queue with in-memory processing
+- Implemented retry logic with exponential backoff (2^retries seconds)
+- Max retries set to 3 attempts
+- Logs delivery status (queued, sent, failed, retry attempts)
+- Added SMTP config to env.config.ts (smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom)
+- Updated .env.example with SMTP configuration
+- Updated README.md with SMTP environment variables documentation
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/notifications/providers/SMTPProvider.ts
+  - src/shared/notifications/providers/index.ts
+- Files modified:
+  - src/shared/config/env.config.ts
+  - .env.example
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Email queue uses in-memory array with async processing
+  - [PATTERN]: Exponential backoff: Math.pow(2, retries) * 1000 for delay
+  - [PATTERN]: Logger.info for successful sends, logger.error for failures with context
+  - [GOTCHA]: Set secure=true only for port 465, use false for 587 (STARTTLS)
+---
+
+## 2026-01-23T01:56:00.000Z - US-029
+- Created EventBus singleton using EventEmitter with typed events
+- Defined event types: TicketCreatedEvent, CommentAddedEvent, TicketUpdatedEvent
+- Implemented NotificationHandlers class that registers event listeners
+- ticket.created: sends email to requester with ticket ID, subject, requester name
+- comment.added: sends email to requester when isPublic=true (agent reply)
+- ticket.updated: sends email when newStatus='resolved'
+- All handlers include error handling with logger.error
+- Logs info/debug messages for tracking notification sends
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/events/EventBus.ts
+  - src/shared/events/NotificationHandlers.ts
+  - src/shared/events/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: EventBus singleton pattern for centralized event management
+  - [PATTERN]: Type-safe events using EventEmitter with generic event type mapping
+  - [PATTERN]: Event handlers should catch and log errors without rethrowing
+  - [GOTCHA]: Only send notifications for public comments (isPublic check)
+  - [GOTCHA]: Only send resolved notifications when newStatus='resolved'
+---
+
+## 2026-01-23T01:58:00.000Z - US-030
+- Created POST /api/v1/admin/sla-rules endpoint
+- Accepts JSON body: { priority, firstResponseMinutes, resolutionMinutes }
+- Requires admin role via requireRole(UserRole.ADMIN) middleware
+- Validates priority is one of: low, medium, high, urgent (TicketPriority enum)
+- Validates firstResponseMinutes and resolutionMinutes are positive integers
+- Creates new SLA rule or updates existing rule for organization and priority
+- Returns 201 with created/updated SLA rule
+- Returns 400 for validation errors
+- Returns 403 for non-admin users (via middleware)
+- Organization isolation applied via organizationIsolation() middleware
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/admin/sla-rule.controller.ts
+  - src/api/routes/admin/sla-rule.routes.ts
+- Files modified:
+  - src/index.ts (added slaRuleRoutes)
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin routes use admin subfolder structure
+  - [PATTERN]: Validate enums with Object.values().includes() before use
+  - [PATTERN]: Use Number.isInteger() to validate integer types
+  - [PATTERN]: Upsert pattern: check if exists, then update or create
+  - [GOTCHA]: Must add NextFunction to controller signature for try-catch error handling
+---
+
+## 2026-01-23T01:59:00.000Z - US-031
+- Created GET /api/v1/admin/sla-rules endpoint
+- Returns all SLA rules for user's organization
+- Requires admin role via requireRole(UserRole.ADMIN) middleware
+- Rules sorted by priority: low (1), medium (2), high (3), urgent (4)
+- Returns 200 with rules array
+- Returns 403 for non-admin users (via middleware)
+- Organization isolation applied via organizationIsolation() middleware
+- Typecheck passes
+- All tests pass (19/19)
+- Files modified:
+  - src/api/controllers/admin/sla-rule.controller.ts (added listSLARules function)
+  - src/api/routes/admin/sla-rule.routes.ts (added GET / route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Sort by enum priority using priorityOrder lookup object
+  - [PATTERN]: Array.sort with custom comparator for priority ordering
+---
+
+## 2026-01-23T02:00:00.000Z - US-032
+- Installed uuid and @types/uuid packages
+- Created IStorageProvider interface with methods: upload, download, delete, getSignedUrl
+- Defined UploadOptions and UploadResult interfaces
+- Created storage utils with validation functions
+- validateFileType: checks against ALLOWED_MIME_TYPES (images: jpg/png/gif, docs: pdf/txt/docx, archives: zip)
+- validateFileSize: enforces 10MB max file size
+- generateFileName: creates unique file name using UUID v4 + extension
+- buildStoragePath: creates organization-scoped path (uploads/{organizationId}/{ticketId}/{filename})
+- ALLOWED_MIME_TYPES constant maps MIME types to file extensions
+- MAX_FILE_SIZE constant set to 10MB
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/storage/interfaces/IStorageProvider.ts
+  - src/shared/storage/utils.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Storage path structure: uploads/{organizationId}/{ticketId}/{filename}
+  - [PATTERN]: Use UUID v4 for unique file names to avoid collisions
+  - [PATTERN]: Validate file type via MIME type lookup object
+  - [GOTCHA]: MIME type for docx is 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+---
+
+## 2026-01-23T02:02:00.000Z - US-033
+- Installed @google-cloud/storage package
+- Implemented FirebaseStorageAdapter class with IStorageProvider interface
+- upload: validates file type/size, generates unique fileName, saves to bucket with metadata
+- download: retrieves file buffer from bucket
+- delete: removes file from bucket
+- getSignedUrl: generates secure signed URL with configurable expiration (default 60 mins)
+- Uses Google Cloud Storage SDK for Firebase Storage integration
+- Bucket name configured via FIREBASE_STORAGE_BUCKET env var
+- Added FIREBASE_STORAGE_BUCKET to .env.example
+- Logs all operations (upload, download, delete, getSignedUrl) with context
+- Error handling with AppError for all operations
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/storage/adapters/FirebaseStorageAdapter.ts
+  - src/shared/storage/adapters/index.ts
+- Files modified:
+  - .env.example
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Storage uses Google Cloud Storage SDK
+  - [PATTERN]: Signed URLs generated with action='read' and expires timestamp
+  - [PATTERN]: File metadata includes contentType and custom metadata object
+  - [GOTCHA]: Storage bucket name required in env or constructor parameter
+---
+
+## 2026-01-23T02:04:00.000Z - US-034
+- Installed multer and @types/multer packages
+- Created Attachment interface (id, fileName, filePath, size, mimeType, uploadedAt)
+- Updated Comment model attachments field from string[] to Attachment[]
+- Implemented POST /api/v1/tickets/:id/attachments endpoint
+- Accepts multipart/form-data with single file upload
+- Validates ticket exists and user has access (org isolation + customer ownership)
+- Validates file type via storage utils (uses ALLOWED_MIME_TYPES)
+- Validates file size via multer limits (10MB max)
+- Uploads file to storage adapter
+- Gets signed URL for uploaded file
+- Creates comment with attachment metadata
+- Returns 201 with attachment metadata (id, fileName, url, size, mimeType, uploadedAt)
+- Returns 400 for no file, invalid type/size
+- Returns 403 for unauthorized access (different org or customer accessing other's ticket)
+- Returns 404 for non-existent ticket
+- Multer configured with memory storage and 10MB file size limit
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/attachment.controller.ts
+- Files modified:
+  - src/domain/models/Comment.ts (added Attachment interface)
+  - src/domain/repositories/CommentRepository.ts (updated CommentDocument type)
+  - src/api/routes/ticket.routes.ts (added POST /:id/attachments route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Multer middleware before controller: uploadMiddleware, then uploadAttachment
+  - [PATTERN]: req.file contains buffer, originalname, mimetype from multer
+  - [PATTERN]: Handle multer.MulterError separately for file size errors
+  - [GOTCHA]: Multer limits must match storage validation limits
+  - [INTEGRATION]: Attachment upload creates a comment with attachment metadata
+---
+
+## 2026-01-23T02:06:00.000Z - US-035
+- Installed zod validation library
+- Created validation schemas for all endpoints
+- sanitizedString: trims and escapes HTML (& < > " ' /)
+- emailSchema: validates email format and converts to lowercase
+- urlSchema: validates URL format
+- createTicketSchema, updateTicketSchema, assignTicketSchema
+- createCommentSchema, createUserSchema, createSLARuleSchema
+- paginationSchema, ticketFilterSchema for query parameters
+- Created validate middleware factory (supports body, query, params)
+- Validation failures return 400 with detailed error array (path, message, code)
+- Logs validation failures with logger.warn
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/validation/schemas.ts
+  - src/shared/validation/middleware.ts
+  - src/shared/validation/index.ts
+- **Learnings for future iterations:**
   - [PATTERN]: Zod schemas use ZodSchema type, not AnyZodObject
   - [PATTERN]: Sanitize strings with trim + HTML escape before storage
   - [PATTERN]: Use error.issues (not error.errors) for Zod v4 validation errors
