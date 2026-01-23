@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_113244",
+    "created_at": "2026-01-23T11:32:44-08:00"
+  },
+  "task": {
+    "id": "US-012",
+    "title": "Create ticket page",
+    "description": "As a user, I want to create tickets so I can request support.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-web-frontend",
+    "commit": "ced930b23e5436754bb8efa9c2297f5c149c7a54",
+    "dirty_files": 1,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json"
+    ]
+  }
+}
