@@ -1,0 +1,516 @@
+# Ralph Progress Log
+Started: Tue Jan 20 10:59:07 PST 2026
+---
+
+## 2026-01-20T21:51:17.035Z - US-001
+- Initialized npm project with TypeScript 5.x
+- Installed Express.js, cors, helmet, express-rate-limit
+- Configured tsconfig.json with strict mode and ES2022 target
+- Set up ESLint and Prettier
+- Created Express server in src/index.ts
+- Added scripts: dev (tsx watch), build (tsc), start, lint, typecheck
+- Server starts on configurable port (default 3000)
+- Health check endpoint GET /health returns 200
+- Updated README.md with quick start and API documentation
+- **Learnings for future iterations:**
+  - ESLint 9 requires .mjs extension for ES module config files
+  - Use tsx watch for hot reload during development
+  - [PATTERN]: Express middleware order: helmet → cors → json → rate limiting → routes
+---
+
+## 2026-01-20T21:56:39.000Z - US-002
+- Installed dotenv package
+- Created .env.example with all required environment variables
+- Created src/shared/config/env.config.ts with validation for NODE_ENV, PORT, and other config
+- Validates NODE_ENV supports development, staging, production
+- Validates required env vars on startup with proper error messages
+- Logs configuration (excluding secrets) on startup via logConfig() function
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use .js extensions in imports for ESM module resolution with NodeNext
+  - [PATTERN]: Validate env vars in a central config module that exports validated config object
+  - Environment configuration should be loaded early in application startup
+---
+
+## 2026-01-20T21:59:45.000Z - US-003
+- Installed Winston for structured logging
+- Created logger utility with debug, info, warn, error levels
+- Created AppError base class with error codes (INTERNAL_ERROR, VALIDATION_ERROR, NOT_FOUND, etc.)
+- Created error handler middleware that returns consistent JSON format
+- Log format includes timestamp, level, message, context
+- Errors include stack traces in development mode
+- Updated README.md with logging and error handling documentation
+- **Learnings for future iterations:**
+  - [PATTERN]: Winston logger with custom format for timestamp and context
+  - [PATTERN]: AppError extends Error with code, statusCode, details fields
+  - [PATTERN]: Error handler middleware checks instanceof AppError for custom errors
+  - [GOTCHA]: Express type definitions require @types/express package
+---
+
+## 2026-01-20T22:00:16.000Z - US-004
+
+## Compacted History Summary
+Automatically compacted on 2026-01-22 17:48:18
+
+
+**Key Learnings from compacted section:**
+
+---
+- Files changed:
+  - src/api/controllers/ticket.controller.ts (added listTickets function)
+  - src/api/routes/ticket.routes.ts (added GET / route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Role-based filtering in controllers using req.user.role comparison
+  - [PATTERN]: Pagination parameters: Math.max/Math.min for bounds, offset = (page - 1) * limit
+  - [PATTERN]: Return consistent paginated response: { items, total, page, limit }
+---
+
+## 2026-01-23T01:07:00.000Z - US-016
+- Added filter support to list tickets endpoint
+- Implemented ?status= filter (comma-separated values)
+- Implemented ?priority= filter
+- Implemented ?assigneeId= filter
+- Implemented ?requesterId= filter (restricted for customers)
+- Implemented ?tags= filter (comma-separated, OR logic using array-contains-any)
+- Implemented ?sortBy= (createdAt, updatedAt, priority) with ?order= (asc, desc)
+- Defaults to sortBy=createdAt, order=desc
+- Customers still restricted to viewing only their own tickets
+- Typecheck passes
+- All tests pass (19/19)
+- Files changed:
+  - src/api/controllers/ticket.controller.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Use 'in' operator for comma-separated filters (status)
+  - [PATTERN]: Use 'array-contains-any' for tag filtering with OR logic
+  - [PATTERN]: Validate sortBy and order params with whitelists before applying
+  - [GOTCHA]: Customers should not be able to override requesterId filter
+---
+
+## 2026-01-23T01:10:00.000Z - US-017
+- Implemented GET /api/v1/tickets/:id endpoint
+- Returns full ticket details with 200 status code
+- Validates ticket belongs to user's organization (403 if not)
+- Customers can only view their own tickets (403 if not)
+- Agents/admins can view all organization tickets
+- Returns 404 for non-existent tickets
+- Typecheck passes
+- All tests pass (19/19)
+- Files changed:
+  - src/api/controllers/ticket.controller.ts (added getTicketById function)
+  - src/api/routes/ticket.routes.ts (added GET /:id route)
+- **Learnings for future iterations:**
+  - [PATTERN]: URL params can be string | string[], handle with Array.isArray check
+  - [PATTERN]: Organization isolation: always validate ticket.organizationId === user.organizationId
+  - [PATTERN]: Role-based access: customers can only view their own tickets, agents/admins can view all org tickets
+  - [INTEGRATION]: Use req.user! for authenticated user context (set by authMiddleware)
+---
+
+## 2026-01-23T01:24:30.000Z - US-018
+- Implemented PATCH /api/v1/tickets/:id endpoint
+- Added updateTicket controller function with validation
+- Validates status transitions using isValidStatusTransition
+- Validates assigneeId exists and is an agent/admin in same organization
+- Validates priority and tags fields
+- Returns 403 for customers attempting updates
+- Returns 400 for invalid transitions
+- Returns 404 for non-existent tickets
+- Updated ticket.routes.ts with PATCH endpoint (agent/admin only)
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use isValidStatusTransition for status change validation
+  - [PATTERN]: Validate assignee exists, is in same org, and has agent/admin role
+  - [INTEGRATION]: UserRepository used to verify assigneeId validity
+  - [GOTCHA]: Customers must be blocked from PATCH endpoint entirely
+---
+
+## 2026-01-23T01:27:49.000Z - US-019
+- Implemented PATCH /api/v1/tickets/:id/assign endpoint
+- Added assignTicket controller function with assigneeId validation
+- Validates assignee is a valid agent/admin in organization
+- Automatically changes status from 'new' to 'open' when assigning
+- Returns 200 with updated ticket on success
+- Returns 400 for invalid assigneeId
+- Files changed: src/api/controllers/ticket.controller.ts, src/api/routes/ticket.routes.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Dedicated assign endpoint separate from general update for clear semantics
+  - [PATTERN]: Status transitions happen automatically (new → open on assignment)
+  - The ticket update pattern validates assignee role and organization match
+---
+
+## 2026-01-23T01:30:00.000Z - US-020
+- Created POST /api/v1/tickets/:id/comments endpoint
+- Accepts body (required, 1-10000 chars) and isPublic (optional boolean)
+- Validates ticket exists and user has access
+- Customers can only comment on their own tickets
+- Default isPublic to true for customers, false for agents
+- Agents can explicitly set isPublic field
+- Updates ticket firstResponseAt when agent adds first public comment
+- Returns 201 with created comment
+- Updated README.md with new endpoint documentation
+- Files changed: src/api/controllers/comment.controller.ts (created), src/api/routes/ticket.routes.ts, README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: CommentRepository already exists with create method and timestamp handling
+  - [PATTERN]: Controllers validate ticket access before creating related entities
+  - [INTEGRATION]: firstResponseAt in slaTimers is updated when agent posts first public comment
+  - [PATTERN]: Customer role checks use strict equality comparison (requesterId !== userId)
+---
+
+## 2026-01-23T01:32:00.000Z - US-021
+- Implemented GET /api/v1/tickets/:id/comments endpoint
+- Created comment-list.controller.ts with listComments handler
+- Added route to ticket.routes.ts for GET /:id/comments
+- Customers only see public comments; agents/admins see all comments
+- Comments sorted by createdAt ascending for threaded conversation
+- Included author details (displayName, role) in response
+- Implemented pagination with page and limit query params (limit max 100)
+- Returns 200 with comments array and pagination metadata
+- Returns 403 for unauthorized access (wrong organization or customer accessing other's ticket)
+- Returns 404 if ticket not found
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use separate controller files for related functionality (comment-list.controller.ts)
+  - [PATTERN]: Enrich response data by fetching related entities (author details)
+  - [PATTERN]: Filter comments based on user role (customers see only public)
+  - [INTEGRATION]: Pagination metadata includes page, limit, total, totalPages
+---
+
+## 2026-01-23T01:36:52.299Z - US-022
+- Created POST /api/v1/users endpoint for user creation
+- Implemented email validation utility in src/shared/utils/validation.ts
+- Created user.controller.ts with createUser function
+- Created user.routes.ts with admin-only POST / endpoint
+- Validates email format, uniqueness within organization
+- Validates role enum (customer, agent, admin)
+- Creates user in Firebase Auth with custom claims
+- Creates user record in database with organizationId
+- Returns 201 with created user (excludes password)
+- Returns 400 for validation errors, 409 for duplicate email, 403 for non-admin
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Auth createUser can be called from admin SDK
+  - [PATTERN]: Use setCustomUserClaims to store role and organizationId in Firebase
+  - [PATTERN]: Email validation uses simple regex pattern
+  - [INTEGRATION]: UserRepository already validates email uniqueness within organization
+---
+
+## 2026-01-23T01:40:00.000Z - US-023
+- Implemented GET /api/v1/users endpoint with admin authorization
+- Added listUsers controller function with role filtering and pagination
+- Supports ?role= query parameter to filter users by role (customer, agent, admin)
+- Supports ?page= and ?limit= query parameters (default limit 50, max 100)
+- Returns { users: [], total: number, page: number, limit: number }
+- Excludes sensitive fields (password hashes) from response
+- Returns 403 for non-admin users
+- Updated README.md with new endpoint documentation
+- Files changed:
+  - src/api/controllers/user.controller.ts (added listUsers function)
+  - src/api/routes/user.routes.ts (added GET / route)
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: UserRepository.findByOrganization() accepts optional where clause for filtering
+  - [PATTERN]: Validate role filters against UserRole enum before applying
+  - [INTEGRATION]: Admin-only endpoints use requireRole(UserRole.ADMIN) middleware
+---
+
+## 2026-01-23T01:42:30.000Z - US-024
+- Implemented GET /api/v1/users/me endpoint
+- Added getCurrentUser controller function in user.controller.ts
+- Added /me route to user.routes.ts with authMiddleware
+- Returns authenticated user's profile including role and organizationId
+- Returns 200 with user JSON for authenticated requests
+- Returns 401 for unauthenticated requests
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: /me routes require only authMiddleware, not RBAC middleware
+  - [PATTERN]: Get current user from req.user.userId set by authMiddleware
+  - [INTEGRATION]: getCurrentUser uses UserRepository.findById() to fetch user details
+---
+
+## 2026-01-23T01:43:50.000Z - US-025
+- Added checkBreach method to SLAService
+- Method checks if current time exceeds firstResponseDue or resolutionDue
+- Updates ticket.slaTimers.breached flag to true when breach detected
+- Checks both first response and resolution timers independently
+- Only flags breach if response/resolution hasn't been recorded yet
+- **Learnings for future iterations:**
+  - [PATTERN]: SLATimer.firstResponseAt is only set after first response is recorded
+  - [PATTERN]: SLATimer.resolvedAt is only set after ticket is resolved
+  - [PATTERN]: Breach detection compares current time with due dates only if action not yet taken
+---
+
+## 2026-01-23T01:48:00Z - US-026
+- Created SLAMonitoringJob class for automated SLA breach detection
+- Installed node-cron and @types/node-cron for scheduling
+- Job runs every 5 minutes checking tickets with status NEW, OPEN, or PENDING
+- Uses SLAService.checkBreach() to detect SLA violations
+- Updates ticket breached flag when violations are detected
+- Logs job execution results (duration, tickets checked, breaches found, errors)
+- Handles errors gracefully without throwing (retry on next cycle)
+- Integrated job startup in src/index.ts with FirestoreAdapter
+- Updated README.md with Background Jobs section documenting the SLA monitoring job
+- Typecheck passes successfully
+- All tests pass (19/19)
+- **Learnings for future iterations:**
+  - [PATTERN]: Background jobs use node-cron for scheduling with cron syntax
+  - [PATTERN]: Jobs should handle errors gracefully and log extensively for monitoring
+  - [INTEGRATION]: Jobs require database adapter injection for repository access
+  - [GOTCHA]: FirestoreAdapter doesn't support 'in' operator, need to query each status separately
+---
+
+## 2026-01-23T01:50:00.000Z - US-027
+- Created INotificationProvider interface with sendEmail method
+- Created NotificationService class using provider abstraction
+- Implemented email templates for ticket events (created, replied, resolved)
+- Templates support HTML and plain text
+- Added convenience methods: sendTicketCreatedEmail, sendTicketRepliedEmail, sendTicketResolvedEmail
+- Typecheck passes
+- All tests pass (19/19)
+- Updated README.md with notification service documentation
+- Files changed:
+  - src/shared/notifications/interfaces/INotificationProvider.ts (new)
+  - src/shared/notifications/templates.ts (new)
+  - src/shared/notifications/NotificationService.ts (new)
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Use provider interface pattern for external services (email, SMS, etc.)
+  - [PATTERN]: Template functions return EmailTemplate objects with subject, body, isHtml
+  - [INTEGRATION]: NotificationService takes INotificationProvider in constructor
+---
+
+## 2026-01-23T01:51:00.000Z - US-025
+- SLA breach detection service already implemented
+- checkBreach method exists in SLAService.ts
+- Checks if current time exceeds firstResponseDue (when no firstResponseAt)
+- Checks if current time exceeds resolutionDue (when no resolvedAt)
+- Updates ticket.slaTimers.breached flag to true if either is breached
+- Typecheck passes
+- All tests pass (19/19)
+- Files verified:
+  - src/domain/services/SLAService.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA breach logic checks both firstResponseDue and resolutionDue
+  - [GOTCHA]: Only check breach if response/resolution has not been set (firstResponseAt/resolvedAt null)
+---
+
+## 2026-01-23T01:52:00.000Z - US-026
+- SLA monitoring background job already implemented
+- Created SLAMonitoringJob class with cron scheduling
+- Runs every 5 minutes using node-cron (*/5 * * * *)
+- Queries tickets with status in (new, open, pending)
+- Checks SLA timers using SLAService.checkBreach for each ticket
+- Updates breached flag if changed
+- Logs job execution with metrics (duration, totalTickets, breachedCount, updatedCount, errorCount)
+- Handles errors gracefully with try-catch per ticket (doesn't fail entire job)
+- Logs warnings for breached tickets with context
+- Typecheck passes
+- All tests pass (19/19)
+- Files verified:
+  - src/jobs/sla-monitoring.job.ts
+  - src/jobs/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Background jobs use node-cron with cron expression format
+  - [PATTERN]: Job execution logging includes startTime, duration, and result metrics
+  - [GOTCHA]: Errors in individual ticket processing should not fail the entire job
+  - [PATTERN]: Export job classes from jobs/index.ts for easy imports
+---
+
+## 2026-01-23T01:54:00.000Z - US-028
+- Installed nodemailer and @types/nodemailer
+- Implemented SMTPProvider class with INotificationProvider interface
+- Created asynchronous email queue with in-memory processing
+- Implemented retry logic with exponential backoff (2^retries seconds)
+- Max retries set to 3 attempts
+- Logs delivery status (queued, sent, failed, retry attempts)
+- Added SMTP config to env.config.ts (smtpHost, smtpPort, smtpUser, smtpPassword, smtpFrom)
+- Updated .env.example with SMTP configuration
+- Updated README.md with SMTP environment variables documentation
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/notifications/providers/SMTPProvider.ts
+  - src/shared/notifications/providers/index.ts
+- Files modified:
+  - src/shared/config/env.config.ts
+  - .env.example
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Email queue uses in-memory array with async processing
+  - [PATTERN]: Exponential backoff: Math.pow(2, retries) * 1000 for delay
+  - [PATTERN]: Logger.info for successful sends, logger.error for failures with context
+  - [GOTCHA]: Set secure=true only for port 465, use false for 587 (STARTTLS)
+---
+
+## 2026-01-23T01:56:00.000Z - US-029
+- Created EventBus singleton using EventEmitter with typed events
+- Defined event types: TicketCreatedEvent, CommentAddedEvent, TicketUpdatedEvent
+- Implemented NotificationHandlers class that registers event listeners
+- ticket.created: sends email to requester with ticket ID, subject, requester name
+- comment.added: sends email to requester when isPublic=true (agent reply)
+- ticket.updated: sends email when newStatus='resolved'
+- All handlers include error handling with logger.error
+- Logs info/debug messages for tracking notification sends
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/events/EventBus.ts
+  - src/shared/events/NotificationHandlers.ts
+  - src/shared/events/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: EventBus singleton pattern for centralized event management
+  - [PATTERN]: Type-safe events using EventEmitter with generic event type mapping
+  - [PATTERN]: Event handlers should catch and log errors without rethrowing
+  - [GOTCHA]: Only send notifications for public comments (isPublic check)
+  - [GOTCHA]: Only send resolved notifications when newStatus='resolved'
+---
+
+## 2026-01-23T01:58:00.000Z - US-030
+- Created POST /api/v1/admin/sla-rules endpoint
+- Accepts JSON body: { priority, firstResponseMinutes, resolutionMinutes }
+- Requires admin role via requireRole(UserRole.ADMIN) middleware
+- Validates priority is one of: low, medium, high, urgent (TicketPriority enum)
+- Validates firstResponseMinutes and resolutionMinutes are positive integers
+- Creates new SLA rule or updates existing rule for organization and priority
+- Returns 201 with created/updated SLA rule
+- Returns 400 for validation errors
+- Returns 403 for non-admin users (via middleware)
+- Organization isolation applied via organizationIsolation() middleware
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/admin/sla-rule.controller.ts
+  - src/api/routes/admin/sla-rule.routes.ts
+- Files modified:
+  - src/index.ts (added slaRuleRoutes)
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin routes use admin subfolder structure
+  - [PATTERN]: Validate enums with Object.values().includes() before use
+  - [PATTERN]: Use Number.isInteger() to validate integer types
+  - [PATTERN]: Upsert pattern: check if exists, then update or create
+  - [GOTCHA]: Must add NextFunction to controller signature for try-catch error handling
+---
+
+## 2026-01-23T01:59:00.000Z - US-031
+- Created GET /api/v1/admin/sla-rules endpoint
+- Returns all SLA rules for user's organization
+- Requires admin role via requireRole(UserRole.ADMIN) middleware
+- Rules sorted by priority: low (1), medium (2), high (3), urgent (4)
+- Returns 200 with rules array
+- Returns 403 for non-admin users (via middleware)
+- Organization isolation applied via organizationIsolation() middleware
+- Typecheck passes
+- All tests pass (19/19)
+- Files modified:
+  - src/api/controllers/admin/sla-rule.controller.ts (added listSLARules function)
+  - src/api/routes/admin/sla-rule.routes.ts (added GET / route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Sort by enum priority using priorityOrder lookup object
+  - [PATTERN]: Array.sort with custom comparator for priority ordering
+---
+
+## 2026-01-23T02:00:00.000Z - US-032
+- Installed uuid and @types/uuid packages
+- Created IStorageProvider interface with methods: upload, download, delete, getSignedUrl
+- Defined UploadOptions and UploadResult interfaces
+- Created storage utils with validation functions
+- validateFileType: checks against ALLOWED_MIME_TYPES (images: jpg/png/gif, docs: pdf/txt/docx, archives: zip)
+- validateFileSize: enforces 10MB max file size
+- generateFileName: creates unique file name using UUID v4 + extension
+- buildStoragePath: creates organization-scoped path (uploads/{organizationId}/{ticketId}/{filename})
+- ALLOWED_MIME_TYPES constant maps MIME types to file extensions
+- MAX_FILE_SIZE constant set to 10MB
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/storage/interfaces/IStorageProvider.ts
+  - src/shared/storage/utils.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Storage path structure: uploads/{organizationId}/{ticketId}/{filename}
+  - [PATTERN]: Use UUID v4 for unique file names to avoid collisions
+  - [PATTERN]: Validate file type via MIME type lookup object
+  - [GOTCHA]: MIME type for docx is 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+---
+
+## 2026-01-23T02:02:00.000Z - US-033
+- Installed @google-cloud/storage package
+- Implemented FirebaseStorageAdapter class with IStorageProvider interface
+- upload: validates file type/size, generates unique fileName, saves to bucket with metadata
+- download: retrieves file buffer from bucket
+- delete: removes file from bucket
+- getSignedUrl: generates secure signed URL with configurable expiration (default 60 mins)
+- Uses Google Cloud Storage SDK for Firebase Storage integration
+- Bucket name configured via FIREBASE_STORAGE_BUCKET env var
+- Added FIREBASE_STORAGE_BUCKET to .env.example
+- Logs all operations (upload, download, delete, getSignedUrl) with context
+- Error handling with AppError for all operations
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/storage/adapters/FirebaseStorageAdapter.ts
+  - src/shared/storage/adapters/index.ts
+- Files modified:
+  - .env.example
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Storage uses Google Cloud Storage SDK
+  - [PATTERN]: Signed URLs generated with action='read' and expires timestamp
+  - [PATTERN]: File metadata includes contentType and custom metadata object
+  - [GOTCHA]: Storage bucket name required in env or constructor parameter
+---
+
+## 2026-01-23T02:04:00.000Z - US-034
+- Installed multer and @types/multer packages
+- Created Attachment interface (id, fileName, filePath, size, mimeType, uploadedAt)
+- Updated Comment model attachments field from string[] to Attachment[]
+- Implemented POST /api/v1/tickets/:id/attachments endpoint
+- Accepts multipart/form-data with single file upload
+- Validates ticket exists and user has access (org isolation + customer ownership)
+- Validates file type via storage utils (uses ALLOWED_MIME_TYPES)
+- Validates file size via multer limits (10MB max)
+- Uploads file to storage adapter
+- Gets signed URL for uploaded file
+- Creates comment with attachment metadata
+- Returns 201 with attachment metadata (id, fileName, url, size, mimeType, uploadedAt)
+- Returns 400 for no file, invalid type/size
+- Returns 403 for unauthorized access (different org or customer accessing other's ticket)
+- Returns 404 for non-existent ticket
+- Multer configured with memory storage and 10MB file size limit
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/attachment.controller.ts
+- Files modified:
+  - src/domain/models/Comment.ts (added Attachment interface)
+  - src/domain/repositories/CommentRepository.ts (updated CommentDocument type)
+  - src/api/routes/ticket.routes.ts (added POST /:id/attachments route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Multer middleware before controller: uploadMiddleware, then uploadAttachment
+  - [PATTERN]: req.file contains buffer, originalname, mimetype from multer
+  - [PATTERN]: Handle multer.MulterError separately for file size errors
+  - [GOTCHA]: Multer limits must match storage validation limits
+  - [INTEGRATION]: Attachment upload creates a comment with attachment metadata
+---
+
+## 2026-01-23T02:06:00.000Z - US-035
+- Installed zod validation library
+- Created validation schemas for all endpoints
+- sanitizedString: trims and escapes HTML (& < > " ' /)
+- emailSchema: validates email format and converts to lowercase
+- urlSchema: validates URL format
+- createTicketSchema, updateTicketSchema, assignTicketSchema
+- createCommentSchema, createUserSchema, createSLARuleSchema
+- paginationSchema, ticketFilterSchema for query parameters
+- Created validate middleware factory (supports body, query, params)
+- Validation failures return 400 with detailed error array (path, message, code)
+- Logs validation failures with logger.warn
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/validation/schemas.ts
+  - src/shared/validation/middleware.ts
+  - src/shared/validation/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Zod schemas use ZodSchema type, not AnyZodObject
+  - [PATTERN]: Sanitize strings with trim + HTML escape before storage
+  - [PATTERN]: Use error.issues (not error.errors) for Zod v4 validation errors
+  - [PATTERN]: sanitizedString as factory function with min/max params
+  - [GOTCHA]: Transform must be applied after min/max validation
+---

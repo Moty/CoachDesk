@@ -1,10 +1,13 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
-import rateLimit from 'express-rate-limit';
 import { config, logConfig } from './shared/config/env.config.js';
 import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
+import {
+  globalRateLimiter,
+  userRateLimiter,
+} from './shared/middleware/rateLimiter.middleware.js';
 import ticketRoutes from './api/routes/ticket.routes.js';
 import userRoutes from './api/routes/user.routes.js';
 import slaRuleRoutes from './api/routes/admin/sla-rule.routes.js';
@@ -17,17 +20,17 @@ const app = express();
 app.use(helmet());
 app.use(cors());
 app.use(express.json());
-app.use(
-  rateLimit({
-    windowMs: 15 * 60 * 1000,
-    max: 100,
-  })
-);
+
+// Global rate limit: 100 requests per 15 minutes per IP
+app.use(globalRateLimiter);
 
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// Apply per-user rate limiting to all API routes
+app.use('/api', userRateLimiter);
 
 // API routes
 app.use('/api/v1/tickets', ticketRoutes);
