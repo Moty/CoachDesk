@@ -362,3 +362,29 @@ Automatically compacted on 2026-01-22 17:48:18
   - [GOTCHA]: Only send notifications for public comments (isPublic check)
   - [GOTCHA]: Only send resolved notifications when newStatus='resolved'
 ---
+
+## 2026-01-23T01:58:00.000Z - US-030
+- Created POST /api/v1/admin/sla-rules endpoint
+- Accepts JSON body: { priority, firstResponseMinutes, resolutionMinutes }
+- Requires admin role via requireRole(UserRole.ADMIN) middleware
+- Validates priority is one of: low, medium, high, urgent (TicketPriority enum)
+- Validates firstResponseMinutes and resolutionMinutes are positive integers
+- Creates new SLA rule or updates existing rule for organization and priority
+- Returns 201 with created/updated SLA rule
+- Returns 400 for validation errors
+- Returns 403 for non-admin users (via middleware)
+- Organization isolation applied via organizationIsolation() middleware
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/admin/sla-rule.controller.ts
+  - src/api/routes/admin/sla-rule.routes.ts
+- Files modified:
+  - src/index.ts (added slaRuleRoutes)
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin routes use admin subfolder structure
+  - [PATTERN]: Validate enums with Object.values().includes() before use
+  - [PATTERN]: Use Number.isInteger() to validate integer types
+  - [PATTERN]: Upsert pattern: check if exists, then update or create
+  - [GOTCHA]: Must add NextFunction to controller signature for try-catch error handling
+---
