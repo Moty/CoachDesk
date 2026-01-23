@@ -306,3 +306,22 @@ Automatically compacted on 2026-01-22 17:22:41
   - [INTEGRATION]: firstResponseAt in slaTimers is updated when agent posts first public comment
   - [PATTERN]: Customer role checks use strict equality comparison (requesterId !== userId)
 ---
+
+## 2026-01-23T01:32:00.000Z - US-021
+- Implemented GET /api/v1/tickets/:id/comments endpoint
+- Created comment-list.controller.ts with listComments handler
+- Added route to ticket.routes.ts for GET /:id/comments
+- Customers only see public comments; agents/admins see all comments
+- Comments sorted by createdAt ascending for threaded conversation
+- Included author details (displayName, role) in response
+- Implemented pagination with page and limit query params (limit max 100)
+- Returns 200 with comments array and pagination metadata
+- Returns 403 for unauthorized access (wrong organization or customer accessing other's ticket)
+- Returns 404 if ticket not found
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use separate controller files for related functionality (comment-list.controller.ts)
+  - [PATTERN]: Enrich response data by fetching related entities (author details)
+  - [PATTERN]: Filter comments based on user role (customers see only public)
+  - [INTEGRATION]: Pagination metadata includes page, limit, total, totalPages
+---
