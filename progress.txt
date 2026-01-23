@@ -166,3 +166,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Tags input accepts comma-separated values, split and filtered before posting
   - [INTEGRATION]: Navigate to ticket detail page after successful creation using response.id
 ---
+
+## 2026-01-23T11:37 - US-013
+- Added status/priority/tags update controls using PATCH /api/v1/tickets/:id
+- Added assignee picker using PATCH /api/v1/tickets/:id/assign
+- Prevented invalid status transitions (open→[in_progress,resolved,closed], in_progress→[open,resolved,closed], resolved→[closed,open], closed→[open])
+- Edit mode with Save/Cancel buttons for agents/admins only
+- Status and priority use dropdown selects, tags use text input, assignee uses text input
+- Typecheck passes, tests pass
+- Files changed: web/src/pages/TicketDetailPage.tsx, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: TypeScript requires type casting for select onChange when using discriminated union types
+  - [PATTERN]: Status transition validation happens client-side with validTransitions lookup object
+  - [INTEGRATION]: Ticket updates and assignee changes use separate PATCH endpoints
+  - [GOTCHA]: Must type state variables as Ticket['status'] and Ticket['priority'] to match strict types
+---
