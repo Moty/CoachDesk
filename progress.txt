@@ -279,3 +279,8 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Log authorization failures with context for security auditing
   - [INTEGRATION]: RBAC middleware requires authMiddleware to run first to populate req.user
 ---
+
+## 2026-01-20 23:33 - MERGE CONFLICT
+- Story: US-012
+- Branch: ralph-helpdesk-ticketing-system/US-012
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-012
