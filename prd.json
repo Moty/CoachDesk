@@ -320,7 +320,7 @@
       "blockedBy": [
         "US-015"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -342,7 +342,7 @@
         "US-006",
         "US-012"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

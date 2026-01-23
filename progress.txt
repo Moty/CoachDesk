@@ -377,3 +377,43 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Pagination parameters: Math.max/Math.min for bounds, offset = (page - 1) * limit
   - [PATTERN]: Return consistent paginated response: { items, total, page, limit }
 ---
+
+## 2026-01-23T01:07:00.000Z - US-016
+- Added filter support to list tickets endpoint
+- Implemented ?status= filter (comma-separated values)
+- Implemented ?priority= filter
+- Implemented ?assigneeId= filter
+- Implemented ?requesterId= filter (restricted for customers)
+- Implemented ?tags= filter (comma-separated, OR logic using array-contains-any)
+- Implemented ?sortBy= (createdAt, updatedAt, priority) with ?order= (asc, desc)
+- Defaults to sortBy=createdAt, order=desc
+- Customers still restricted to viewing only their own tickets
+- Typecheck passes
+- All tests pass (19/19)
+- Files changed:
+  - src/api/controllers/ticket.controller.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Use 'in' operator for comma-separated filters (status)
+  - [PATTERN]: Use 'array-contains-any' for tag filtering with OR logic
+  - [PATTERN]: Validate sortBy and order params with whitelists before applying
+  - [GOTCHA]: Customers should not be able to override requesterId filter
+---
+
+## 2026-01-23T01:10:00.000Z - US-017
+- Implemented GET /api/v1/tickets/:id endpoint
+- Returns full ticket details with 200 status code
+- Validates ticket belongs to user's organization (403 if not)
+- Customers can only view their own tickets (403 if not)
+- Agents/admins can view all organization tickets
+- Returns 404 for non-existent tickets
+- Typecheck passes
+- All tests pass (19/19)
+- Files changed:
+  - src/api/controllers/ticket.controller.ts (added getTicketById function)
+  - src/api/routes/ticket.routes.ts (added GET /:id route)
+- **Learnings for future iterations:**
+  - [PATTERN]: URL params can be string | string[], handle with Array.isArray check
+  - [PATTERN]: Organization isolation: always validate ticket.organizationId === user.organizationId
+  - [PATTERN]: Role-based access: customers can only view their own tickets, agents/admins can view all org tickets
+  - [INTEGRATION]: Use req.user! for authenticated user context (set by authMiddleware)
+---

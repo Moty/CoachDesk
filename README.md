@@ -28,6 +28,7 @@ The server will start on port 3000 by default (configurable via `PORT` environme
 | GET    | /health             | Health check                                   |
 | POST   | /api/v1/tickets     | Create a new ticket (requires auth)            |
 | GET    | /api/v1/tickets     | List tickets with pagination (requires auth)   |
+| GET    | /api/v1/tickets/:id | Get ticket by ID (requires auth)               |
 
 ## Environment Variables
 
