@@ -488,3 +488,29 @@ Automatically compacted on 2026-01-22 17:48:18
   - [GOTCHA]: Multer limits must match storage validation limits
   - [INTEGRATION]: Attachment upload creates a comment with attachment metadata
 ---
+
+## 2026-01-23T02:06:00.000Z - US-035
+- Installed zod validation library
+- Created validation schemas for all endpoints
+- sanitizedString: trims and escapes HTML (& < > " ' /)
+- emailSchema: validates email format and converts to lowercase
+- urlSchema: validates URL format
+- createTicketSchema, updateTicketSchema, assignTicketSchema
+- createCommentSchema, createUserSchema, createSLARuleSchema
+- paginationSchema, ticketFilterSchema for query parameters
+- Created validate middleware factory (supports body, query, params)
+- Validation failures return 400 with detailed error array (path, message, code)
+- Logs validation failures with logger.warn
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/validation/schemas.ts
+  - src/shared/validation/middleware.ts
+  - src/shared/validation/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Zod schemas use ZodSchema type, not AnyZodObject
+  - [PATTERN]: Sanitize strings with trim + HTML escape before storage
+  - [PATTERN]: Use error.issues (not error.errors) for Zod v4 validation errors
+  - [PATTERN]: sanitizedString as factory function with min/max params
+  - [GOTCHA]: Transform must be applied after min/max validation
+---
