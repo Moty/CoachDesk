@@ -256,3 +256,25 @@ Automatically compacted on 2026-01-22 18:06:48
   - [PATTERN]: sanitizedString as factory function with min/max params
   - [GOTCHA]: Transform must be applied after min/max validation
 ---
+
+## 2026-01-23T02:08:00.000Z - US-036
+- Created rate limiting middleware with three tiers:
+  - Global rate limit: 100 requests per 15 minutes per IP
+  - Auth rate limit: 5 requests per 15 minutes (for auth endpoints)
+  - User rate limit: 1000 requests per hour per authenticated user
+- All rate limiters return 429 with Retry-After header when exceeded
+- Applied globalRateLimiter to entire app
+- Applied userRateLimiter to all /api routes (after authentication)
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/middleware/rateLimiter.middleware.ts
+- Files modified:
+  - src/shared/middleware/index.ts
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: express-rate-limit v8 uses standardHeaders and legacyHeaders options
+  - [PATTERN]: Rate limiters can use keyGenerator for custom keys (e.g., userId)
+  - [GOTCHA]: req.rateLimit.resetTime is not typed in @types/express, use static Retry-After values
+  - [INTEGRATION]: Apply global rate limiter before routes, user rate limiter on /api prefix
+---
