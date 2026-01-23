@@ -387,3 +387,100 @@ export async function updateTicket(
     next(error);
   }
 }
+
+interface AssignTicketRequest {
+  assigneeId: string;
+}
+
+export async function assignTicket(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const user = req.user!;
+    const ticketId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const { assigneeId }: AssignTicketRequest = req.body;
+
+    // Validate assigneeId is provided
+    if (!assigneeId || typeof assigneeId !== 'string') {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        'assigneeId is required',
+        400,
+        { field: 'assigneeId' }
+      );
+    }
+
+    // Fetch the ticket
+    const ticket = await ticketRepository.findById(ticketId);
+
+    if (!ticket) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        'Ticket not found',
+        404,
+        { ticketId }
+      );
+    }
+
+    // Validate ticket belongs to user's organization
+    if (ticket.organizationId !== user.organizationId) {
+      throw new AppError(
+        ErrorCode.FORBIDDEN,
+        'Access denied',
+        403,
+        { ticketId }
+      );
+    }
+
+    // Validate assignee exists and is a valid agent in organization
+    const assignee = await userRepository.findById(assigneeId);
+    
+    if (!assignee) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        'Invalid assigneeId',
+        400,
+        { field: 'assigneeId', value: assigneeId }
+      );
+    }
+
+    // Validate assignee is in same organization
+    if (assignee.organizationId !== user.organizationId) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        'Invalid assigneeId',
+        400,
+        { field: 'assigneeId', value: assigneeId }
+      );
+    }
+
+    // Validate assignee is an agent or admin
+    if (assignee.role !== UserRole.AGENT && assignee.role !== UserRole.ADMIN) {
+      throw new AppError(
+        ErrorCode.VALIDATION_ERROR,
+        'Invalid assigneeId',
+        400,
+        { field: 'assigneeId', value: assigneeId }
+      );
+    }
+
+    // Build update object
+    const updates: Partial<typeof ticket> = {
+      assigneeId,
+    };
+
+    // If status is 'new', change to 'open'
+    if (ticket.status === TicketStatus.NEW) {
+      updates.status = TicketStatus.OPEN;
+    }
+
+    // Update the ticket
+    const updatedTicket = await ticketRepository.update(ticketId, updates);
+
+    res.status(200).json(updatedTicket);
+  } catch (error) {
+    next(error);
+  }
+}

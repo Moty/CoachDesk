@@ -2,7 +2,7 @@ import { Router } from 'express';
 import { authMiddleware } from '../../shared/middleware/auth.middleware.js';
 import { requireRole } from '../../shared/middleware/rbac.middleware.js';
 import { UserRole } from '../../domain/models/User.js';
-import { createTicket, listTickets, getTicketById, updateTicket } from '../controllers/ticket.controller.js';
+import { createTicket, listTickets, getTicketById, updateTicket, assignTicket } from '../controllers/ticket.controller.js';
 
 const router = Router();
 
@@ -32,6 +32,13 @@ router.patch(
   authMiddleware,
   requireRole(UserRole.AGENT, UserRole.ADMIN),
   updateTicket
+);
+
+router.patch(
+  '/:id/assign',
+  authMiddleware,
+  requireRole(UserRole.AGENT, UserRole.ADMIN),
+  assignTicket
 );
 
 export default router;
