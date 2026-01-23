@@ -1,0 +1,35 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260122_163243",
+    "created_at": "2026-01-22T16:32:43-08:00"
+  },
+  "task": {
+    "id": "US-012",
+    "title": "Organization Isolation Middleware",
+    "description": "As a developer, I need middleware to enforce multi-tenant data isolation.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "51c1451b4d0a6541528d7bad40d343a0167d98b8",
+    "dirty_files": 11,
+    "staged_files": [
+      ".gitignore",
+      ".ralph/repl/US-011_state.json",
+      "agent.yaml",
+      "lib/git.sh",
+      "ralph.sh",
+      "scripts/generate-pin.sh",
+      "system_instructions/system_instructions.md",
+      "system_instructions/system_instructions_codex.md",
+      "system_instructions/system_instructions_copilot.md"
+    ],
+    "modified_files": [
+      ".ralph/context.json",
+      ".ralph/repl/US-011_state.json",
+      "progress.txt"
+    ]
+  }
+}
