@@ -132,11 +132,48 @@ export async function listTickets(
       queryWhere.requesterId = user.userId;
     }
 
+    // Filter: status (comma-separated)
+    if (req.query.status) {
+      const statuses = (req.query.status as string).split(',').map(s => s.trim());
+      queryWhere.status = { 'in': statuses };
+    }
+
+    // Filter: priority
+    if (req.query.priority) {
+      queryWhere.priority = req.query.priority as string;
+    }
+
+    // Filter: assigneeId
+    if (req.query.assigneeId) {
+      queryWhere.assigneeId = req.query.assigneeId as string;
+    }
+
+    // Filter: requesterId (agents/admins can filter by requester)
+    if (req.query.requesterId && user.role !== UserRole.CUSTOMER) {
+      queryWhere.requesterId = req.query.requesterId as string;
+    }
+
+    // Filter: tags (comma-separated, OR logic - match any tag)
+    if (req.query.tags) {
+      const tags = (req.query.tags as string).split(',').map(t => t.trim());
+      queryWhere.tags = { 'array-contains-any': tags };
+    }
+
+    // Sorting: default to createdAt desc
+    const sortBy = (req.query.sortBy as string) || 'createdAt';
+    const order = (req.query.order as string) || 'desc';
+    
+    const validSortFields = ['createdAt', 'updatedAt', 'priority'];
+    const validOrders = ['asc', 'desc'];
+    
+    const finalSortBy = validSortFields.includes(sortBy) ? sortBy : 'createdAt';
+    const finalOrder = validOrders.includes(order) ? order : 'desc';
+
     // Get total count and tickets
     const total = await ticketRepository.count({ where: queryWhere });
     const tickets = await ticketRepository.findAll({
       where: queryWhere,
-      orderBy: [{ field: 'createdAt', direction: 'desc' }],
+      orderBy: [{ field: finalSortBy, direction: finalOrder as 'asc' | 'desc' }],
       limit,
       offset,
     });

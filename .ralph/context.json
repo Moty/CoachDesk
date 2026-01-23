@@ -297,7 +297,7 @@
         "US-006",
         "US-012"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
