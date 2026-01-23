@@ -63,6 +63,13 @@ FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/service-account.json
 
 # CORS
 CORS_ORIGIN=http://localhost:3000
+
+# Email/SMTP
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your-email@gmail.com
+SMTP_PASSWORD=your-app-password
+SMTP_FROM=noreply@coachdesk.com
 ```
 
 ## Database Configuration
