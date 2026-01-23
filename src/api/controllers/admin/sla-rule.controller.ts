@@ -93,3 +93,42 @@ export async function createSLARule(
     next(error);
   }
 }
+
+export async function listSLARules(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const organizationId = req.user!.organizationId;
+    const slaRuleRepository = new SLARuleRepository(firestoreAdapter);
+
+    // Get all rules for organization
+    const rules = await slaRuleRepository.findAll({
+      where: { organizationId },
+    });
+
+    // Define priority order for sorting
+    const priorityOrder: { [key: string]: number } = {
+      [TicketPriority.LOW]: 1,
+      [TicketPriority.MEDIUM]: 2,
+      [TicketPriority.HIGH]: 3,
+      [TicketPriority.URGENT]: 4,
+    };
+
+    // Sort rules by priority
+    const sortedRules = rules.sort((a, b) => {
+      return priorityOrder[a.priority] - priorityOrder[b.priority];
+    });
+
+    logger.info('SLA rules listed', {
+      organizationId,
+      count: sortedRules.length,
+    });
+
+    res.status(200).json(sortedRules);
+  } catch (error) {
+    next(error);
+  }
+}
+
