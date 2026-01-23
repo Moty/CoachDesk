@@ -6,6 +6,7 @@ import { config, logConfig } from './shared/config/env.config.js';
 import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import ticketRoutes from './api/routes/ticket.routes.js';
+import userRoutes from './api/routes/user.routes.js';
 
 const app = express();
 
@@ -27,6 +28,7 @@ app.get('/health', (req, res) => {
 
 // API routes
 app.use('/api/v1/tickets', ticketRoutes);
+app.use('/api/v1/users', userRoutes);
 
 // Error handler must be last
 app.use(errorHandler);
