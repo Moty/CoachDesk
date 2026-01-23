@@ -10,6 +10,11 @@ interface EnvConfig {
   firestoreProjectId: string;
   firestoreDatabaseId: string;
   corsOrigin: string;
+  smtpHost: string;
+  smtpPort: number;
+  smtpUser: string;
+  smtpPassword: string;
+  smtpFrom: string;
 }
 
 function validateEnv(): EnvConfig {
@@ -24,6 +29,8 @@ function validateEnv(): EnvConfig {
     throw new Error(`Invalid PORT: ${process.env.PORT}. Must be a number between 0 and 65535`);
   }
 
+  const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
+  
   const config: EnvConfig = {
     nodeEnv: nodeEnv as 'development' | 'staging' | 'production' | 'test',
     port,
@@ -31,7 +38,12 @@ function validateEnv(): EnvConfig {
     dbType: process.env.DB_TYPE || 'firestore',
     firestoreProjectId: process.env.FIRESTORE_PROJECT_ID || '',
     firestoreDatabaseId: process.env.FIRESTORE_DATABASE_ID || '(default)',
-    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000'
+    corsOrigin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    smtpHost: process.env.SMTP_HOST || 'smtp.gmail.com',
+    smtpPort,
+    smtpUser: process.env.SMTP_USER || '',
+    smtpPassword: process.env.SMTP_PASSWORD || '',
+    smtpFrom: process.env.SMTP_FROM || 'noreply@coachdesk.com'
   };
 
   return config;
