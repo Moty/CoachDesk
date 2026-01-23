@@ -226,3 +226,16 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Optional form fields clear to undefined instead of empty string in payload
   - [INTEGRATION]: Admin navigation uses nested routes under /admin/*
 ---
+
+## 2026-01-23T11:48 - US-017
+- Added inline edit mode for SLA rules in table rows
+- Added edit functionality using PATCH /api/v1/admin/sla-rules/:id
+- Added delete functionality using DELETE /api/v1/admin/sla-rules/:id with confirmation
+- Updates list without full page refresh after edits/deletes
+- Typecheck passes
+- Files changed: web/src/pages/AdminSLARulesPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Inline edit mode toggles row between display and input fields
+  - [PATTERN]: Delete actions use confirm() for user confirmation
+  - [PATTERN]: State updates after edit/delete keep UI in sync without reload
+---
