@@ -2,6 +2,16 @@
 
 Cloud-agnostic enterprise-ready customer support and ticketing platform.
 
+## Features
+
+- Multi-tenant ticket management with organization isolation
+- Role-based access control (Admin, Agent, Customer)
+- SLA monitoring and breach detection
+- Real-time comment system
+- Notification service with email templates
+- Database abstraction layer (Firestore, extensible to other databases)
+- JWT-based authentication
+
 ## Quick Start
 
 ```bash
@@ -123,6 +133,46 @@ All errors return a consistent JSON format:
   "message": "Error message",
   "details": {}
 }
+```
+
+## Notification Service
+
+The application includes a notification service for sending emails with support for both HTML and plain text.
+
+### Features
+
+- Provider-based abstraction (`INotificationProvider` interface)
+- Pre-built email templates for common scenarios:
+  - Ticket Created
+  - Ticket Replied
+  - Ticket Resolved
+- Support for HTML and plain text emails
+
+### Usage
+
+```typescript
+import { NotificationService } from './shared/notifications/NotificationService.js';
+import { INotificationProvider } from './shared/notifications/interfaces/INotificationProvider.js';
+
+// Initialize with a provider (e.g., SMTP/SendGrid)
+const provider: INotificationProvider = /* your provider */;
+const notificationService = new NotificationService(provider);
+
+// Send a custom email
+await notificationService.sendEmail(
+  'user@example.com',
+  'Subject',
+  '<p>HTML body</p>',
+  true
+);
+
+// Use built-in templates
+await notificationService.sendTicketCreatedEmail(
+  'agent@example.com',
+  'TICKET-123',
+  'Login issue',
+  'John Doe'
+);
 ```
 
 ## Authentication
