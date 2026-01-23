@@ -278,3 +278,18 @@ Automatically compacted on 2026-01-22 18:06:48
   - [GOTCHA]: req.rateLimit.resetTime is not typed in @types/express, use static Retry-After values
   - [INTEGRATION]: Apply global rate limiter before routes, user rate limiter on /api prefix
 ---
+
+## 2026-01-23T02:11:30.000Z - US-037
+- Configured helmet with HSTS (maxAge: 1 year, includeSubDomains, preload)
+- Set Content-Security-Policy with strict directives (self-only defaults)
+- Enabled X-Content-Type-Options: nosniff via helmet noSniff option
+- Set X-Frame-Options: DENY via helmet frameguard
+- Configured CORS with allowed origins from config.corsOrigin (comma-separated)
+- CORS restricts to allowed origins, allows credentials, and specified methods/headers
+- Files changed: src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Helmet v7+ uses `noSniff: true` instead of `xContentTypeOptions: 'nosniff'`
+  - [PATTERN]: Helmet v7+ uses `frameguard: { action: 'deny' }` instead of `xFrameOptions`
+  - [PATTERN]: CORS origin validation with comma-separated list from env config
+  - [INTEGRATION]: Security headers applied before all other middleware
+---
