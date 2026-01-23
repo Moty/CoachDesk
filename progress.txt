@@ -151,3 +151,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Conditional rendering for role-specific UI (internal checkbox for agents/admins)
   - [INTEGRATION]: Comment state updated optimistically after successful POST
 ---
+
+## 2026-01-23T11:34 - US-012
+- Created ticket form that posts to POST /api/v1/tickets
+- Validates subject (1-255 chars) and description (1+ chars) before submit
+- Supports priority dropdown (low/medium/high/urgent) and tags input (comma-separated)
+- Navigates to new ticket detail on success
+- Shows validation errors with red borders and error messages
+- Cancel button returns to tickets list
+- Typecheck passes, tests pass
+- Files changed: web/src/pages/CreateTicketPage.tsx, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Form validation checks trim() length for required text fields
+  - [PATTERN]: Tags input accepts comma-separated values, split and filtered before posting
+  - [INTEGRATION]: Navigate to ticket detail page after successful creation using response.id
+---
