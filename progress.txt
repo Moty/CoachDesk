@@ -399,3 +399,19 @@ Automatically compacted on 2026-01-22 18:06:48
   - [PATTERN]: Document Firebase emulator setup for local development without production access
   - Good documentation reduces onboarding time for new developers
 ---
+
+## 2026-01-23T02:27:30.000Z - US-044
+- Configured structured JSON logging for production
+- Added dual formats: human-readable for development, JSON for production
+- Added request logging middleware to log all API requests (method, path, status, duration)
+- Enhanced authentication failure logging with context
+- Enhanced authorization failure logging with path and method
+- Production logs use JSON format for integration with Firebase/GCP Cloud Logging
+- Added service and environment metadata to all logs
+- **Learnings for future iterations:**
+  - [PATTERN]: Use different log formats for dev (human-readable) vs production (JSON)
+  - [PATTERN]: Request logger middleware logs incoming requests and responses with duration
+  - [PATTERN]: Log authentication and authorization failures with full context for security auditing
+  - [INTEGRATION]: JSON logs in production are queryable in GCP Cloud Logging
+  - Winston logger supports default metadata for consistent log enrichment
+---
