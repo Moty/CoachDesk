@@ -16,6 +16,12 @@ function TicketDetailPage() {
   const [newComment, setNewComment] = useState('')
   const [isInternal, setIsInternal] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [editStatus, setEditStatus] = useState<Ticket['status']>('open')
+  const [editPriority, setEditPriority] = useState<Ticket['priority']>('low')
+  const [editTags, setEditTags] = useState('')
+  const [editAssignee, setEditAssignee] = useState('')
+  const [updating, setUpdating] = useState(false)
 
   useEffect(() => {
     const loadTicket = async () => {
@@ -23,6 +29,10 @@ function TicketDetailPage() {
         setLoading(true)
         const data = await apiClient.get<Ticket>(`/api/v1/tickets/${id}`)
         setTicket(data)
+        setEditStatus(data.status)
+        setEditPriority(data.priority)
+        setEditTags(data.tags.join(', '))
+        setEditAssignee(data.assigneeId || '')
       } catch (err) {
         setError('Ticket not found')
       } finally {
@@ -54,6 +64,7 @@ function TicketDetailPage() {
 
   const isCustomer = user?.role === 'customer'
   const canUseInternal = user?.role === 'agent' || user?.role === 'admin'
+  const canEditTicket = user?.role === 'agent' || user?.role === 'admin'
   const visibleComments = comments.filter(c => !isCustomer || !c.isInternal)
 
   const handleSubmitComment = async (e: React.FormEvent) => {
@@ -77,21 +88,132 @@ function TicketDetailPage() {
     }
   }
 
+  const handleUpdateTicket = async () => {
+    if (!id || !ticket) return
+    
+    try {
+      setUpdating(true)
+      const updates: Partial<Ticket> = {}
+      
+      if (editStatus !== ticket.status) {
+        // Check for invalid status transitions
+        const validTransitions: Record<string, string[]> = {
+          open: ['in_progress', 'resolved', 'closed'],
+          in_progress: ['open', 'resolved', 'closed'],
+          resolved: ['closed', 'open'],
+          closed: ['open']
+        }
+        
+        if (!validTransitions[ticket.status]?.includes(editStatus)) {
+          alert(`Invalid status transition from ${ticket.status} to ${editStatus}`)
+          return
+        }
+        updates.status = editStatus
+      }
+      
+      if (editPriority !== ticket.priority) {
+        updates.priority = editPriority
+      }
+      
+      const newTags = editTags.split(',').map(t => t.trim()).filter(Boolean)
+      if (JSON.stringify(newTags) !== JSON.stringify(ticket.tags)) {
+        updates.tags = newTags
+      }
+      
+      if (Object.keys(updates).length > 0) {
+        const updatedTicket = await apiClient.patch<Ticket>(`/api/v1/tickets/${id}`, updates)
+        setTicket(updatedTicket)
+        setEditStatus(updatedTicket.status)
+        setEditPriority(updatedTicket.priority)
+        setEditTags(updatedTicket.tags.join(', '))
+      }
+      
+      // Handle assignee separately
+      if (editAssignee !== (ticket.assigneeId || '')) {
+        const updatedTicket = await apiClient.patch<Ticket>(`/api/v1/tickets/${id}/assign`, {
+          assigneeId: editAssignee || null
+        })
+        setTicket(updatedTicket)
+        setEditAssignee(updatedTicket.assigneeId || '')
+      }
+      
+      setEditing(false)
+    } catch (err: any) {
+      console.error('Failed to update ticket:', err)
+      alert(err.message || 'Failed to update ticket')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  const handleCancelEdit = () => {
+    if (ticket) {
+      setEditStatus(ticket.status)
+      setEditPriority(ticket.priority)
+      setEditTags(ticket.tags.join(', '))
+      setEditAssignee(ticket.assigneeId || '')
+    }
+    setEditing(false)
+  }
+
   return (
     <div>
-      <h2>{ticket.subject}</h2>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+        <h2>{ticket.subject}</h2>
+        {canEditTicket && !editing && (
+          <button onClick={() => setEditing(true)}>Edit Ticket</button>
+        )}
+      </div>
       <div style={{ background: '#f9f9f9', padding: '1rem', marginBottom: '1rem', border: '1px solid #ddd' }}>
         <div style={{ display: 'grid', gridTemplateColumns: '150px 1fr', gap: '0.5rem' }}>
           <strong>Status:</strong>
-          <span>{ticket.status}</span>
+          {editing ? (
+            <select value={editStatus} onChange={(e) => setEditStatus(e.target.value as Ticket['status'])} disabled={updating}>
+              <option value="open">Open</option>
+              <option value="in_progress">In Progress</option>
+              <option value="resolved">Resolved</option>
+              <option value="closed">Closed</option>
+            </select>
+          ) : (
+            <span>{ticket.status}</span>
+          )}
           <strong>Priority:</strong>
-          <span>{ticket.priority}</span>
+          {editing ? (
+            <select value={editPriority} onChange={(e) => setEditPriority(e.target.value as Ticket['priority'])} disabled={updating}>
+              <option value="low">Low</option>
+              <option value="medium">Medium</option>
+              <option value="high">High</option>
+              <option value="urgent">Urgent</option>
+            </select>
+          ) : (
+            <span>{ticket.priority}</span>
+          )}
           <strong>Assignee:</strong>
-          <span>{ticket.assigneeEmail || ticket.assigneeId || 'Unassigned'}</span>
+          {editing ? (
+            <input
+              type="text"
+              value={editAssignee}
+              onChange={(e) => setEditAssignee(e.target.value)}
+              placeholder="Enter assignee ID"
+              disabled={updating}
+            />
+          ) : (
+            <span>{ticket.assigneeEmail || ticket.assigneeId || 'Unassigned'}</span>
+          )}
           <strong>Requester:</strong>
           <span>{ticket.requesterEmail || ticket.requesterId}</span>
           <strong>Tags:</strong>
-          <span>{ticket.tags.length > 0 ? ticket.tags.join(', ') : 'None'}</span>
+          {editing ? (
+            <input
+              type="text"
+              value={editTags}
+              onChange={(e) => setEditTags(e.target.value)}
+              placeholder="Comma-separated tags"
+              disabled={updating}
+            />
+          ) : (
+            <span>{ticket.tags.length > 0 ? ticket.tags.join(', ') : 'None'}</span>
+          )}
           <strong>Created:</strong>
           <span>{new Date(ticket.createdAt).toLocaleString()}</span>
           <strong>Updated:</strong>
@@ -115,6 +237,14 @@ function TicketDetailPage() {
             </>
           )}
         </div>
+        {editing && (
+          <div style={{ marginTop: '1rem' }}>
+            <button onClick={handleUpdateTicket} disabled={updating} style={{ marginRight: '0.5rem' }}>
+              {updating ? 'Saving...' : 'Save Changes'}
+            </button>
+            <button onClick={handleCancelEdit} disabled={updating}>Cancel</button>
+          </div>
+        )}
       </div>
       <div>
         <h3>Description</h3>
