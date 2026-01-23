@@ -17,6 +17,13 @@ function AdminSLARulesPage() {
   const [submitting, setSubmitting] = useState(false)
   const [submitError, setSubmitError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null)
+  const [editFormData, setEditFormData] = useState<CreateSLARuleData>({
+    name: '',
+    priority: '',
+    responseTimeMinutes: undefined,
+    resolutionTimeMinutes: undefined
+  })
 
   useEffect(() => {
     loadRules()
@@ -63,6 +70,66 @@ function AdminSLARulesPage() {
       setSubmitError(err.message || 'Failed to create SLA rule')
     } finally {
       setSubmitting(false)
+    }
+  }
+
+  function startEdit(rule: SLARule) {
+    setEditingRuleId(rule.id)
+    setEditFormData({
+      name: rule.name,
+      priority: rule.priority || '',
+      responseTimeMinutes: rule.responseTimeMinutes,
+      resolutionTimeMinutes: rule.resolutionTimeMinutes
+    })
+    setSuccessMessage('')
+  }
+
+  function cancelEdit() {
+    setEditingRuleId(null)
+    setEditFormData({
+      name: '',
+      priority: '',
+      responseTimeMinutes: undefined,
+      resolutionTimeMinutes: undefined
+    })
+  }
+
+  async function handleEdit(ruleId: string) {
+    setSubmitting(true)
+    setSuccessMessage('')
+
+    try {
+      const payload: CreateSLARuleData = {
+        name: editFormData.name,
+        priority: editFormData.priority || undefined,
+        responseTimeMinutes: editFormData.responseTimeMinutes || undefined,
+        resolutionTimeMinutes: editFormData.resolutionTimeMinutes || undefined
+      }
+
+      const updatedRule = await apiClient.patch<SLARule>(`/api/v1/admin/sla-rules/${ruleId}`, payload)
+      setRules(rules.map(r => r.id === ruleId ? updatedRule : r))
+      setSuccessMessage('SLA rule updated successfully')
+      setEditingRuleId(null)
+    } catch (err: any) {
+      setError(err.message || 'Failed to update SLA rule')
+    } finally {
+      setSubmitting(false)
+    }
+  }
+
+  async function handleDelete(ruleId: string) {
+    if (!confirm('Are you sure you want to delete this SLA rule?')) {
+      return
+    }
+
+    setSuccessMessage('')
+
+    try {
+      await apiClient.delete(`/api/v1/admin/sla-rules/${ruleId}`)
+      setRules(rules.filter(r => r.id !== ruleId))
+      setSuccessMessage('SLA rule deleted successfully')
+    } catch (err: any) {
+      setError(err.message || 'Failed to delete SLA rule')
     }
   }
 
@@ -177,16 +244,76 @@ function AdminSLARulesPage() {
               <th style={{ textAlign: 'left', padding: '10px' }}>Response Time</th>
               <th style={{ textAlign: 'left', padding: '10px' }}>Resolution Time</th>
               <th style={{ textAlign: 'left', padding: '10px' }}>Created</th>
+              <th style={{ textAlign: 'left', padding: '10px' }}>Actions</th>
             </tr>
           </thead>
           <tbody>
             {rules.map((rule) => (
               <tr key={rule.id} style={{ borderBottom: '1px solid #ddd' }}>
-                <td style={{ padding: '10px' }}>{rule.name}</td>
-                <td style={{ padding: '10px' }}>{rule.priority || '-'}</td>
-                <td style={{ padding: '10px' }}>{rule.responseTimeMinutes ? `${rule.responseTimeMinutes} min` : '-'}</td>
-                <td style={{ padding: '10px' }}>{rule.resolutionTimeMinutes ? `${rule.resolutionTimeMinutes} min` : '-'}</td>
-                <td style={{ padding: '10px' }}>{new Date(rule.createdAt).toLocaleString()}</td>
+                {editingRuleId === rule.id ? (
+                  <>
+                    <td style={{ padding: '10px' }}>
+                      <input
+                        type="text"
+                        value={editFormData.name}
+                        onChange={(e) => setEditFormData({ ...editFormData, name: e.target.value })}
+                        style={{ width: '100%', padding: '5px' }}
+                      />
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <select
+                        value={editFormData.priority}
+                        onChange={(e) => setEditFormData({ ...editFormData, priority: e.target.value })}
+                        style={{ width: '100%', padding: '5px' }}
+                      >
+                        <option value="">--</option>
+                        <option value="low">Low</option>
+                        <option value="medium">Medium</option>
+                        <option value="high">High</option>
+                        <option value="urgent">Urgent</option>
+                      </select>
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editFormData.responseTimeMinutes || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, responseTimeMinutes: e.target.value ? parseInt(e.target.value) : undefined })}
+                        style={{ width: '100%', padding: '5px' }}
+                      />
+                    </td>
+                    <td style={{ padding: '10px' }}>
+                      <input
+                        type="number"
+                        min="1"
+                        value={editFormData.resolutionTimeMinutes || ''}
+                        onChange={(e) => setEditFormData({ ...editFormData, resolutionTimeMinutes: e.target.value ? parseInt(e.target.value) : undefined })}
+                        style={{ width: '100%', padding: '5px' }}
+                      />
+                    </td>
+                    <td style={{ padding: '10px' }}>{new Date(rule.createdAt).toLocaleString()}</td>
+                    <td style={{ padding: '10px' }}>
+                      <button onClick={() => handleEdit(rule.id)} disabled={submitting} style={{ marginRight: '5px' }}>
+                        Save
+                      </button>
+                      <button onClick={cancelEdit}>Cancel</button>
+                    </td>
+                  </>
+                ) : (
+                  <>
+                    <td style={{ padding: '10px' }}>{rule.name}</td>
+                    <td style={{ padding: '10px' }}>{rule.priority || '-'}</td>
+                    <td style={{ padding: '10px' }}>{rule.responseTimeMinutes ? `${rule.responseTimeMinutes} min` : '-'}</td>
+                    <td style={{ padding: '10px' }}>{rule.resolutionTimeMinutes ? `${rule.resolutionTimeMinutes} min` : '-'}</td>
+                    <td style={{ padding: '10px' }}>{new Date(rule.createdAt).toLocaleString()}</td>
+                    <td style={{ padding: '10px' }}>
+                      <button onClick={() => startEdit(rule)} style={{ marginRight: '5px' }}>
+                        Edit
+                      </button>
+                      <button onClick={() => handleDelete(rule.id)}>Delete</button>
+                    </td>
+                  </>
+                )}
               </tr>
             ))}
           </tbody>
