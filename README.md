@@ -2,6 +2,22 @@
 
 Cloud-agnostic enterprise-ready customer support and ticketing platform.
 
+## Table of Contents
+
+- [Features](#features)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Local Development](#local-development)
+- [Firebase Emulators](#firebase-emulators)
+- [Testing](#testing)
+- [Available Commands](#available-commands)
+- [API Documentation](#api-documentation)
+- [Environment Variables](#environment-variables)
+- [Database Configuration](#database-configuration)
+- [Authentication & Authorization](#authentication--authorization)
+- [Background Jobs](#background-jobs)
+- [Deployment](#deployment)
+
 ## Features
 
 - Multi-tenant ticket management with organization isolation
@@ -11,67 +27,262 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 - Notification service with email templates
 - Database abstraction layer (Firestore, extensible to other databases)
 - JWT-based authentication
+- Comprehensive OpenAPI documentation
+- Audit logging for compliance
 
-## Quick Start
+## Prerequisites
+
+Before you begin, ensure you have the following installed:
+
+- **Node.js 20 or higher**: [Download here](https://nodejs.org/)
+- **npm**: Comes with Node.js
+- **Firebase CLI**: Install globally
+  ```bash
+  npm install -g firebase-tools
+  ```
+- **Git**: For version control
+
+## Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone <repository-url>
+   cd helpdesk
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Set up environment variables**:
+   ```bash
+   cp .env.example .env
+   ```
+   
+   Edit `.env` and fill in the required values (see [Environment Variables](#environment-variables)).
+
+4. **Firebase Setup** (required for database):
+   - Create a Firebase project at [Firebase Console](https://console.firebase.google.com/)
+   - Generate a service account key:
+     - Go to Project Settings → Service Accounts
+     - Click "Generate New Private Key"
+     - Save the JSON file securely in your project directory
+   - Update `.env` with your Firebase project ID and service account path
+
+## Local Development
+
+### Quick Start
 
 ```bash
-npm install
 npm run dev
 ```
 
-The server will start on port 3000 by default (configurable via `PORT` environment variable).
+The server will start on port 3000 (or the port specified in your `.env` file).
+
+You should see:
+```
+[INFO]: Starting HelpDesk application...
+[INFO]: Configuration loaded:
+[INFO]:   - Environment: development
+[INFO]:   - Port: 3000
+[INFO]:   - CORS Origin: http://localhost:3000
+[INFO]: Firestore connection established
+[INFO]: Server ready on port 3000
+```
+
+### Development Features
+
+- **Hot Reload**: The dev server uses `tsx watch` for automatic reloading on file changes
+- **Type Checking**: TypeScript errors are shown in real-time
+- **Logging**: Debug-level logs are enabled in development mode
+
+### Accessing the Application
+
+- **API Base URL**: `http://localhost:3000/api/v1`
+- **Health Check**: `http://localhost:3000/health`
+- **API Documentation**: `http://localhost:3000/api-docs` (Swagger UI)
+
+## Firebase Emulators
+
+For local development without connecting to production Firebase, use the Firebase Emulator Suite:
+
+### Setup Emulators
+
+1. **Initialize emulators** (if not already done):
+   ```bash
+   firebase init emulators
+   ```
+   
+   Select:
+   - Authentication Emulator
+   - Firestore Emulator
+   - Storage Emulator (optional)
+
+2. **Start emulators**:
+   ```bash
+   firebase emulators:start
+   ```
+
+3. **Update your `.env`** to use emulator:
+   ```env
+   FIRESTORE_EMULATOR_HOST=localhost:8080
+   FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
+   ```
+
+4. **Start the application**:
+   ```bash
+   npm run dev
+   ```
+
+### Emulator UI
+
+Access the Firebase Emulator UI at `http://localhost:4000` to:
+- View Firestore data
+- Inspect authentication users
+- Test security rules
+- View logs
+
+## Testing
+
+### Run All Tests
+
+```bash
+npm test
+```
+
+### Run Tests in Watch Mode
+
+```bash
+npm run test:watch
+```
+
+### Run Tests with UI
+
+```bash
+npm run test:ui
+```
+
+### Test Coverage
+
+```bash
+npm run test:coverage
+```
+
+Tests are written using Vitest and cover:
+- Database adapters (Firestore)
+- Repository implementations
+- Service layer logic
+- API endpoints
+- Middleware functions
 
 ## Available Commands
 
-- `npm run dev` - Start development server with hot reload
-- `npm run build` - Build for production
-- `npm start` - Start production server
-- `npm run typecheck` - Run TypeScript type checking
-- `npm test` - Run unit tests
-- `npm run test:watch` - Run tests in watch mode
-- `npm run test:ui` - Run tests with UI
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server with hot reload |
+| `npm run build` | Build for production |
+| `npm start` | Start production server |
+| `npm run typecheck` | Run TypeScript type checking |
+| `npm test` | Run unit tests |
+| `npm run test:watch` | Run tests in watch mode |
+| `npm run test:ui` | Run tests with UI |
 
-## API Endpoints
+## API Documentation
 
-| Method | Path                          | Description                                    |
-|--------|-------------------------------|------------------------------------------------|
-| GET    | /health                       | Health check                                   |
-| POST   | /api/v1/tickets               | Create a new ticket (requires auth)            |
-| GET    | /api/v1/tickets               | List tickets with pagination (requires auth)   |
-| GET    | /api/v1/tickets/:id           | Get ticket by ID (requires auth)               |
-| PATCH  | /api/v1/tickets/:id           | Update ticket (requires agent/admin role)      |
-| PATCH  | /api/v1/tickets/:id/assign    | Assign ticket to agent (requires agent/admin)  |
-| POST   | /api/v1/tickets/:id/comments  | Add comment to ticket (requires auth)          |
-| GET    | /api/v1/tickets/:id/comments  | List comments for ticket (requires auth)       |
-| POST   | /api/v1/users                 | Create a new user (requires admin role)        |
-| GET    | /api/v1/users                 | List users in organization (requires admin)    |
-| GET    | /api/v1/admin/audit-logs      | List audit logs with filters (requires admin)  |
+### Swagger UI
+
+Interactive API documentation is available at `http://localhost:3000/api-docs` when the server is running.
+
+The OpenAPI 3.0 specification is located at `docs/api/openapi.yaml`.
+
+### API Endpoints
+
+| Method | Path                          | Description                                    | Auth |
+|--------|-------------------------------|------------------------------------------------|------|
+| GET    | /health                       | Health check                                   | No   |
+| GET    | /api-docs                     | Swagger UI documentation                       | No   |
+| POST   | /api/v1/tickets               | Create a new ticket                            | Yes  |
+| GET    | /api/v1/tickets               | List tickets with filters                      | Yes  |
+| GET    | /api/v1/tickets/:id           | Get ticket by ID                               | Yes  |
+| PATCH  | /api/v1/tickets/:id           | Update ticket (agent/admin)                    | Yes  |
+| PATCH  | /api/v1/tickets/:id/assign    | Assign ticket to agent (agent/admin)           | Yes  |
+| POST   | /api/v1/tickets/:id/comments  | Add comment to ticket                          | Yes  |
+| GET    | /api/v1/tickets/:id/comments  | List comments for ticket                       | Yes  |
+| POST   | /api/v1/tickets/:id/attachments | Upload file attachment                       | Yes  |
+| POST   | /api/v1/users                 | Create a new user (admin)                      | Yes  |
+| GET    | /api/v1/users                 | List users in organization (admin)             | Yes  |
+| GET    | /api/v1/users/me              | Get current authenticated user                 | Yes  |
+| POST   | /api/v1/admin/sla-rules       | Create SLA rule (admin)                        | Yes  |
+| GET    | /api/v1/admin/sla-rules       | List SLA rules (admin)                         | Yes  |
+| GET    | /api/v1/admin/sla-rules/:id   | Get SLA rule by ID (admin)                     | Yes  |
+| PATCH  | /api/v1/admin/sla-rules/:id   | Update SLA rule (admin)                        | Yes  |
+| DELETE | /api/v1/admin/sla-rules/:id   | Delete SLA rule (admin)                        | Yes  |
+| GET    | /api/v1/admin/audit-logs      | List audit logs with filters (admin)           | Yes  |
 
 ## Environment Variables
 
-Create a `.env` file based on `.env.example`:
+Create a `.env` file in the project root based on `.env.example`:
 
-```
+### Required Variables
+
+```env
+# Application
 NODE_ENV=development
 PORT=3000
 LOG_LEVEL=info
 
-# Database
+# Database - Firestore
 DB_TYPE=firestore
-FIRESTORE_PROJECT_ID=your-project-id
+FIRESTORE_PROJECT_ID=your-firebase-project-id
 FIRESTORE_DATABASE_ID=(default)
-FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/service-account.json
+FIREBASE_SERVICE_ACCOUNT_PATH=/path/to/serviceAccountKey.json
+FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 
-# CORS
-CORS_ORIGIN=http://localhost:3000
+# CORS - Comma-separated list of allowed origins
+CORS_ORIGIN=http://localhost:3000,http://localhost:5173
 
-# Email/SMTP
+# Email/SMTP Configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
 SMTP_PASSWORD=your-app-password
-SMTP_FROM=noreply@coachdesk.com
+SMTP_FROM=noreply@helpdesk.com
 ```
+
+### Variable Descriptions
+
+| Variable | Description | Example |
+|----------|-------------|---------|
+| `NODE_ENV` | Environment (development, staging, production) | `development` |
+| `PORT` | Server port | `3000` |
+| `LOG_LEVEL` | Logging level (debug, info, warn, error) | `info` |
+| `FIRESTORE_PROJECT_ID` | Firebase project ID | `my-helpdesk-123` |
+| `FIREBASE_SERVICE_ACCOUNT_PATH` | Path to service account JSON | `./serviceAccountKey.json` |
+| `FIREBASE_STORAGE_BUCKET` | Firebase storage bucket for attachments | `my-helpdesk-123.appspot.com` |
+| `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:3000` |
+| `SMTP_HOST` | SMTP server hostname | `smtp.gmail.com` |
+| `SMTP_PORT` | SMTP server port | `587` |
+| `SMTP_USER` | SMTP username/email | `user@gmail.com` |
+| `SMTP_PASSWORD` | SMTP password or app password | `****` |
+| `SMTP_FROM` | Default sender email address | `noreply@helpdesk.com` |
+
+### Firebase Emulator Variables
+
+When using Firebase emulators, add:
+
+```env
+FIRESTORE_EMULATOR_HOST=localhost:8080
+FIREBASE_AUTH_EMULATOR_HOST=localhost:9099
+```
+
+### Security Notes
+
+- **Never commit `.env` files** to version control
+- Keep `.env.example` updated with new variables (without sensitive values)
+- Use different credentials for development, staging, and production
+- For production, use environment variables from your hosting platform (Firebase Functions config, Cloud Run secrets, etc.)
+
 
 ## Database Configuration
 
@@ -183,7 +394,9 @@ await notificationService.sendTicketCreatedEmail(
 );
 ```
 
-## Authentication
+## Authentication & Authorization
+
+### Authentication
 
 The application uses Firebase Admin SDK for JWT-based authentication.
 
@@ -241,6 +454,27 @@ The middleware:
 - Returns 403 for insufficient permissions
 - Logs authorization failures for security auditing
 - Supports multiple role requirements with OR logic
+
+## Deployment
+
+### Firebase
+
+See [Firebase Deployment Guide](docs/deployment/firebase-deployment.md) for detailed instructions on deploying to Firebase.
+
+Quick deployment:
+```bash
+./scripts/deploy-firebase.sh
+```
+
+### Other Platforms
+
+The application is cloud-agnostic and can be deployed to:
+- **AWS**: Lambda + API Gateway or ECS
+- **Google Cloud**: Cloud Run or App Engine
+- **Azure**: App Service or Container Instances
+- **SAP BTP**: Cloud Foundry (see migration guide when available)
+
+See the deployment documentation in `docs/deployment/` for platform-specific guides.
 
 
 ## Background Jobs
