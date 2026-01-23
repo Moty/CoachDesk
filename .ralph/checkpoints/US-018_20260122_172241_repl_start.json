@@ -1,0 +1,25 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260122_172241",
+    "created_at": "2026-01-22T17:22:42-08:00"
+  },
+  "task": {
+    "id": "US-018",
+    "title": "Update Ticket Endpoint",
+    "description": "As an agent or admin, I want to update tickets via PATCH /api/v1/tickets/:id.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "7e0e9de41f7ecbb8423a9dd8da8d3df388989a2e",
+    "dirty_files": 6,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "progress.txt"
+    ]
+  }
+}

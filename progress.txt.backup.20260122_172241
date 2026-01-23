@@ -48,14 +48,175 @@ Started: Tue Jan 20 10:59:07 PST 2026
 ---
 
 ## 2026-01-20T22:00:16.000Z - US-004
-
-## Compacted History Summary
-Automatically compacted on 2026-01-22 17:22:41
-
-
-**Key Learnings from compacted section:**
-
+- Created IRepository<T> interface with CRUD methods (create, findById, findAll, update, delete, findOne, count)
+- Created IDatabaseAdapter interface with connect, disconnect, healthCheck, getCollection, transaction methods
+- Created ITransaction interface for atomic operations with commit, rollback, getCollection methods
+- Created Repository<T> abstract base class implementing IRepository<T>
+- Created IQueryBuilder<T> interface with where, and, or, orderBy, limit, offset, execute, first, count methods
+- Created QueryOptions interface for filtering, sorting, pagination
+- Created query operators type: ==, !=, >, >=, <, <=, in, not-in, array-contains, array-contains-any
+- Created index.ts for database module exports
+- Files created:
+  - src/shared/database/interfaces/IRepository.ts
+  - src/shared/database/interfaces/IDatabaseAdapter.ts
+  - src/shared/database/interfaces/IQueryBuilder.ts
+  - src/shared/database/base/Repository.ts
+  - src/shared/database/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Repository pattern uses adapter pattern for database abstraction
+  - [PATTERN]: Base Repository class expects subclasses to implement toDomain() and toDatabase() for entity mapping
+  - [PATTERN]: Transaction interface allows getCollection within transaction context
+  - [PATTERN]: Query operators support Firestore-style filtering (array-contains, in, not-in)
 ---
+
+<<<<<<< HEAD
+## 2026-01-20T16:10:00.000Z - US-005
+- Installed firebase-admin package
+- Created FirestoreAdapter implementing IDatabaseAdapter
+- Implemented FirestoreCollection wrapper with create, findById, findAll, update, delete, findOne, count methods
+- Implemented FirestoreTransaction wrapper for transaction support
+- Connection pooling via Firebase Admin SDK initialization
+- Health check implementation using dummy collection query
+- Updated env.config.ts to support 'test' environment
+- Created vitest.config.ts for test framework setup
+- Created comprehensive unit tests for Firestore adapter with mocks
+- All tests passing (6/6)
+- Typecheck passes
+- Files created:
+  - src/shared/database/adapters/firestore/FirestoreAdapter.ts
+  - src/shared/database/adapters/firestore/index.ts
+  - tests/database/FirestoreAdapter.test.ts
+  - vitest.config.ts
+- Updated files:
+  - src/shared/database/index.ts (exported FirestoreAdapter)
+  - src/shared/config/env.config.ts (added 'test' to NODE_ENV validation)
+  - .env.example (added FIREBASE_SERVICE_ACCOUNT_PATH)
+  - package.json (added test and test:watch scripts)
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK uses singleton pattern - check admin.apps before re-initializing
+  - [PATTERN]: Firestore FieldValue.serverTimestamp() for consistent timestamps across clients
+  - [PATTERN]: Use vitest for testing with vi.mock for mocking external dependencies
+  - [GOTCHA]: Mock structure needs to match actual firebase-admin module structure exactly
+  - [INTEGRATION]: FirestoreAdapter requires FIREBASE_SERVICE_ACCOUNT_PATH env var or uses application default credentials
+---
+
+## 2026-01-20T22:09:00.000Z - US-006
+- Created Ticket interface with all fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)
+- Created TicketStatus enum (NEW, OPEN, PENDING, RESOLVED, CLOSED) and TicketPriority enum (LOW, MEDIUM, HIGH, URGENT)
+- Created SLATimer interface with firstResponseAt, firstResponseDue, resolvedAt, resolutionDue, breached fields
+- Implemented TicketRepository extending Repository<Ticket>
+- Implemented methods: create, findById, findByOrganization, update, delete
+- Added status transition validation using isValidStatusTransition function
+- Added priority validation using isValidPriority function
+- Documented required Firestore indexes: organizationId, status, createdAt
+- Files created:
+  - src/domain/models/Ticket.ts
+  - src/domain/repositories/TicketRepository.ts
+  - src/domain/models/index.ts
+  - src/domain/repositories/index.ts
+  - src/domain/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Domain models use enums for status and priority with validation functions
+  - [PATTERN]: Repository toDomain/toDatabase handle Firestore timestamp conversion (_seconds field)
+  - [PATTERN]: AppError requires ErrorCode enum and statusCode parameter (code, message, statusCode, details)
+  - [PATTERN]: Status transitions defined in STATUS_TRANSITIONS map for validation
+  - [INTEGRATION]: Domain layer structure: models/ and repositories/ subdirectories under src/domain/
+---
+
+## 2026-01-20T22:43:30.000Z - US-005
+- Integrated FirestoreAdapter with Express server startup
+- Added database connection initialization in src/index.ts
+- Enhanced health check endpoint to include database connectivity status
+- Database connects on application startup with proper error handling
+- Typecheck passes successfully
+- All unit tests pass (13/13 tests)
+- Files changed:
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Initialize database adapter early in startup sequence before starting HTTP server
+  - [PATTERN]: Use async start() function to handle database connection errors gracefully
+  - [INTEGRATION]: Health check endpoint now reports both server and database status
+---
+
+## 2026-01-20T22:45:45.000Z - US-006
+- Created Ticket interface with all required fields
+- Implemented TicketRepository extending Repository<Ticket>
+- Added create, findById, findByOrganization, update, delete methods
+- Implemented status enum validation with isValidStatusTransition function
+- Implemented priority enum validation with isValidPriority function
+- Documented required indexes: organizationId, status, createdAt
+- Typecheck passes successfully
+- Files changed:
+  - src/domain/models/Ticket.ts (existing)
+  - src/domain/repositories/TicketRepository.ts (existing)
+- **Learnings for future iterations:**
+  - [PATTERN]: Use STATUS_TRANSITIONS map to validate state transitions
+  - [PATTERN]: Repository validates business rules (status transitions, priority values)
+  - [PATTERN]: Set default timestamps and status in create method
+  - [INTEGRATION]: Ticket model includes SLATimer interface for SLA tracking
+---
+
+## 2026-01-21T00:10:59.000Z - US-006
+- Created Ticket interface with all required fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)
+- Implemented TicketStatus enum (NEW, OPEN, PENDING, RESOLVED, CLOSED)
+- Implemented TicketPriority enum (LOW, MEDIUM, HIGH, URGENT)
+- Created SLATimer interface for tracking SLA metrics
+- Implemented TicketRepository extending Repository<Ticket>
+- Added methods: create, findById, findByOrganization, update, delete (via base class)
+- Implemented status transition validation with STATUS_TRANSITIONS map
+- Implemented priority validation with isValidPriority function
+- Documented required indexes: organizationId, status, createdAt
+- Typecheck passes successfully
+- Files created:
+  - src/domain/models/Ticket.ts
+  - src/domain/repositories/TicketRepository.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Status transitions enforced via map of valid transitions
+  - [PATTERN]: Timestamp conversion handles both Date and Firestore Timestamp formats
+  - [PATTERN]: Repository validates business rules (priority, status transitions) before persisting
+  - [GOTCHA]: Firestore timestamps can be either Date objects or {_seconds, _nanoseconds} objects
+---
+
+## 2026-01-21T05:51:00.000Z - US-007
+- Created User interface with id, role, organizationId, email, displayName, createdAt, updatedAt
+- Implemented UserRole enum (CUSTOMER, AGENT, ADMIN)
+- Implemented UserRepository extending Repository<User>
+- Added methods: create, findById, findByEmail, findByOrganization, update (via base class)
+- Enforced unique email per organization constraint in create and update methods
+- Documented required indexes: email, organizationId
+- Typecheck passes successfully
+- All tests pass (6/6)
+- Files created:
+  - src/domain/models/User.ts
+  - src/domain/repositories/UserRepository.ts
+- Updated files:
+  - src/domain/models/index.ts (exported User and UserRole)
+  - src/domain/repositories/index.ts (exported UserRepository)
+- **Learnings for future iterations:**
+  - [PATTERN]: Same pattern as Ticket model - enum for role validation, validation helper function
+  - [PATTERN]: Unique constraint enforced at repository level by querying before create/update
+  - [PATTERN]: Timestamp conversion uses same helper as TicketRepository
+  - [INTEGRATION]: User repository will be used by authentication and RBAC middleware
+---
+
+## 2026-01-21T06:09:00.000Z - US-008
+- Created Comment interface with id, ticketId, authorId, isPublic, body, attachments, createdAt
+- Implemented CommentRepository extending Repository<Comment>
+- Added methods: create, findByTicket, findById (via base class)
+- Implemented filtering by isPublic flag in findByTicket method
+- Comments sorted by createdAt in ascending order
+- Documented required indexes: ticketId, createdAt
+- Typecheck passes successfully
+- Files created:
+  - src/domain/models/Comment.ts
+  - src/domain/repositories/CommentRepository.ts
+- Updated files:
+  - src/domain/models/index.ts (exported Comment)
+  - src/domain/repositories/index.ts (exported CommentRepository)
+- **Learnings for future iterations:**
+  - [PATTERN]: Same timestamp conversion pattern as TicketRepository and UserRepository
+  - [PATTERN]: Repository create method sets default timestamp if not provided
+  - [PATTERN]: findByTicket uses QueryOptions with orderBy for consistent sorting
   - [INTEGRATION]: Comment model will be used for ticket conversation threads
 ---
 
