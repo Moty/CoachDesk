@@ -1,11 +1,19 @@
 import { Request, Response, NextFunction } from 'express';
-import * as admin from 'firebase-admin';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { AppError, ErrorCode } from '../errors/AppError.js';
 import { logger } from '../utils/logger.js';
 
 // Initialize Firebase Admin if not already initialized
-if (admin.apps.length === 0) {
-  admin.initializeApp();
+if (getApps().length === 0) {
+  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+  if (serviceAccountPath) {
+    initializeApp({
+      credential: cert(serviceAccountPath),
+    });
+  } else {
+    initializeApp();
+  }
 }
 
 export interface AuthenticatedUser {
@@ -46,7 +54,7 @@ export async function authMiddleware(
     }
 
     // Verify the Firebase JWT token
-    const decodedToken = await admin.auth().verifyIdToken(token);
+    const decodedToken = await getAuth().verifyIdToken(token);
 
     // Extract user claims
     const userId = decodedToken.uid;

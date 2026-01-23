@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import rateLimit from 'express-rate-limit';
+import rateLimit, { ipKeyGenerator } from 'express-rate-limit';
 
 // Global rate limit: 100 requests per 15 minutes per IP
 export const globalRateLimiter = rateLimit({
@@ -42,7 +42,7 @@ export const userRateLimiter = rateLimit({
   // Key generator uses userId from authenticated request
   keyGenerator: (req: Request) => {
     // Use userId from auth middleware if available, otherwise fall back to IP
-    return (req as any).user?.userId || req.ip || 'unknown';
+    return (req as any).user?.userId || ipKeyGenerator(req);
   },
   handler: (_req: Request, res: Response) => {
     res.status(429).set('Retry-After', '3600').json({
