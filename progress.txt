@@ -239,3 +239,19 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Delete actions use confirm() for user confirmation
   - [PATTERN]: State updates after edit/delete keep UI in sync without reload
 ---
+
+## 2026-01-23T11:50 - US-018
+- Created AuditLog type in web/src/types/auditLog.ts
+- Created AdminAuditLogsPage listing audit logs via GET /api/v1/admin/audit-logs
+- Added filters for userId, action, startDate, and endDate
+- Supports pagination with page/pageSize params
+- Renders empty state when no logs match
+- Details column shows expandable JSON details
+- Updated AdminPage to include Audit Logs link in navigation
+- Typecheck passes
+- Files changed: web/src/types/auditLog.ts, web/src/pages/AdminAuditLogsPage.tsx, web/src/pages/AdminPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Filters trigger page reset to 1 and reload data
+  - [PATTERN]: API may return array or paginated response object, handle both
+  - [PATTERN]: Use HTML <details> element for expandable content
+---
