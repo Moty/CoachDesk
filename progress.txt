@@ -112,3 +112,15 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Page resets to 1 when filters change to avoid empty results
   - [INTEGRATION]: Sorting uses sortBy and sortOrder query params
 ---
+
+## 2026-01-23T09:17 - US-009
+- Created Ticket Detail page that loads GET /api/v1/tickets/:id
+- Displays ticket metadata: status, priority, assignee, requester, tags, SLA timers
+- Shows not-found state when ticket does not exist
+- Typecheck passes
+- Files changed: web/src/pages/TicketDetailPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: useParams hook extracts route params
+  - [PATTERN]: Conditional rendering for optional fields like firstResponseAt
+  - [INTEGRATION]: Ticket detail shows all metadata in a grid layout
+---
