@@ -339,3 +339,26 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: Logger.info for successful sends, logger.error for failures with context
   - [GOTCHA]: Set secure=true only for port 465, use false for 587 (STARTTLS)
 ---
+
+## 2026-01-23T01:56:00.000Z - US-029
+- Created EventBus singleton using EventEmitter with typed events
+- Defined event types: TicketCreatedEvent, CommentAddedEvent, TicketUpdatedEvent
+- Implemented NotificationHandlers class that registers event listeners
+- ticket.created: sends email to requester with ticket ID, subject, requester name
+- comment.added: sends email to requester when isPublic=true (agent reply)
+- ticket.updated: sends email when newStatus='resolved'
+- All handlers include error handling with logger.error
+- Logs info/debug messages for tracking notification sends
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/events/EventBus.ts
+  - src/shared/events/NotificationHandlers.ts
+  - src/shared/events/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: EventBus singleton pattern for centralized event management
+  - [PATTERN]: Type-safe events using EventEmitter with generic event type mapping
+  - [PATTERN]: Event handlers should catch and log errors without rethrowing
+  - [GOTCHA]: Only send notifications for public comments (isPublic check)
+  - [GOTCHA]: Only send resolved notifications when newStatus='resolved'
+---
