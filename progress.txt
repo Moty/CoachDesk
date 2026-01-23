@@ -368,3 +368,18 @@ Automatically compacted on 2026-01-22 18:06:48
   - [INTEGRATION]: OpenAPI spec serves as single source of truth for API documentation
   - OpenAPI spec includes all current endpoints with proper schemas and examples
 ---
+
+## 2026-01-23T02:24:00.000Z - US-042
+- Created firebase.json with hosting and functions config
+- Configured Cloud Functions with Node.js 20 runtime
+- Created firestore.indexes.json with composite indexes for tickets, comments, audit logs, SLA rules
+- Created firestore.rules with role-based security rules
+- Created deployment script scripts/deploy-firebase.sh
+- Documented deployment steps in docs/deployment/firebase-deployment.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Firestore composite indexes required for complex queries with multiple filters
+  - [PATTERN]: Security rules should enforce organization-level data isolation
+  - [PATTERN]: Use Firebase CLI functions:config:set for environment variables in production
+  - [GOTCHA]: Service account keys must never be committed to version control
+  - [INTEGRATION]: Firebase security rules enforce role-based access at database level
+---
