@@ -45,7 +45,7 @@ gemini:
   # Additional CLI flags (optional)
   # flags: ""
 # Git workflow settings
-# Ralph creates sub-branches per story, merges them to feature branch, and optionally pushes/creates PRs
+# Agents commit directly to the feature branch. Ralph optionally pushes and creates PRs.
 git:
   # Automatically checkout the feature branch before spawning agent
   auto-checkout-branch: true
@@ -54,12 +54,14 @@ git:
   # Push settings
   push:
     # Enable automatic push after each story merge (disabled by default for backward compatibility)
-    enabled: false
+    enabled: true
     # When to push: "iteration" (after each story) or "end" (after RALPH_COMPLETE)
     timing: iteration
   # Pull Request settings
   pr:
     # Enable automatic PR creation when all stories complete (disabled by default)
-    enabled: false
+    enabled: true
     # Create as draft PR
     draft: false
+    # Automatically merge the PR after creation (requires push and pr enabled)
+    auto-merge: true

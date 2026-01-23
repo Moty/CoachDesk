@@ -1,0 +1,419 @@
+# Ralph Progress Log
+Started: Tue Jan 20 10:59:07 PST 2026
+---
+
+## 2026-01-20T21:51:17.035Z - US-001
+- Initialized npm project with TypeScript 5.x
+- Installed Express.js, cors, helmet, express-rate-limit
+- Configured tsconfig.json with strict mode and ES2022 target
+- Set up ESLint and Prettier
+- Created Express server in src/index.ts
+- Added scripts: dev (tsx watch), build (tsc), start, lint, typecheck
+- Server starts on configurable port (default 3000)
+- Health check endpoint GET /health returns 200
+- Updated README.md with quick start and API documentation
+- **Learnings for future iterations:**
+  - ESLint 9 requires .mjs extension for ES module config files
+  - Use tsx watch for hot reload during development
+  - [PATTERN]: Express middleware order: helmet → cors → json → rate limiting → routes
+---
+
+## 2026-01-20T21:56:39.000Z - US-002
+- Installed dotenv package
+- Created .env.example with all required environment variables
+- Created src/shared/config/env.config.ts with validation for NODE_ENV, PORT, and other config
+- Validates NODE_ENV supports development, staging, production
+- Validates required env vars on startup with proper error messages
+- Logs configuration (excluding secrets) on startup via logConfig() function
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use .js extensions in imports for ESM module resolution with NodeNext
+  - [PATTERN]: Validate env vars in a central config module that exports validated config object
+  - Environment configuration should be loaded early in application startup
+---
+
+## 2026-01-20T21:59:45.000Z - US-003
+- Installed Winston for structured logging
+- Created logger utility with debug, info, warn, error levels
+- Created AppError base class with error codes (INTERNAL_ERROR, VALIDATION_ERROR, NOT_FOUND, etc.)
+- Created error handler middleware that returns consistent JSON format
+- Log format includes timestamp, level, message, context
+- Errors include stack traces in development mode
+- Updated README.md with logging and error handling documentation
+- **Learnings for future iterations:**
+  - [PATTERN]: Winston logger with custom format for timestamp and context
+  - [PATTERN]: AppError extends Error with code, statusCode, details fields
+  - [PATTERN]: Error handler middleware checks instanceof AppError for custom errors
+  - [GOTCHA]: Express type definitions require @types/express package
+---
+
+## 2026-01-20T22:00:16.000Z - US-004
+- Created IRepository<T> interface with CRUD methods (create, findById, findAll, update, delete, findOne, count)
+- Created IDatabaseAdapter interface with connect, disconnect, healthCheck, getCollection, transaction methods
+- Created ITransaction interface for atomic operations with commit, rollback, getCollection methods
+- Created Repository<T> abstract base class implementing IRepository<T>
+- Created IQueryBuilder<T> interface with where, and, or, orderBy, limit, offset, execute, first, count methods
+- Created QueryOptions interface for filtering, sorting, pagination
+- Created query operators type: ==, !=, >, >=, <, <=, in, not-in, array-contains, array-contains-any
+- Created index.ts for database module exports
+- Files created:
+  - src/shared/database/interfaces/IRepository.ts
+  - src/shared/database/interfaces/IDatabaseAdapter.ts
+  - src/shared/database/interfaces/IQueryBuilder.ts
+  - src/shared/database/base/Repository.ts
+  - src/shared/database/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Repository pattern uses adapter pattern for database abstraction
+  - [PATTERN]: Base Repository class expects subclasses to implement toDomain() and toDatabase() for entity mapping
+  - [PATTERN]: Transaction interface allows getCollection within transaction context
+  - [PATTERN]: Query operators support Firestore-style filtering (array-contains, in, not-in)
+---
+
+<<<<<<< HEAD
+## 2026-01-20T16:10:00.000Z - US-005
+- Installed firebase-admin package
+- Created FirestoreAdapter implementing IDatabaseAdapter
+- Implemented FirestoreCollection wrapper with create, findById, findAll, update, delete, findOne, count methods
+- Implemented FirestoreTransaction wrapper for transaction support
+- Connection pooling via Firebase Admin SDK initialization
+- Health check implementation using dummy collection query
+- Updated env.config.ts to support 'test' environment
+- Created vitest.config.ts for test framework setup
+- Created comprehensive unit tests for Firestore adapter with mocks
+- All tests passing (6/6)
+- Typecheck passes
+- Files created:
+  - src/shared/database/adapters/firestore/FirestoreAdapter.ts
+  - src/shared/database/adapters/firestore/index.ts
+  - tests/database/FirestoreAdapter.test.ts
+  - vitest.config.ts
+- Updated files:
+  - src/shared/database/index.ts (exported FirestoreAdapter)
+  - src/shared/config/env.config.ts (added 'test' to NODE_ENV validation)
+  - .env.example (added FIREBASE_SERVICE_ACCOUNT_PATH)
+  - package.json (added test and test:watch scripts)
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK uses singleton pattern - check admin.apps before re-initializing
+  - [PATTERN]: Firestore FieldValue.serverTimestamp() for consistent timestamps across clients
+  - [PATTERN]: Use vitest for testing with vi.mock for mocking external dependencies
+  - [GOTCHA]: Mock structure needs to match actual firebase-admin module structure exactly
+  - [INTEGRATION]: FirestoreAdapter requires FIREBASE_SERVICE_ACCOUNT_PATH env var or uses application default credentials
+---
+
+## 2026-01-20T22:09:00.000Z - US-006
+- Created Ticket interface with all fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)
+- Created TicketStatus enum (NEW, OPEN, PENDING, RESOLVED, CLOSED) and TicketPriority enum (LOW, MEDIUM, HIGH, URGENT)
+- Created SLATimer interface with firstResponseAt, firstResponseDue, resolvedAt, resolutionDue, breached fields
+- Implemented TicketRepository extending Repository<Ticket>
+- Implemented methods: create, findById, findByOrganization, update, delete
+- Added status transition validation using isValidStatusTransition function
+- Added priority validation using isValidPriority function
+- Documented required Firestore indexes: organizationId, status, createdAt
+- Files created:
+  - src/domain/models/Ticket.ts
+  - src/domain/repositories/TicketRepository.ts
+  - src/domain/models/index.ts
+  - src/domain/repositories/index.ts
+  - src/domain/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Domain models use enums for status and priority with validation functions
+  - [PATTERN]: Repository toDomain/toDatabase handle Firestore timestamp conversion (_seconds field)
+  - [PATTERN]: AppError requires ErrorCode enum and statusCode parameter (code, message, statusCode, details)
+  - [PATTERN]: Status transitions defined in STATUS_TRANSITIONS map for validation
+  - [INTEGRATION]: Domain layer structure: models/ and repositories/ subdirectories under src/domain/
+---
+
+## 2026-01-20T22:43:30.000Z - US-005
+- Integrated FirestoreAdapter with Express server startup
+- Added database connection initialization in src/index.ts
+- Enhanced health check endpoint to include database connectivity status
+- Database connects on application startup with proper error handling
+- Typecheck passes successfully
+- All unit tests pass (13/13 tests)
+- Files changed:
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Initialize database adapter early in startup sequence before starting HTTP server
+  - [PATTERN]: Use async start() function to handle database connection errors gracefully
+  - [INTEGRATION]: Health check endpoint now reports both server and database status
+---
+
+## 2026-01-20T22:45:45.000Z - US-006
+- Created Ticket interface with all required fields
+- Implemented TicketRepository extending Repository<Ticket>
+- Added create, findById, findByOrganization, update, delete methods
+- Implemented status enum validation with isValidStatusTransition function
+- Implemented priority enum validation with isValidPriority function
+- Documented required indexes: organizationId, status, createdAt
+- Typecheck passes successfully
+- Files changed:
+  - src/domain/models/Ticket.ts (existing)
+  - src/domain/repositories/TicketRepository.ts (existing)
+- **Learnings for future iterations:**
+  - [PATTERN]: Use STATUS_TRANSITIONS map to validate state transitions
+  - [PATTERN]: Repository validates business rules (status transitions, priority values)
+  - [PATTERN]: Set default timestamps and status in create method
+  - [INTEGRATION]: Ticket model includes SLATimer interface for SLA tracking
+---
+
+## 2026-01-21T00:10:59.000Z - US-006
+- Created Ticket interface with all required fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)
+- Implemented TicketStatus enum (NEW, OPEN, PENDING, RESOLVED, CLOSED)
+- Implemented TicketPriority enum (LOW, MEDIUM, HIGH, URGENT)
+- Created SLATimer interface for tracking SLA metrics
+- Implemented TicketRepository extending Repository<Ticket>
+- Added methods: create, findById, findByOrganization, update, delete (via base class)
+- Implemented status transition validation with STATUS_TRANSITIONS map
+- Implemented priority validation with isValidPriority function
+- Documented required indexes: organizationId, status, createdAt
+- Typecheck passes successfully
+- Files created:
+  - src/domain/models/Ticket.ts
+  - src/domain/repositories/TicketRepository.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Status transitions enforced via map of valid transitions
+  - [PATTERN]: Timestamp conversion handles both Date and Firestore Timestamp formats
+  - [PATTERN]: Repository validates business rules (priority, status transitions) before persisting
+  - [GOTCHA]: Firestore timestamps can be either Date objects or {_seconds, _nanoseconds} objects
+---
+
+## 2026-01-21T05:51:00.000Z - US-007
+- Created User interface with id, role, organizationId, email, displayName, createdAt, updatedAt
+- Implemented UserRole enum (CUSTOMER, AGENT, ADMIN)
+- Implemented UserRepository extending Repository<User>
+- Added methods: create, findById, findByEmail, findByOrganization, update (via base class)
+- Enforced unique email per organization constraint in create and update methods
+- Documented required indexes: email, organizationId
+- Typecheck passes successfully
+- All tests pass (6/6)
+- Files created:
+  - src/domain/models/User.ts
+  - src/domain/repositories/UserRepository.ts
+- Updated files:
+  - src/domain/models/index.ts (exported User and UserRole)
+  - src/domain/repositories/index.ts (exported UserRepository)
+- **Learnings for future iterations:**
+  - [PATTERN]: Same pattern as Ticket model - enum for role validation, validation helper function
+  - [PATTERN]: Unique constraint enforced at repository level by querying before create/update
+  - [PATTERN]: Timestamp conversion uses same helper as TicketRepository
+  - [INTEGRATION]: User repository will be used by authentication and RBAC middleware
+---
+
+## 2026-01-21T06:09:00.000Z - US-008
+- Created Comment interface with id, ticketId, authorId, isPublic, body, attachments, createdAt
+- Implemented CommentRepository extending Repository<Comment>
+- Added methods: create, findByTicket, findById (via base class)
+- Implemented filtering by isPublic flag in findByTicket method
+- Comments sorted by createdAt in ascending order
+- Documented required indexes: ticketId, createdAt
+- Typecheck passes successfully
+- Files created:
+  - src/domain/models/Comment.ts
+  - src/domain/repositories/CommentRepository.ts
+- Updated files:
+  - src/domain/models/index.ts (exported Comment)
+  - src/domain/repositories/index.ts (exported CommentRepository)
+- **Learnings for future iterations:**
+  - [PATTERN]: Same timestamp conversion pattern as TicketRepository and UserRepository
+  - [PATTERN]: Repository create method sets default timestamp if not provided
+  - [PATTERN]: findByTicket uses QueryOptions with orderBy for consistent sorting
+  - [INTEGRATION]: Comment model will be used for ticket conversation threads
+---
+
+## 2026-01-21T07:03:00.000Z - US-009
+- Created SLARule interface with id, organizationId, priority, firstResponseMinutes, resolutionMinutes, createdAt
+- Created SLATimer interface with firstResponseAt, firstResponseDue, resolvedAt, resolutionDue, breached
+- Implemented SLARuleRepository extending Repository base class
+- Added methods: create (with validation), findByOrganizationAndPriority, update
+- Support for default SLA rules per organization via findByOrganizationAndPriority
+- Added index exports for SLARule model and repository
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: SLARuleRepository uses the same Repository pattern as other entities
+  - [PATTERN]: Priority field uses TicketPriority enum for type safety
+  - [INTEGRATION]: SLATimer interface is used with tickets to track SLA compliance
+---
+
+## 2026-01-20 23:19 - MERGE CONFLICT
+- Story: US-011
+- Branch: ralph-helpdesk-ticketing-system/US-011
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-011
+
+## 2026-01-21T07:28:50.000Z - US-010
+- Installed Firebase Admin SDK
+- Created auth middleware to verify Firebase JWT tokens
+- Extract user claims (userId, email, role, organizationId)
+- Attach user context to request object
+- Return 401 for missing/invalid tokens
+- Support Bearer token format
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Admin SDK must be initialized before use
+  - [PATTERN]: Use ErrorCode enum for AppError constructor
+  - [PATTERN]: Extend Express.Request type with user property for authenticated user context
+  - [GOTCHA]: AppError constructor takes (code, message, statusCode, details) not (message, statusCode, code)
+---
+
+## 2026-01-20 23:29 - MERGE CONFLICT
+- Story: US-010
+- Branch: ralph-helpdesk-ticketing-system/US-010
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-010
+
+## 2026-01-21T07:29:00.000Z - US-011
+- Created requireRole middleware factory for RBAC
+- Supports multiple roles with OR logic
+- Returns 403 for insufficient permissions
+- Logs authorization failures with user context
+- Created middleware index.ts for exports
+- Updated README.md with RBAC documentation
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/middleware/rbac.middleware.ts
+  - src/shared/middleware/index.ts
+- Files updated:
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Middleware factory pattern for parameterized middleware (requireRole takes ...roles)
+  - [PATTERN]: Always check req.user exists before accessing properties in authorization middleware
+  - [PATTERN]: Log authorization failures with context for security auditing
+  - [INTEGRATION]: RBAC middleware requires authMiddleware to run first to populate req.user
+---
+
+## 2026-01-20 23:33 - MERGE CONFLICT
+- Story: US-012
+- Branch: ralph-helpdesk-ticketing-system/US-012
+- Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-012
+
+## 2026-01-23T00:34:04Z - US-012
+- Created organizationIsolation middleware factory
+- Validates organizationId in request matches authenticated user's organization
+- Returns 403 for organization mismatches
+- Supports admin role override capability
+- Checks body, query, and params for organizationId
+- Updated middleware index exports
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: Organization isolation middleware checks body, query, and params for organizationId
+  - [PATTERN]: Admin role can bypass organization isolation
+  - [INTEGRATION]: organizationIsolation middleware depends on authMiddleware (requires req.user)
+---
+
+## 2026-01-23T00:36:50Z - US-013
+- Implemented POST /api/v1/tickets endpoint
+- Created ticket.controller.ts with createTicket handler
+- Created ticket.routes.ts with authentication and RBAC middleware
+- Validates subject (1-200 chars), description (1-5000 chars), priority enum
+- Defaults priority to 'medium' if not provided
+- Sets requesterId from authenticated user, organizationId from user context
+- Sets status to 'new' on creation
+- Returns 201 with created ticket JSON
+- Returns 400 for validation errors, 401 for unauthenticated requests
+- Integrated ticket routes into Express app in src/index.ts
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/ticket.controller.ts
+  - src/api/routes/ticket.routes.ts
+  - src/api/controllers/ (directory)
+  - src/api/routes/ (directory)
+- Files updated:
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: API structure: controllers handle business logic, routes define endpoints with middleware
+  - [PATTERN]: Validation follows pattern: check required + type, then check length/enum constraints
+  - [PATTERN]: Use trim() on string inputs to clean whitespace
+  - [INTEGRATION]: Controllers instantiate repository with FirestoreAdapter singleton
+  - [INTEGRATION]: Routes chain middleware: authMiddleware → requireRole → controller
+---
+
+## 2026-01-23T00:38:50Z - US-014
+- Created SLAService with calculateTimers method
+- Loads SLA rules for organization and priority using SLARuleRepository
+- Calculates firstResponseDue = createdAt + firstResponseMinutes
+- Calculates resolutionDue = createdAt + resolutionMinutes
+- Modified ticket.controller.ts to initialize SLA timers on ticket creation
+- Sets SLA timers before creating ticket with calculated due dates
+- Typecheck passes
+- All tests pass
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA service calculates timers using milliseconds (minutes * 60 * 1000)
+  - [INTEGRATION]: SLAService depends on SLARuleRepository and domain models
+  - [PATTERN]: Services belong in src/domain/services/
+  - Controllers instantiate services at module level for dependency injection
+---
+
+
+## 2026-01-23T00:38:50Z - US-014
+- Created SLAService with calculateTimers method
+- Loads SLA rules for organization and priority using SLARuleRepository
+- Calculates firstResponseDue = createdAt + firstResponseMinutes
+- Calculates resolutionDue = createdAt + resolutionMinutes
+- Modified ticket.controller.ts to initialize SLA timers on ticket creation
+- Sets SLA timers before creating ticket with calculated due dates
+- Typecheck passes
+- All tests pass
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA service calculates timers using milliseconds (minutes * 60 * 1000)
+  - [INTEGRATION]: SLAService depends on SLARuleRepository and domain models
+  - [PATTERN]: Services belong in src/domain/services/
+  - Controllers instantiate services at module level for dependency injection
+---
+
+## 2026-01-23T00:41:30.000Z - US-015
+- Implemented GET /api/v1/tickets endpoint with pagination
+- Added listTickets controller with role-based filtering
+- Customers see only their own tickets (requesterId filter)
+- Agents/admins see all organization tickets
+- Supports ?page= and ?limit= query parameters (default limit 50, max 100)
+- Returns { tickets: [], total: number, page: number, limit: number }
+- Returns empty array when no tickets exist
+- Typecheck passes
+- Files changed:
+  - src/api/controllers/ticket.controller.ts (added listTickets function)
+  - src/api/routes/ticket.routes.ts (added GET / route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Role-based filtering in controllers using req.user.role comparison
+  - [PATTERN]: Pagination parameters: Math.max/Math.min for bounds, offset = (page - 1) * limit
+  - [PATTERN]: Return consistent paginated response: { items, total, page, limit }
+---
+
+## 2026-01-23T01:07:00.000Z - US-016
+- Added filter support to list tickets endpoint
+- Implemented ?status= filter (comma-separated values)
+- Implemented ?priority= filter
+- Implemented ?assigneeId= filter
+- Implemented ?requesterId= filter (restricted for customers)
+- Implemented ?tags= filter (comma-separated, OR logic using array-contains-any)
+- Implemented ?sortBy= (createdAt, updatedAt, priority) with ?order= (asc, desc)
+- Defaults to sortBy=createdAt, order=desc
+- Customers still restricted to viewing only their own tickets
+- Typecheck passes
+- All tests pass (19/19)
+- Files changed:
+  - src/api/controllers/ticket.controller.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Use 'in' operator for comma-separated filters (status)
+  - [PATTERN]: Use 'array-contains-any' for tag filtering with OR logic
+  - [PATTERN]: Validate sortBy and order params with whitelists before applying
+  - [GOTCHA]: Customers should not be able to override requesterId filter
+---
+
+## 2026-01-23T01:10:00.000Z - US-017
+- Implemented GET /api/v1/tickets/:id endpoint
+- Returns full ticket details with 200 status code
+- Validates ticket belongs to user's organization (403 if not)
+- Customers can only view their own tickets (403 if not)
+- Agents/admins can view all organization tickets
+- Returns 404 for non-existent tickets
+- Typecheck passes
+- All tests pass (19/19)
+- Files changed:
+  - src/api/controllers/ticket.controller.ts (added getTicketById function)
+  - src/api/routes/ticket.routes.ts (added GET /:id route)
+- **Learnings for future iterations:**
+  - [PATTERN]: URL params can be string | string[], handle with Array.isArray check
+  - [PATTERN]: Organization isolation: always validate ticket.organizationId === user.organizationId
+  - [PATTERN]: Role-based access: customers can only view their own tickets, agents/admins can view all org tickets
+  - [INTEGRATION]: Use req.user! for authenticated user context (set by authMiddleware)
+---
