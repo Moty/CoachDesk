@@ -210,3 +210,42 @@ export async function listUsers(
     next(error);
   }
 }
+
+export async function getCurrentUser(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    if (!req.user) {
+      throw new AppError(
+        ErrorCode.UNAUTHORIZED,
+        'User not authenticated',
+        401
+      );
+    }
+
+    const userId = req.user.userId;
+    const user = await userRepository.findById(userId);
+
+    if (!user) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        'User not found',
+        404
+      );
+    }
+
+    res.status(200).json({
+      id: user.id,
+      email: user.email,
+      displayName: user.displayName,
+      role: user.role,
+      organizationId: user.organizationId,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
+    });
+  } catch (error) {
+    next(error);
+  }
+}
