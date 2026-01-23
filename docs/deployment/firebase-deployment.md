@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide covers deploying the HelpDesk application to Firebase, including Cloud Functions, Firestore, and related services.
+This guide covers deploying the HelpDesk application to Firebase, including Cloud Functions, Firestore, frontend hosting, and related services.
 
 ## Prerequisites
 
@@ -87,6 +87,18 @@ firebase functions:secrets:set JWT_SECRET
 
 ## Deployment
 
+### Building the Frontend
+
+Before deploying, build the frontend:
+
+```bash
+cd web
+npm install
+npm run build
+```
+
+This creates optimized production files in `web/dist/`.
+
 ### Automated Deployment
 
 Use the provided deployment script:
@@ -96,19 +108,24 @@ Use the provided deployment script:
 ```
 
 This script will:
-1. Build the project
-2. Run type checks
-3. Run tests
-4. Deploy Firestore rules
-5. Deploy Firestore indexes
-6. Deploy Cloud Functions
-7. Deploy hosting configuration
+1. Build the backend project
+2. Build the frontend (web/)
+3. Run type checks
+4. Run tests
+5. Deploy Firestore rules
+6. Deploy Firestore indexes
+7. Deploy Cloud Functions
+8. Deploy frontend hosting (web/dist)
 
 ### Manual Deployment
 
 #### Deploy Everything
 
 ```bash
+# Build frontend first
+cd web && npm run build && cd ..
+
+# Deploy all components
 firebase deploy
 ```
 
@@ -129,12 +146,70 @@ firebase deploy --only firestore:indexes
 firebase deploy --only functions
 ```
 
-**Hosting Only:**
+**Frontend Hosting Only:**
 ```bash
+# Build frontend first
+cd web && npm run build && cd ..
+
 firebase deploy --only hosting
 ```
 
-## Cloud Functions Configuration
+## Firebase Hosting Configuration
+
+### Hosting Setup
+
+The `firebase.json` configuration is set up to:
+- Serve the frontend SPA from `web/dist/`
+- Proxy `/api/**` requests to the backend Cloud Function
+- Handle client-side routing with SPA fallback
+
+```json
+{
+  "hosting": {
+    "public": "web/dist",
+    "rewrites": [
+      {
+        "source": "/api/**",
+        "run": {
+          "serviceId": "helpdesk-api",
+          "region": "us-central1"
+        }
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  }
+}
+```
+
+### Frontend Environment Variables
+
+For production, set frontend environment variables in `web/.env.production`:
+
+```env
+VITE_API_BASE_URL=https://your-project.web.app
+VITE_FIREBASE_API_KEY=your-production-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
+```
+
+The build process automatically uses these values.
+
+### Custom Domain
+
+To use a custom domain:
+
+1. In Firebase Console, go to Hosting → Add custom domain
+2. Follow DNS verification steps
+3. Update CORS_ORIGIN in backend environment to include your domain:
+   ```bash
+   firebase functions:config:set app.cors_origin="https://yourdomain.com,https://www.yourdomain.com"
+   ```
 
 ### Function Entry Point
 

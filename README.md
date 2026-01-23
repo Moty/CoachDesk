@@ -29,6 +29,7 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 - JWT-based authentication
 - Comprehensive OpenAPI documentation
 - Audit logging for compliance
+- **Web frontend UI** built with React + TypeScript + Vite
 
 ## Prerequisites
 
@@ -72,13 +73,13 @@ Before you begin, ensure you have the following installed:
 
 ## Local Development
 
-### Quick Start
+### Backend Development
 
 ```bash
 npm run dev
 ```
 
-The server will start on port 3000 (or the port specified in your `.env` file).
+The backend server will start on port 3000 (or the port specified in your `.env` file).
 
 You should see:
 ```
@@ -86,10 +87,54 @@ You should see:
 [INFO]: Configuration loaded:
 [INFO]:   - Environment: development
 [INFO]:   - Port: 3000
-[INFO]:   - CORS Origin: http://localhost:3000
+[INFO]:   - CORS Origin: http://localhost:3000,http://localhost:5173
 [INFO]: Firestore connection established
 [INFO]: Server ready on port 3000
 ```
+
+### Frontend Development
+
+1. **Install frontend dependencies**:
+   ```bash
+   cd web
+   npm install
+   ```
+
+2. **Configure environment variables**:
+   ```bash
+   cp web/.env.example web/.env
+   ```
+   
+   Edit `web/.env` with your Firebase configuration:
+   ```env
+   VITE_API_BASE_URL=http://localhost:3000
+   VITE_FIREBASE_API_KEY=your-api-key
+   VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+   VITE_FIREBASE_PROJECT_ID=your-project-id
+   VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+   VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+   VITE_FIREBASE_APP_ID=your-app-id
+   ```
+
+3. **Start the frontend dev server**:
+   ```bash
+   cd web
+   npm run dev
+   ```
+
+   The frontend will be available at `http://localhost:5173`
+
+### Frontend Available Commands
+
+From the `web/` directory:
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start frontend dev server with hot reload |
+| `npm run build` | Build frontend for production to web/dist |
+| `npm run preview` | Preview production build locally |
+| `npm test` | Run frontend unit tests |
+| `npm run typecheck` | Run TypeScript type checking |
 
 ### Development Features
 
@@ -99,6 +144,7 @@ You should see:
 
 ### Accessing the Application
 
+- **Frontend UI**: `http://localhost:5173` (development)
 - **API Base URL**: `http://localhost:3000/api/v1`
 - **Health Check**: `http://localhost:3000/health`
 - **API Documentation**: `http://localhost:3000/api-docs` (Swagger UI)
