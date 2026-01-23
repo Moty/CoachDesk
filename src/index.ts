@@ -7,6 +7,7 @@ import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import ticketRoutes from './api/routes/ticket.routes.js';
 import userRoutes from './api/routes/user.routes.js';
+import slaRuleRoutes from './api/routes/admin/sla-rule.routes.js';
 import { FirestoreAdapter } from './shared/database/adapters/firestore/FirestoreAdapter.js';
 import { SLAMonitoringJob } from './jobs/sla-monitoring.job.js';
 
@@ -31,6 +32,7 @@ app.get('/health', (req, res) => {
 // API routes
 app.use('/api/v1/tickets', ticketRoutes);
 app.use('/api/v1/users', userRoutes);
+app.use('/api/v1/admin/sla-rules', slaRuleRoutes);
 
 // Error handler must be last
 app.use(errorHandler);
