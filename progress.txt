@@ -388,3 +388,21 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: Upsert pattern: check if exists, then update or create
   - [GOTCHA]: Must add NextFunction to controller signature for try-catch error handling
 ---
+
+## 2026-01-23T01:59:00.000Z - US-031
+- Created GET /api/v1/admin/sla-rules endpoint
+- Returns all SLA rules for user's organization
+- Requires admin role via requireRole(UserRole.ADMIN) middleware
+- Rules sorted by priority: low (1), medium (2), high (3), urgent (4)
+- Returns 200 with rules array
+- Returns 403 for non-admin users (via middleware)
+- Organization isolation applied via organizationIsolation() middleware
+- Typecheck passes
+- All tests pass (19/19)
+- Files modified:
+  - src/api/controllers/admin/sla-rule.controller.ts (added listSLARules function)
+  - src/api/routes/admin/sla-rule.routes.ts (added GET / route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Sort by enum priority using priorityOrder lookup object
+  - [PATTERN]: Array.sort with custom comparator for priority ordering
+---
