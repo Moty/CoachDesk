@@ -1,0 +1,28 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260122_174819",
+    "created_at": "2026-01-22T17:48:19-08:00"
+  },
+  "task": {
+    "id": "US-027",
+    "title": "Notification Service Interface",
+    "description": "As a developer, I need a notification service abstraction.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "96727cd4fe970f5771fac5d79f5a6e40ca373415",
+    "dirty_files": 8,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/compaction.log",
+      ".ralph/context.json",
+      "node_modules/.package-lock.json",
+      "node_modules/.vite/vitest/da39a3ee5e6b4b0d3255bfef95601890afd80709/results.json",
+      "prd.json",
+      "progress.txt"
+    ]
+  }
+}
