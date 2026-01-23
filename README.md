@@ -23,13 +23,15 @@ The server will start on port 3000 by default (configurable via `PORT` environme
 
 ## API Endpoints
 
-| Method | Path                | Description                                    |
-|--------|---------------------|------------------------------------------------|
-| GET    | /health             | Health check                                   |
-| POST   | /api/v1/tickets     | Create a new ticket (requires auth)            |
-| GET    | /api/v1/tickets     | List tickets with pagination (requires auth)   |
-| GET    | /api/v1/tickets/:id | Get ticket by ID (requires auth)               |
-| PATCH  | /api/v1/tickets/:id | Update ticket (requires agent/admin role)      |
+| Method | Path                          | Description                                    |
+|--------|-------------------------------|------------------------------------------------|
+| GET    | /health                       | Health check                                   |
+| POST   | /api/v1/tickets               | Create a new ticket (requires auth)            |
+| GET    | /api/v1/tickets               | List tickets with pagination (requires auth)   |
+| GET    | /api/v1/tickets/:id           | Get ticket by ID (requires auth)               |
+| PATCH  | /api/v1/tickets/:id           | Update ticket (requires agent/admin role)      |
+| PATCH  | /api/v1/tickets/:id/assign    | Assign ticket to agent (requires agent/admin)  |
+| POST   | /api/v1/tickets/:id/comments  | Add comment to ticket (requires auth)          |
 
 ## Environment Variables
 
