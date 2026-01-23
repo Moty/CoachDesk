@@ -455,3 +455,36 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: File metadata includes contentType and custom metadata object
   - [GOTCHA]: Storage bucket name required in env or constructor parameter
 ---
+
+## 2026-01-23T02:04:00.000Z - US-034
+- Installed multer and @types/multer packages
+- Created Attachment interface (id, fileName, filePath, size, mimeType, uploadedAt)
+- Updated Comment model attachments field from string[] to Attachment[]
+- Implemented POST /api/v1/tickets/:id/attachments endpoint
+- Accepts multipart/form-data with single file upload
+- Validates ticket exists and user has access (org isolation + customer ownership)
+- Validates file type via storage utils (uses ALLOWED_MIME_TYPES)
+- Validates file size via multer limits (10MB max)
+- Uploads file to storage adapter
+- Gets signed URL for uploaded file
+- Creates comment with attachment metadata
+- Returns 201 with attachment metadata (id, fileName, url, size, mimeType, uploadedAt)
+- Returns 400 for no file, invalid type/size
+- Returns 403 for unauthorized access (different org or customer accessing other's ticket)
+- Returns 404 for non-existent ticket
+- Multer configured with memory storage and 10MB file size limit
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/attachment.controller.ts
+- Files modified:
+  - src/domain/models/Comment.ts (added Attachment interface)
+  - src/domain/repositories/CommentRepository.ts (updated CommentDocument type)
+  - src/api/routes/ticket.routes.ts (added POST /:id/attachments route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Multer middleware before controller: uploadMiddleware, then uploadAttachment
+  - [PATTERN]: req.file contains buffer, originalname, mimetype from multer
+  - [PATTERN]: Handle multer.MulterError separately for file size errors
+  - [GOTCHA]: Multer limits must match storage validation limits
+  - [INTEGRATION]: Attachment upload creates a comment with attachment metadata
+---
