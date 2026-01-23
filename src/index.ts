@@ -11,6 +11,7 @@ import {
 import ticketRoutes from './api/routes/ticket.routes.js';
 import userRoutes from './api/routes/user.routes.js';
 import slaRuleRoutes from './api/routes/admin/sla-rule.routes.js';
+import auditLogRoutes from './api/routes/admin/audit-log.routes.js';
 import { FirestoreAdapter } from './shared/database/adapters/firestore/FirestoreAdapter.js';
 import { SLAMonitoringJob } from './jobs/sla-monitoring.job.js';
 
@@ -71,6 +72,7 @@ app.use('/api', userRateLimiter);
 app.use('/api/v1/tickets', ticketRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/admin/sla-rules', slaRuleRoutes);
+app.use('/api/v1/admin/audit-logs', auditLogRoutes);
 
 // Error handler must be last
 app.use(errorHandler);

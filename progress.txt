@@ -311,3 +311,22 @@ Automatically compacted on 2026-01-22 18:06:48
   - [PATTERN]: Auto-set timestamp in create method if not provided
   - [PATTERN]: Query filter methods (findByTicket, findByUser) merge query?.where with method filters
 ---
+
+## 2026-01-23T02:15:00.000Z - US-039
+- Implemented audit log creation on ticket updates
+- Added AuditLogRepository import to ticket.controller.ts
+- Added eventBus import to ticket.controller.ts
+- Modified updateTicket function to track before/after changes for all fields (status, priority, assigneeId, tags)
+- Create audit log entry with userId, action, resourceType, resourceId, changes, organizationId
+- Emit 'ticket.updated' event with ticketId, subject, oldStatus, newStatus, requesterId, requesterEmail
+- Typecheck passes
+- All tests pass (19/19)
+- Files modified:
+  - src/api/controllers/ticket.controller.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Track changes with { before, after } structure for audit logs
+  - [PATTERN]: Create audit log before emitting event to ensure data consistency
+  - [PATTERN]: Fetch requester data for event emission when requesterEmail needed
+  - [INTEGRATION]: AuditLogRepository.create stores audit logs with changes object
+  - [INTEGRATION]: EventBus.emit('ticket.updated') requires oldStatus/newStatus from changes
+---
