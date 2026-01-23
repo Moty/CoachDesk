@@ -211,3 +211,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Form state managed with local useState hooks
   - [INTEGRATION]: API client handles GET with query params for filtering
 ---
+
+## 2026-01-23T11:46 - US-016
+- Created SLARule type in web/src/types/slaRule.ts
+- Created AdminSLARulesPage listing SLA rules via GET /api/v1/admin/sla-rules
+- Added create SLA rule form posting to POST /api/v1/admin/sla-rules
+- Form includes name (required), priority (optional dropdown), responseTimeMinutes, resolutionTimeMinutes
+- Shows success and error feedback from API
+- Updated AdminPage to include SLA Rules link in navigation
+- Typecheck passes, tests pass
+- Files changed: web/src/types/slaRule.ts, web/src/pages/AdminSLARulesPage.tsx, web/src/pages/AdminPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin sub-pages follow pattern: list + create form toggle + success/error feedback
+  - [PATTERN]: Optional form fields clear to undefined instead of empty string in payload
+  - [INTEGRATION]: Admin navigation uses nested routes under /admin/*
+---
