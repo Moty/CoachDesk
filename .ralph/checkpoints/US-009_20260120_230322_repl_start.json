@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260120_230322",
+    "created_at": "2026-01-20T23:03:22-08:00"
+  },
+  "task": {
+    "id": "US-009",
+    "title": "SLA Rule Model & Repository",
+    "description": "As a developer, I need the SLA Rule data model for tracking service level agreements.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-ticketing-system",
+    "commit": "15e0004d9f432ea25a1a31054f02686cb22fb827",
+    "dirty_files": 2,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json"
+    ]
+  }
+}
