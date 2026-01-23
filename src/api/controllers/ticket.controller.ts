@@ -5,6 +5,7 @@ import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
 import { SLARuleRepository } from '../../domain/repositories/SLARuleRepository.js';
 import { SLAService } from '../../domain/services/SLAService.js';
+import { UserRole } from '../../domain/models/User.js';
 
 const firestoreAdapter = new FirestoreAdapter();
 const ticketRepository = new TicketRepository(firestoreAdapter);
@@ -107,6 +108,45 @@ export async function createTicket(
 
     // Return 201 with created ticket
     res.status(201).json(ticket);
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function listTickets(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const user = req.user!;
+    const page = Math.max(1, parseInt(req.query.page as string) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit as string) || 50));
+    const offset = (page - 1) * limit;
+
+    // Build query based on user role
+    const queryWhere: Record<string, any> = { organizationId: user.organizationId };
+
+    // Customers can only see their own tickets
+    if (user.role === UserRole.CUSTOMER) {
+      queryWhere.requesterId = user.userId;
+    }
+
+    // Get total count and tickets
+    const total = await ticketRepository.count({ where: queryWhere });
+    const tickets = await ticketRepository.findAll({
+      where: queryWhere,
+      orderBy: [{ field: 'createdAt', direction: 'desc' }],
+      limit,
+      offset,
+    });
+
+    res.status(200).json({
+      tickets,
+      total,
+      page,
+      limit,
+    });
   } catch (error) {
     next(error);
   }

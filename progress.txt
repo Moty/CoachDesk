@@ -298,3 +298,64 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Admin role can bypass organization isolation
   - [INTEGRATION]: organizationIsolation middleware depends on authMiddleware (requires req.user)
 ---
+
+## 2026-01-23T00:36:50Z - US-013
+- Implemented POST /api/v1/tickets endpoint
+- Created ticket.controller.ts with createTicket handler
+- Created ticket.routes.ts with authentication and RBAC middleware
+- Validates subject (1-200 chars), description (1-5000 chars), priority enum
+- Defaults priority to 'medium' if not provided
+- Sets requesterId from authenticated user, organizationId from user context
+- Sets status to 'new' on creation
+- Returns 201 with created ticket JSON
+- Returns 400 for validation errors, 401 for unauthenticated requests
+- Integrated ticket routes into Express app in src/index.ts
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/api/controllers/ticket.controller.ts
+  - src/api/routes/ticket.routes.ts
+  - src/api/controllers/ (directory)
+  - src/api/routes/ (directory)
+- Files updated:
+  - src/index.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: API structure: controllers handle business logic, routes define endpoints with middleware
+  - [PATTERN]: Validation follows pattern: check required + type, then check length/enum constraints
+  - [PATTERN]: Use trim() on string inputs to clean whitespace
+  - [INTEGRATION]: Controllers instantiate repository with FirestoreAdapter singleton
+  - [INTEGRATION]: Routes chain middleware: authMiddleware → requireRole → controller
+---
+
+## 2026-01-23T00:38:50Z - US-014
+- Created SLAService with calculateTimers method
+- Loads SLA rules for organization and priority using SLARuleRepository
+- Calculates firstResponseDue = createdAt + firstResponseMinutes
+- Calculates resolutionDue = createdAt + resolutionMinutes
+- Modified ticket.controller.ts to initialize SLA timers on ticket creation
+- Sets SLA timers before creating ticket with calculated due dates
+- Typecheck passes
+- All tests pass
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA service calculates timers using milliseconds (minutes * 60 * 1000)
+  - [INTEGRATION]: SLAService depends on SLARuleRepository and domain models
+  - [PATTERN]: Services belong in src/domain/services/
+  - Controllers instantiate services at module level for dependency injection
+---
+
+
+## 2026-01-23T00:38:50Z - US-014
+- Created SLAService with calculateTimers method
+- Loads SLA rules for organization and priority using SLARuleRepository
+- Calculates firstResponseDue = createdAt + firstResponseMinutes
+- Calculates resolutionDue = createdAt + resolutionMinutes
+- Modified ticket.controller.ts to initialize SLA timers on ticket creation
+- Sets SLA timers before creating ticket with calculated due dates
+- Typecheck passes
+- All tests pass
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA service calculates timers using milliseconds (minutes * 60 * 1000)
+  - [INTEGRATION]: SLAService depends on SLARuleRepository and domain models
+  - [PATTERN]: Services belong in src/domain/services/
+  - Controllers instantiate services at module level for dependency injection
+---

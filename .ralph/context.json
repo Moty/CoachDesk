@@ -255,7 +255,7 @@
         "US-006",
         "US-012"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -275,7 +275,7 @@
         "US-009",
         "US-013"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
