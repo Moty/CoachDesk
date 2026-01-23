@@ -353,3 +353,18 @@ Automatically compacted on 2026-01-22 18:06:48
   - [PATTERN]: Admin routes follow pattern: authMiddleware → organizationIsolation → requireRole(ADMIN)
   - [INTEGRATION]: Audit log endpoint uses existing AuditLogRepository with filtering capabilities
 ---
+
+## 2026-01-23T02:22:00.000Z - US-041
+- Created OpenAPI 3.0 specification in docs/api/openapi.yaml
+- Documented all endpoints: tickets, users, comments, attachments, SLA rules, audit logs
+- Documented request/response schemas with examples
+- Documented authentication requirements using Bearer JWT
+- Documented error response formats with error codes
+- Integrated Swagger UI at /api-docs endpoint
+- Installed swagger-ui-express and yamljs packages
+- **Learnings for future iterations:**
+  - [PATTERN]: Use YAML.load() to load OpenAPI spec from YAML file
+  - [PATTERN]: Swagger UI requires CSP adjustments for inline styles
+  - [INTEGRATION]: OpenAPI spec serves as single source of truth for API documentation
+  - OpenAPI spec includes all current endpoints with proper schemas and examples
+---
