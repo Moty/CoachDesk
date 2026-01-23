@@ -113,6 +113,55 @@ export async function createTicket(
   }
 }
 
+export async function getTicketById(
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
+  try {
+    const user = req.user!;
+    const ticketId = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+
+    // Fetch the ticket
+    const ticket = await ticketRepository.findById(ticketId);
+
+    if (!ticket) {
+      throw new AppError(
+        ErrorCode.NOT_FOUND,
+        'Ticket not found',
+        404,
+        { ticketId }
+      );
+    }
+
+    // Validate ticket belongs to user's organization
+    if (ticket.organizationId !== user.organizationId) {
+      throw new AppError(
+        ErrorCode.FORBIDDEN,
+        'Access denied',
+        403,
+        { ticketId }
+      );
+    }
+
+    // Customers can only view their own tickets
+    if (user.role === UserRole.CUSTOMER && ticket.requesterId !== user.userId) {
+      throw new AppError(
+        ErrorCode.FORBIDDEN,
+        'Access denied',
+        403,
+        { ticketId }
+      );
+    }
+
+    // Agents/admins can view all organization tickets (already validated above)
+
+    res.status(200).json(ticket);
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function listTickets(
   req: Request,
   res: Response,
