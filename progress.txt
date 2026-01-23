@@ -71,3 +71,17 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: File uploads use FormData with 'file' field name
   - [INTEGRATION]: apiClient is exposed via useAuth hook for easy access
 ---
+
+## 2026-01-23T09:15 - US-006
+- Created User type with role field (customer/agent/admin)
+- Updated AuthContext to fetch current user via GET /api/v1/users/me on auth state change
+- Store user role in auth state
+- Created RoleGuard component to gate routes by role
+- Admin route now requires agent or admin role, shows access denied for customers
+- Typecheck passes
+- Files changed: web/src/types/user.ts, web/src/contexts/AuthContext.tsx, web/src/components/RoleGuard.tsx, web/src/App.tsx, web/src/components/Layout.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: User role is fetched from backend on auth state change
+  - [PATTERN]: RoleGuard shows access denied state for unauthorized roles
+  - [INTEGRATION]: firebaseUser is separate from backend user with role
+---
