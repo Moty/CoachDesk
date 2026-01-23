@@ -23,8 +23,8 @@ function App() {
                   <Route path="/" element={<TicketsPage />} />
                   <Route path="/ticket/:id" element={<TicketDetailPage />} />
                   <Route path="/ticket/new" element={<CreateTicketPage />} />
-                  <Route path="/admin" element={
-                    <RoleGuard allowedRoles={['agent', 'admin']}>
+                  <Route path="/admin/*" element={
+                    <RoleGuard allowedRoles={['admin']}>
                       <AdminPage />
                     </RoleGuard>
                   } />
