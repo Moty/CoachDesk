@@ -181,3 +181,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: Ticket updates and assignee changes use separate PATCH endpoints
   - [GOTCHA]: Must type state variables as Ticket['status'] and Ticket['priority'] to match strict types
 ---
+
+## 2026-01-23T11:42 - US-014
+- Created Attachment type with id, filename, contentType, size, url, uploadedBy, createdAt fields
+- Added attachment uploader that posts to POST /api/v1/tickets/:id/attachments with 'file' field
+- Enforces 10MB file size limit before upload with client-side validation
+- Shows uploaded attachments in ticket timeline with download links, filename, size, and timestamp
+- File input resets after successful upload
+- Typecheck passes, tests pass
+- Files changed: web/src/types/attachment.ts, web/src/pages/TicketDetailPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: File uploads use apiClient.uploadFile() method with multipart/form-data
+  - [PATTERN]: File size validation (10MB) happens client-side before upload
+  - [INTEGRATION]: Attachments are loaded via GET /api/v1/tickets/:id/attachments and displayed before comments
+  - [GOTCHA]: File input element must be manually reset after successful upload using querySelector
+---
