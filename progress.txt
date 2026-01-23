@@ -429,3 +429,29 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: Validate file type via MIME type lookup object
   - [GOTCHA]: MIME type for docx is 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ---
+
+## 2026-01-23T02:02:00.000Z - US-033
+- Installed @google-cloud/storage package
+- Implemented FirebaseStorageAdapter class with IStorageProvider interface
+- upload: validates file type/size, generates unique fileName, saves to bucket with metadata
+- download: retrieves file buffer from bucket
+- delete: removes file from bucket
+- getSignedUrl: generates secure signed URL with configurable expiration (default 60 mins)
+- Uses Google Cloud Storage SDK for Firebase Storage integration
+- Bucket name configured via FIREBASE_STORAGE_BUCKET env var
+- Added FIREBASE_STORAGE_BUCKET to .env.example
+- Logs all operations (upload, download, delete, getSignedUrl) with context
+- Error handling with AppError for all operations
+- Typecheck passes
+- All tests pass (19/19)
+- Files created:
+  - src/shared/storage/adapters/FirebaseStorageAdapter.ts
+  - src/shared/storage/adapters/index.ts
+- Files modified:
+  - .env.example
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase Storage uses Google Cloud Storage SDK
+  - [PATTERN]: Signed URLs generated with action='read' and expires timestamp
+  - [PATTERN]: File metadata includes contentType and custom metadata object
+  - [GOTCHA]: Storage bucket name required in env or constructor parameter
+---
