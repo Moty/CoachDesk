@@ -36,6 +36,8 @@ export function requireRole(...roles: UserRole[]) {
           userId: req.user.userId,
           userRole,
           requiredRoles: roles,
+          path: req.path,
+          method: req.method,
         });
 
         throw new AppError(

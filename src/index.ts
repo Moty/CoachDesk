@@ -8,6 +8,7 @@ import { fileURLToPath } from 'url';
 import { config, logConfig } from './shared/config/env.config.js';
 import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
+import { requestLogger } from './shared/middleware/requestLogger.middleware.js';
 import {
   globalRateLimiter,
   userRateLimiter,
@@ -66,6 +67,9 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Request logging middleware
+app.use(requestLogger);
 
 // Global rate limit: 100 requests per 15 minutes per IP
 app.use(globalRateLimiter);

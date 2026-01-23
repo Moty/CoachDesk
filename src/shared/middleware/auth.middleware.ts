@@ -68,7 +68,12 @@ export async function authMiddleware(
     if (error instanceof AppError) {
       next(error);
     } else {
-      logger.error('Authentication failed', { error });
+      logger.warn('Authentication failed', {
+        error: error instanceof Error ? error.message : 'Unknown error',
+        path: req.path,
+        method: req.method,
+        ip: req.ip,
+      });
       next(new AppError(ErrorCode.UNAUTHORIZED, 'Invalid or expired token', 401));
     }
   }
