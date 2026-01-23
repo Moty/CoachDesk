@@ -363,3 +363,17 @@ Automatically compacted on 2026-01-22 17:22:41
   - [PATTERN]: Validate role filters against UserRole enum before applying
   - [INTEGRATION]: Admin-only endpoints use requireRole(UserRole.ADMIN) middleware
 ---
+
+## 2026-01-23T01:42:30.000Z - US-024
+- Implemented GET /api/v1/users/me endpoint
+- Added getCurrentUser controller function in user.controller.ts
+- Added /me route to user.routes.ts with authMiddleware
+- Returns authenticated user's profile including role and organizationId
+- Returns 200 with user JSON for authenticated requests
+- Returns 401 for unauthenticated requests
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: /me routes require only authMiddleware, not RBAC middleware
+  - [PATTERN]: Get current user from req.user.userId set by authMiddleware
+  - [INTEGRATION]: getCurrentUser uses UserRepository.findById() to fetch user details
+---
