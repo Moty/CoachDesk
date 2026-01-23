@@ -1,0 +1,143 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Helper functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function getUserRole() {
+      return isAuthenticated() ? 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role : null;
+    }
+    
+    function getOrganizationId() {
+      return isAuthenticated() ? 
+        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.organizationId : null;
+    }
+    
+    function isAdmin() {
+      return getUserRole() == 'admin';
+    }
+    
+    function isAgent() {
+      return getUserRole() == 'agent';
+    }
+    
+    function isCustomer() {
+      return getUserRole() == 'customer';
+    }
+    
+    function belongsToOrganization(orgId) {
+      return getOrganizationId() == orgId;
+    }
+    
+    function isOwner(resourceOrgId) {
+      return isAuthenticated() && belongsToOrganization(resourceOrgId);
+    }
+    
+    function isTicketRequester(ticketId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/tickets/$(ticketId)).data.requesterId == request.auth.uid;
+    }
+    
+    function isTicketAssignee(ticketId) {
+      return isAuthenticated() && 
+        get(/databases/$(database)/documents/tickets/$(ticketId)).data.assigneeId == request.auth.uid;
+    }
+    
+    // Users collection
+    match /users/{userId} {
+      // Only admins can create users
+      allow create: if isAuthenticated() && isAdmin();
+      
+      // Users can read their own profile, admins can read all in their org
+      allow read: if isAuthenticated() && 
+        (request.auth.uid == userId || (isAdmin() && belongsToOrganization(resource.data.organizationId)));
+      
+      // Only admins can update users
+      allow update: if isAuthenticated() && isAdmin() && belongsToOrganization(resource.data.organizationId);
+      
+      // Only admins can delete users
+      allow delete: if isAuthenticated() && isAdmin() && belongsToOrganization(resource.data.organizationId);
+    }
+    
+    // Tickets collection
+    match /tickets/{ticketId} {
+      // Authenticated users can create tickets
+      allow create: if isAuthenticated() && belongsToOrganization(request.resource.data.organizationId);
+      
+      // Users can read tickets they own or are assigned to, agents/admins can read all in their org
+      allow read: if isAuthenticated() && (
+        isTicketRequester(ticketId) ||
+        isTicketAssignee(ticketId) ||
+        ((isAgent() || isAdmin()) && belongsToOrganization(resource.data.organizationId))
+      );
+      
+      // Agents and admins can update tickets in their org
+      allow update: if isAuthenticated() && 
+        (isAgent() || isAdmin()) && 
+        belongsToOrganization(resource.data.organizationId);
+      
+      // Only admins can delete tickets
+      allow delete: if isAuthenticated() && isAdmin() && belongsToOrganization(resource.data.organizationId);
+    }
+    
+    // Comments collection
+    match /comments/{commentId} {
+      // Authenticated users can create comments
+      allow create: if isAuthenticated();
+      
+      // Users can read comments on tickets they have access to
+      // Internal comments only visible to agents and admins
+      allow read: if isAuthenticated() && (
+        (!resource.data.isInternal) ||
+        (resource.data.isInternal && (isAgent() || isAdmin()))
+      );
+      
+      // Only comment author can update their own comments within 5 minutes
+      allow update: if isAuthenticated() && 
+        request.auth.uid == resource.data.authorId &&
+        request.time < resource.data.createdAt + duration.value(5, 'm');
+      
+      // Only admins can delete comments
+      allow delete: if isAuthenticated() && isAdmin();
+    }
+    
+    // SLA Rules collection
+    match /slaRules/{ruleId} {
+      // Only admins can create SLA rules
+      allow create: if isAuthenticated() && isAdmin() && belongsToOrganization(request.resource.data.organizationId);
+      
+      // Agents and admins can read SLA rules in their org
+      allow read: if isAuthenticated() && 
+        (isAgent() || isAdmin()) && 
+        belongsToOrganization(resource.data.organizationId);
+      
+      // Only admins can update SLA rules
+      allow update: if isAuthenticated() && isAdmin() && belongsToOrganization(resource.data.organizationId);
+      
+      // Only admins can delete SLA rules
+      allow delete: if isAuthenticated() && isAdmin() && belongsToOrganization(resource.data.organizationId);
+    }
+    
+    // Audit Logs collection
+    match /auditLogs/{logId} {
+      // System only (no direct writes allowed)
+      allow create: if false;
+      
+      // Only admins can read audit logs in their org
+      allow read: if isAuthenticated() && isAdmin() && belongsToOrganization(resource.data.organizationId);
+      
+      // No updates or deletes allowed
+      allow update, delete: if false;
+    }
+    
+    // Deny all other access
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
