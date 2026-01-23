@@ -1,6 +1,8 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext'
 import Layout from './components/Layout'
+import ProtectedRoute from './components/ProtectedRoute'
+import LoginPage from './pages/LoginPage'
 import TicketsPage from './pages/TicketsPage'
 import TicketDetailPage from './pages/TicketDetailPage'
 import CreateTicketPage from './pages/CreateTicketPage'
@@ -11,15 +13,22 @@ function App() {
   return (
     <AuthProvider>
       <BrowserRouter>
-        <Layout>
-          <Routes>
-            <Route path="/" element={<TicketsPage />} />
-            <Route path="/ticket/:id" element={<TicketDetailPage />} />
-            <Route path="/ticket/new" element={<CreateTicketPage />} />
-            <Route path="/admin" element={<AdminPage />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </Layout>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="*" element={
+            <ProtectedRoute>
+              <Layout>
+                <Routes>
+                  <Route path="/" element={<TicketsPage />} />
+                  <Route path="/ticket/:id" element={<TicketDetailPage />} />
+                  <Route path="/ticket/new" element={<CreateTicketPage />} />
+                  <Route path="/admin" element={<AdminPage />} />
+                  <Route path="*" element={<NotFoundPage />} />
+                </Routes>
+              </Layout>
+            </ProtectedRoute>
+          } />
+        </Routes>
       </BrowserRouter>
     </AuthProvider>
   )

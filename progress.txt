@@ -28,3 +28,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: React Router v6 uses <Routes> and <Route element={...}> syntax
   - [PATTERN]: Layout wrapper shares header/nav across all routes
 ---
+
+## 2026-01-23T09:12 - US-003
+- Installed Firebase SDK
+- Created firebase.ts with Firebase config from env vars
+- Created AuthProvider/context with user, loading state, and getIdToken helper
+- Added signIn and signOut helpers using Firebase Auth
+- Wrapped app with AuthProvider to make auth state accessible app-wide
+- Added vite-env.d.ts for TypeScript env var types
+- Tests pass, typecheck passes
+- Files changed: web/package.json, web/src/firebase.ts, web/src/contexts/AuthContext.tsx, web/src/App.tsx, web/src/vite-env.d.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Vite env vars need TypeScript declarations in vite-env.d.ts
+  - [PATTERN]: Firebase Auth state is managed via onAuthStateChanged listener
+  - [INTEGRATION]: AuthProvider wraps entire app to provide auth context
+---

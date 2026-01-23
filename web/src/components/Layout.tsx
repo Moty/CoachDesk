@@ -1,10 +1,23 @@
 import { Link } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
 
 function Layout({ children }: { children: React.ReactNode }) {
+  const { user, signOut } = useAuth()
+
+  const handleSignOut = async () => {
+    await signOut()
+  }
+
   return (
     <div>
-      <header style={{ background: '#333', color: '#fff', padding: '1rem' }}>
+      <header style={{ background: '#333', color: '#fff', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
         <h1>HelpDesk</h1>
+        {user && (
+          <div>
+            <span style={{ marginRight: '1rem' }}>{user.email}</span>
+            <button onClick={handleSignOut} style={{ padding: '0.5rem 1rem' }}>Sign Out</button>
+          </div>
+        )}
       </header>
       <nav style={{ background: '#eee', padding: '1rem' }}>
         <Link to="/" style={{ marginRight: '1rem' }}>Tickets</Link>
