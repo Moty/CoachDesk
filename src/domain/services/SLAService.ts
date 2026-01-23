@@ -43,4 +43,31 @@ export class SLAService {
       breached: false,
     };
   }
+
+  /**
+   * Check if SLA timers have been breached
+   */
+  checkBreach(slaTimers: SLATimer): SLATimer {
+    const now = new Date();
+    let breached = false;
+
+    // Check first response breach
+    if (slaTimers.firstResponseDue && !slaTimers.firstResponseAt) {
+      if (now > slaTimers.firstResponseDue) {
+        breached = true;
+      }
+    }
+
+    // Check resolution breach
+    if (slaTimers.resolutionDue && !slaTimers.resolvedAt) {
+      if (now > slaTimers.resolutionDue) {
+        breached = true;
+      }
+    }
+
+    return {
+      ...slaTimers,
+      breached,
+    };
+  }
 }
