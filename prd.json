@@ -353,7 +353,7 @@
         "PATCH /api/v1/tickets/:id accepts: { status?, priority?, assigneeId?, tags? }",
         "Require agent or admin role",
         "Validate ticket exists and belongs to organization",
-        "Validate status transitions (new → open → pending/on-hold → resolved → closed)",
+        "Validate status transitions (new \u2192 open \u2192 pending/on-hold \u2192 resolved \u2192 closed)",
         "Validate assigneeId exists and is an agent",
         "Return 200 with updated ticket",
         "Return 400 for invalid transitions",
@@ -773,7 +773,7 @@
       "blockedBy": [
         "US-005"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -907,11 +907,11 @@
       "description": "As a developer, I need documentation for migrating to SAP BTP.",
       "acceptanceCriteria": [
         "Create docs/architecture/sap-migration-guide.md",
-        "Document Firebase → SAP service mappings",
-        "Document authentication migration (Firebase Auth → XSUAA)",
-        "Document database migration (Firestore → HANA Cloud)",
-        "Document storage migration (Firebase Storage → Document Management)",
-        "Document event migration (Pub/Sub → Event Mesh)",
+        "Document Firebase \u2192 SAP service mappings",
+        "Document authentication migration (Firebase Auth \u2192 XSUAA)",
+        "Document database migration (Firestore \u2192 HANA Cloud)",
+        "Document storage migration (Firebase Storage \u2192 Document Management)",
+        "Document event migration (Pub/Sub \u2192 Event Mesh)",
         "Document deployment steps (Cloud Foundry manifest.yml)",
         "Document environment variable mappings",
         "Include code examples for adapter implementations"
