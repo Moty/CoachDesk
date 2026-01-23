@@ -1,6 +1,10 @@
 import express from 'express';
 import helmet from 'helmet';
 import cors from 'cors';
+import swaggerUi from 'swagger-ui-express';
+import YAML from 'yamljs';
+import path from 'path';
+import { fileURLToPath } from 'url';
 import { config, logConfig } from './shared/config/env.config.js';
 import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
@@ -15,7 +19,13 @@ import auditLogRoutes from './api/routes/admin/audit-log.routes.js';
 import { FirestoreAdapter } from './shared/database/adapters/firestore/FirestoreAdapter.js';
 import { SLAMonitoringJob } from './jobs/sla-monitoring.job.js';
 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 const app = express();
+
+// Load OpenAPI specification
+const openapiDocument = YAML.load(path.join(__dirname, '../docs/api/openapi.yaml'));
 
 // Security headers with helmet
 app.use(helmet({
@@ -64,6 +74,9 @@ app.use(globalRateLimiter);
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// Swagger UI documentation
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 
 // Apply per-user rate limiting to all API routes
 app.use('/api', userRateLimiter);

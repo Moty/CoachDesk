@@ -811,7 +811,7 @@
       "blockedBy": [
         "US-039"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
