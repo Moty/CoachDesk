@@ -139,3 +139,15 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Internal comments have yellow background (#fff3cd)
   - [INTEGRATION]: Comments loaded separately with their own pagination state
 ---
+
+## 2026-01-23T09:20 - US-011
+- Added comment composer that posts to POST /api/v1/tickets/:id/comments
+- Agents/admins can choose public vs internal via checkbox; customers always public
+- New comment appends to timeline without full page refresh
+- Typecheck passes, tests pass
+- Files changed: web/src/pages/TicketDetailPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Form submission prevents default and handles async API calls
+  - [PATTERN]: Conditional rendering for role-specific UI (internal checkbox for agents/admins)
+  - [INTEGRATION]: Comment state updated optimistically after successful POST
+---
