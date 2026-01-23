@@ -255,3 +255,20 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: API may return array or paginated response object, handle both
   - [PATTERN]: Use HTML <details> element for expandable content
 ---
+
+## 2026-01-23T11:52 - US-019
+- Updated firebase.json hosting config to serve SPA from web/dist
+- Added /api/** proxy rewrite to backend Cloud Function
+- Added SPA fallback route (** -> /index.html) for client-side routing
+- Updated .env.example CORS_ORIGIN to include http://localhost:5173
+- Documented frontend setup and development in README.md
+- Added frontend commands table and environment variable docs
+- Updated docs/deployment/firebase-deployment.md with frontend build/deploy steps
+- Added hosting configuration section and custom domain setup
+- Typecheck passes
+- Files changed: firebase.json, .env.example, README.md, docs/deployment/firebase-deployment.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase hosting rewrites support API proxy and SPA fallback
+  - [PATTERN]: Frontend env vars use VITE_ prefix for Vite build
+  - [INTEGRATION]: CORS_ORIGIN must include both backend dev and frontend dev URLs
+---
