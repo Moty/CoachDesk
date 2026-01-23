@@ -16,3 +16,15 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [PATTERN]: Vitest requires jsdom environment for React component tests
   - [INTEGRATION]: Frontend workspace is in web/ directory, separate from backend
 ---
+
+## 2026-01-23T09:10 - US-002
+- Installed and configured React Router
+- Created Layout component with header, navigation, and main content slot
+- Added route placeholders: /, /ticket/:id, /ticket/new, /admin, and 404 not-found
+- Verified in browser at http://localhost:5173/
+- Typecheck passes
+- Files changed: web/package.json, web/src/App.tsx, web/src/components/Layout.tsx, web/src/pages/TicketsPage.tsx, web/src/pages/TicketDetailPage.tsx, web/src/pages/CreateTicketPage.tsx, web/src/pages/AdminPage.tsx, web/src/pages/NotFoundPage.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: React Router v6 uses <Routes> and <Route element={...}> syntax
+  - [PATTERN]: Layout wrapper shares header/nav across all routes
+---
