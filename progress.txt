@@ -344,3 +344,22 @@ Automatically compacted on 2026-01-22 17:22:41
   - [PATTERN]: Email validation uses simple regex pattern
   - [INTEGRATION]: UserRepository already validates email uniqueness within organization
 ---
+
+## 2026-01-23T01:40:00.000Z - US-023
+- Implemented GET /api/v1/users endpoint with admin authorization
+- Added listUsers controller function with role filtering and pagination
+- Supports ?role= query parameter to filter users by role (customer, agent, admin)
+- Supports ?page= and ?limit= query parameters (default limit 50, max 100)
+- Returns { users: [], total: number, page: number, limit: number }
+- Excludes sensitive fields (password hashes) from response
+- Returns 403 for non-admin users
+- Updated README.md with new endpoint documentation
+- Files changed:
+  - src/api/controllers/user.controller.ts (added listUsers function)
+  - src/api/routes/user.routes.ts (added GET / route)
+  - README.md
+- **Learnings for future iterations:**
+  - [PATTERN]: UserRepository.findByOrganization() accepts optional where clause for filtering
+  - [PATTERN]: Validate role filters against UserRole enum before applying
+  - [INTEGRATION]: Admin-only endpoints use requireRole(UserRole.ADMIN) middleware
+---
