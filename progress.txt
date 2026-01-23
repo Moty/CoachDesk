@@ -1,3 +1,18 @@
 # Ralph Progress Log
 Started: Thu Jan 22 23:47:56 PST 2026
 ---
+
+## 2026-01-23T09:08 - US-001
+- Created web/ workspace with Vite + React + TypeScript
+- Added npm scripts: dev, build, preview, test, typecheck
+- Created web/src/main.tsx and web/src/App.tsx with basic render
+- Configured build output to web/dist
+- Added web/tsconfig.json and web/vite.config.ts
+- Added web/.env.example with VITE_API_BASE_URL and VITE_FIREBASE_* placeholders
+- All tests pass, typecheck passes
+- Files changed: web/package.json, web/vite.config.ts, web/tsconfig.json, web/tsconfig.node.json, web/.env.example, web/index.html, web/src/main.tsx, web/src/App.tsx, web/vitest.config.ts, web/src/App.test.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Vite + React projects use jsx: "react-jsx" to avoid importing React in every component
+  - [PATTERN]: Vitest requires jsdom environment for React component tests
+  - [INTEGRATION]: Frontend workspace is in web/ directory, separate from backend
+---
