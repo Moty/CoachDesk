@@ -284,3 +284,17 @@ Started: Tue Jan 20 10:59:07 PST 2026
 - Story: US-012
 - Branch: ralph-helpdesk-ticketing-system/US-012
 - Recovery: git checkout ralph/helpdesk-ticketing-system && git merge ralph-helpdesk-ticketing-system/US-012
+
+## 2026-01-23T00:34:04Z - US-012
+- Created organizationIsolation middleware factory
+- Validates organizationId in request matches authenticated user's organization
+- Returns 403 for organization mismatches
+- Supports admin role override capability
+- Checks body, query, and params for organizationId
+- Updated middleware index exports
+- Typecheck passes
+- **Learnings for future iterations:**
+  - [PATTERN]: Organization isolation middleware checks body, query, and params for organizationId
+  - [PATTERN]: Admin role can bypass organization isolation
+  - [INTEGRATION]: organizationIsolation middleware depends on authMiddleware (requires req.user)
+---

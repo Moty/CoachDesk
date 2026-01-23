@@ -5,6 +5,7 @@ import rateLimit from 'express-rate-limit';
 import { config, logConfig } from './shared/config/env.config.js';
 import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
+import ticketRoutes from './api/routes/ticket.routes.js';
 
 const app = express();
 
@@ -23,6 +24,9 @@ app.use(
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'ok' });
 });
+
+// API routes
+app.use('/api/v1/tickets', ticketRoutes);
 
 // Error handler must be last
 app.use(errorHandler);
