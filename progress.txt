@@ -276,3 +276,18 @@ Automatically compacted on 2026-01-22 17:48:18
   - [PATTERN]: Template functions return EmailTemplate objects with subject, body, isHtml
   - [INTEGRATION]: NotificationService takes INotificationProvider in constructor
 ---
+
+## 2026-01-23T01:51:00.000Z - US-025
+- SLA breach detection service already implemented
+- checkBreach method exists in SLAService.ts
+- Checks if current time exceeds firstResponseDue (when no firstResponseAt)
+- Checks if current time exceeds resolutionDue (when no resolvedAt)
+- Updates ticket.slaTimers.breached flag to true if either is breached
+- Typecheck passes
+- All tests pass (19/19)
+- Files verified:
+  - src/domain/services/SLAService.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA breach logic checks both firstResponseDue and resolutionDue
+  - [GOTCHA]: Only check breach if response/resolution has not been set (firstResponseAt/resolvedAt null)
+---
