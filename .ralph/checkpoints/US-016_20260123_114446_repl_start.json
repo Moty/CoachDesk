@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_114446",
+    "created_at": "2026-01-23T11:44:46-08:00"
+  },
+  "task": {
+    "id": "US-016",
+    "title": "Admin SLA rules list and create",
+    "description": "As an admin, I want to list and create SLA rules so I can manage policies.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-web-frontend",
+    "commit": "ac00bf324d4710627dbddac5e3f982075861cf20",
+    "dirty_files": 1,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json"
+    ]
+  }
+}
