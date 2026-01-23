@@ -196,3 +196,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: Attachments are loaded via GET /api/v1/tickets/:id/attachments and displayed before comments
   - [GOTCHA]: File input element must be manually reset after successful upload using querySelector
 ---
+
+## 2026-01-23T19:43 - US-015
+- Created AdminUsersPage with user listing and creation form
+- Added role filter for users (all/customer/agent/admin)
+- Added user creation form with email, displayName, and role fields
+- Form validates and surfaces API errors
+- Updated AdminPage to route to users sub-page
+- Updated App.tsx to restrict admin routes to admin role only
+- Typecheck passes
+- Files changed: web/src/pages/AdminUsersPage.tsx, web/src/pages/AdminPage.tsx, web/src/App.tsx, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin pages use nested routing with AdminPage as container
+  - [PATTERN]: Form state managed with local useState hooks
+  - [INTEGRATION]: API client handles GET with query params for filtering
+---
