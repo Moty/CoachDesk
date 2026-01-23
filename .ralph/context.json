@@ -2,943 +2,353 @@
   "tasks": [
     {
       "id": "US-001",
-      "title": "Project Scaffolding",
-      "description": "As a developer, I need the project initialized with TypeScript, Express.js, and essential tooling.",
+      "title": "Frontend scaffold and build pipeline",
+      "description": "As a developer, I want a Vite + React + TypeScript workspace so the UI can be built and served.",
       "acceptanceCriteria": [
-        "Initialize npm project with TypeScript 5.x",
-        "Install Express.js, cors, helmet, express-rate-limit",
-        "Configure tsconfig.json with strict mode, ES2022 target",
-        "Set up ESLint and Prettier",
-        "Create basic Express server in src/index.ts",
-        "Add scripts: dev (tsx watch), build (tsc), start, test, lint",
-        "Server starts on configurable port (default 3000)",
-        "Health check endpoint GET /health returns 200",
+        "Create web/ workspace with Vite + React + TypeScript",
+        "Add npm scripts for dev, build, preview, and test",
+        "Create web/src/main.tsx and web/src/App.tsx with a basic render",
+        "Configure build output to web/dist",
+        "Add web/tsconfig.json and web/vite.config.ts",
+        "Add web/.env.example with VITE_API_BASE_URL and VITE_FIREBASE_* placeholders",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 1,
       "blockedBy": [],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-002",
-      "title": "Environment Configuration",
-      "description": "As a developer, I need environment-based configuration management.",
+      "title": "App shell and routing skeleton",
+      "description": "As a user, I want a basic app shell and routes so I can navigate the UI.",
       "acceptanceCriteria": [
-        "Install dotenv package",
-        "Create .env.example with all required variables",
-        "Create src/shared/config/env.config.ts with validation",
-        "Support NODE_ENV (development, staging, production)",
-        "Validate required env vars on startup",
-        "Log configuration (excluding secrets) on startup",
+        "Install and configure React Router in web/",
+        "Create layout with header, navigation, and main content slot",
+        "Define route placeholders for Tickets, Ticket Detail, Create Ticket, and Admin sections",
+        "Add a not-found route",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 2,
       "blockedBy": [
         "US-001"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Logging & Error Handling",
-      "description": "As a developer, I need centralized logging and error handling.",
+      "title": "Firebase Auth SDK and context",
+      "description": "As a user, I want Firebase authentication available in the app so I can sign in and obtain tokens.",
       "acceptanceCriteria": [
-        "Install Winston or Pino for structured logging",
-        "Create logger utility with levels (debug, info, warn, error)",
-        "Create AppError base class with error codes",
-        "Create error handler middleware",
-        "Log format includes: timestamp, level, message, context",
-        "Errors return consistent JSON format: { code, message, details? }",
-        "Error logs include stack traces in development",
+        "Configure Firebase Web SDK using VITE_FIREBASE_* env vars",
+        "Create AuthProvider/context with user, loading state, and getIdToken helper",
+        "Expose signIn and signOut helpers for configured providers",
+        "Auth state is accessible app-wide",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 3,
       "blockedBy": [
         "US-001"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "Database Repository Interface",
-      "description": "As a developer, I need repository pattern interfaces for database abstraction.",
+      "title": "Authentication UI and route guard",
+      "description": "As a user, I want to sign in and access protected routes only when authenticated.",
       "acceptanceCriteria": [
-        "Define IRepository<T> interface with CRUD methods",
-        "Define IDatabaseAdapter interface",
-        "Create base Repository<T> abstract class",
-        "Add transaction support interface",
-        "Add query builder interface for filtering/sorting",
+        "Add login page that supports Firebase Auth sign-in",
+        "Redirect unauthenticated users to login for protected routes",
+        "Add sign-out action in the header user menu",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 4,
       "blockedBy": [
-        "US-001"
+        "US-002",
+        "US-003"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Firestore Adapter Implementation",
-      "description": "As a developer, I need Firestore database adapter implementation.",
+      "title": "Typed API client and error handling",
+      "description": "As a developer, I want a consistent API client so UI calls match existing endpoints.",
       "acceptanceCriteria": [
-        "Implement FirestoreAdapter with connection pooling",
-        "Connection established successfully on startup",
-        "Typecheck passes",
-        "Unit tests for Firestore adapter pass"
+        "Create API client using VITE_API_BASE_URL",
+        "Attach Authorization: Bearer <token> from AuthProvider to requests",
+        "Handle backend error format { code, message, details } with user-friendly messages",
+        "Support pagination and filtering query params",
+        "Support multipart/form-data file upload with field name file",
+        "Tests pass",
+        "Typecheck passes"
       ],
       "priority": 5,
       "blockedBy": [
-        "US-004"
+        "US-003"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Ticket Model & Repository",
-      "description": "As a developer, I need the Ticket data model and repository implementation.",
+      "title": "Role-based routing and access denied state",
+      "description": "As a user, I want role-based access so I only see pages I can use.",
       "acceptanceCriteria": [
-        "Create Ticket interface with all fields (id, organizationId, requesterId, assigneeId, status, priority, subject, description, tags, createdAt, updatedAt, slaTimers)",
-        "Implement TicketRepository extending Repository<Ticket>",
-        "Add methods: create, findById, findByOrganization, update, delete",
-        "Validate status enum transitions",
-        "Validate priority enum values",
-        "Add indexes for organizationId, status, createdAt",
+        "Fetch current user via GET /api/v1/users/me on app load",
+        "Store user role (customer/agent/admin) in auth state",
+        "Gate routes by role and show access denied state when unauthorized",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 6,
       "blockedBy": [
+        "US-004",
         "US-005"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-007",
-      "title": "User Model & Repository",
-      "description": "As a developer, I need the User data model and repository implementation.",
+      "title": "Ticket list page with pagination",
+      "description": "As a user, I want to view tickets so I can manage workload.",
       "acceptanceCriteria": [
-        "Create User interface (id, role, organizationId, email, displayName, createdAt, updatedAt)",
-        "Create UserRole enum: customer, agent, admin",
-        "Implement UserRepository extending Repository<User>",
-        "Add methods: create, findById, findByEmail, findByOrganization, update",
-        "Enforce unique email per organization",
-        "Add index on email and organizationId",
+        "Create Tickets page that calls GET /api/v1/tickets with pagination",
+        "Render ticket rows with subject, status, priority, requester, and updatedAt",
+        "Show empty-state message when no tickets match",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 7,
       "blockedBy": [
-        "US-005"
+        "US-006"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Comment Model & Repository",
-      "description": "As a developer, I need the Comment data model for ticket conversations.",
+      "title": "Ticket list filters and sorting",
+      "description": "As a user, I want to filter and sort tickets so I can find work quickly.",
       "acceptanceCriteria": [
-        "Create Comment interface (id, ticketId, authorId, isPublic, body, attachments, createdAt)",
-        "Implement CommentRepository extending Repository<Comment>",
-        "Add methods: create, findByTicket, findById",
-        "Add filtering by isPublic flag",
-        "Add sorting by createdAt (ascending)",
-        "Add index on ticketId and createdAt",
+        "Add filters for status, priority, assignee, and tags",
+        "Add sorting for createdAt, updatedAt, and priority",
+        "Filters and sorting update API query params",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 8,
       "blockedBy": [
-        "US-005"
+        "US-007"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-009",
-      "title": "SLA Rule Model & Repository",
-      "description": "As a developer, I need the SLA Rule data model for tracking service level agreements.",
+      "title": "Ticket detail page",
+      "description": "As a user, I want to view ticket details so I can understand the request.",
       "acceptanceCriteria": [
-        "Create SLARule interface (id, organizationId, priority, firstResponseMinutes, resolutionMinutes, createdAt)",
-        "Create SLATimer interface (firstResponseAt, firstResponseDue, resolvedAt, resolutionDue, breached)",
-        "Implement SLARuleRepository",
-        "Add methods: create, findByOrganizationAndPriority, update",
-        "Support default rules per organization",
+        "Create Ticket Detail page that loads GET /api/v1/tickets/:id",
+        "Display ticket metadata (status, priority, assignee, requester, tags, SLA timers)",
+        "Show not-found state when ticket does not exist",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 9,
       "blockedBy": [
-        "US-005"
+        "US-006"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Authentication Middleware",
-      "description": "As a developer, I need JWT-based authentication middleware.",
+      "title": "Ticket comments timeline",
+      "description": "As a user, I want to read ticket comments so I can follow the conversation.",
       "acceptanceCriteria": [
-        "Install Firebase Admin SDK",
-        "Create auth middleware to verify Firebase JWT tokens",
-        "Extract user claims (userId, email, role, organizationId)",
-        "Attach user context to request object",
-        "Return 401 for missing/invalid tokens",
-        "Support Bearer token format",
+        "Load comments via GET /api/v1/tickets/:id/comments with pagination",
+        "Render comments timeline with author, timestamp, and visibility label",
+        "Hide internal comments from customers",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 10,
       "blockedBy": [
-        "US-007"
+        "US-009"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-011",
-      "title": "RBAC Middleware",
-      "description": "As a developer, I need role-based access control middleware.",
+      "title": "Comment composer",
+      "description": "As a user, I want to add comments so communication is tracked.",
       "acceptanceCriteria": [
-        "Create requireRole(...roles) middleware factory",
-        "Check user role from authenticated request",
-        "Return 403 for insufficient permissions",
-        "Support multiple role requirements (OR logic)",
-        "Log authorization failures",
+        "Add comment composer that posts to POST /api/v1/tickets/:id/comments",
+        "Allow agents/admins to choose public vs internal; customers always public",
+        "Append new comment to timeline without full page refresh",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 11,
       "blockedBy": [
         "US-010"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Organization Isolation Middleware",
-      "description": "As a developer, I need middleware to enforce multi-tenant data isolation.",
+      "title": "Create ticket page",
+      "description": "As a user, I want to create tickets so I can request support.",
       "acceptanceCriteria": [
-        "Create organizationIsolation middleware",
-        "Validate organizationId in request matches authenticated user",
-        "Return 403 for organization mismatches",
-        "Support admin override capability",
+        "Create ticket form that posts to POST /api/v1/tickets",
+        "Validate subject (1-255 chars) and description (1+ chars) before submit",
+        "Support priority and tags inputs",
+        "Navigate to new ticket detail on success",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 12,
       "blockedBy": [
-        "US-011"
+        "US-006"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-013",
-      "title": "Create Ticket Endpoint",
-      "description": "As an end user or agent, I want to create new support tickets via POST /api/v1/tickets.",
+      "title": "Agent/admin ticket updates",
+      "description": "As an agent/admin, I want to update ticket fields so I can manage tickets.",
       "acceptanceCriteria": [
-        "POST /api/v1/tickets accepts: { subject, description, priority?, tags? }",
-        "Authenticate request (require customer or agent role)",
-        "Validate subject (required, 1-200 chars)",
-        "Validate description (required, 1-5000 chars)",
-        "Validate priority enum or default to 'medium'",
-        "Set requesterId from authenticated user",
-        "Set status to 'new'",
-        "Return 201 with created ticket JSON",
-        "Return 400 for validation errors",
-        "Return 401 for unauthenticated requests",
+        "Add status/priority/tags update controls using PATCH /api/v1/tickets/:id",
+        "Add assignee picker using PATCH /api/v1/tickets/:id/assign",
+        "Prevent invalid status transitions per backend rules",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 13,
       "blockedBy": [
-        "US-006",
-        "US-012"
+        "US-009"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-014",
-      "title": "Initialize SLA Timers on Ticket Creation",
-      "description": "As a system, I need to initialize SLA timers when tickets are created.",
+      "title": "Attachment uploader",
+      "description": "As a user, I want to upload attachments so I can share files with support.",
       "acceptanceCriteria": [
-        "Create SLAService with calculateTimers method",
-        "Load SLA rules for organization and priority",
-        "Calculate firstResponseDue = createdAt + firstResponseMinutes",
-        "Calculate resolutionDue = createdAt + resolutionMinutes",
-        "Set SLA timers on ticket creation",
+        "Add attachment uploader that posts to POST /api/v1/tickets/:id/attachments with file field",
+        "Enforce 10MB file size limit before upload",
+        "Show uploaded attachments in ticket timeline with download links",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 14,
       "blockedBy": [
-        "US-009",
-        "US-013"
+        "US-009"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-015",
-      "title": "List Tickets Endpoint - Basic",
-      "description": "As an agent or customer, I want to view tickets via GET /api/v1/tickets with pagination.",
+      "title": "Admin user management",
+      "description": "As an admin, I want to manage users so I can onboard agents and customers.",
       "acceptanceCriteria": [
-        "GET /api/v1/tickets returns paginated ticket list",
-        "Filter by organizationId automatically (isolation)",
-        "Customers see only their own tickets",
-        "Agents/admins see all organization tickets",
-        "Support ?page= and ?limit= for pagination (default limit 50, max 100)",
-        "Return 200 with { tickets: [], total: number, page: number, limit: number }",
-        "Return empty array when no tickets",
+        "Create Admin Users page listing users via GET /api/v1/users with role filter",
+        "Add user creation form posting to POST /api/v1/users",
+        "Surface API validation errors for email and role",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 15,
       "blockedBy": [
-        "US-006",
-        "US-012"
+        "US-006"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-016",
-      "title": "List Tickets Endpoint - Filters",
-      "description": "As an agent, I want to filter and sort tickets in the list.",
+      "title": "Admin SLA rules list and create",
+      "description": "As an admin, I want to list and create SLA rules so I can manage policies.",
       "acceptanceCriteria": [
-        "Support ?status= filter (comma-separated)",
-        "Support ?priority= filter",
-        "Support ?assigneeId= filter",
-        "Support ?requesterId= filter",
-        "Support ?tags= filter (comma-separated, OR logic)",
-        "Support ?sortBy= (createdAt, updatedAt, priority) and ?order= (asc, desc)",
+        "Create Admin SLA Rules page listing rules via GET /api/v1/admin/sla-rules",
+        "Add create SLA rule form posting to POST /api/v1/admin/sla-rules",
+        "Show success and error feedback from API",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 16,
       "blockedBy": [
-        "US-015"
+        "US-006"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-017",
-      "title": "Get Ticket by ID Endpoint",
-      "description": "As a user, I want to view ticket details via GET /api/v1/tickets/:id.",
+      "title": "Admin SLA rules edit and delete",
+      "description": "As an admin, I want to update and remove SLA rules so policies stay current.",
       "acceptanceCriteria": [
-        "GET /api/v1/tickets/:id returns full ticket details",
-        "Validate ticket belongs to user's organization",
-        "Customers can only view their own tickets",
-        "Agents/admins can view all organization tickets",
-        "Return 200 with ticket JSON",
-        "Return 404 for non-existent tickets",
-        "Return 403 for unauthorized access",
+        "Add edit and delete actions for SLA rules using PATCH/DELETE /api/v1/admin/sla-rules/:id",
+        "Update list after edits/deletes without full page refresh",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 17,
       "blockedBy": [
-        "US-006",
-        "US-012"
+        "US-016"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-018",
-      "title": "Update Ticket Endpoint",
-      "description": "As an agent or admin, I want to update tickets via PATCH /api/v1/tickets/:id.",
+      "title": "Admin audit logs",
+      "description": "As an admin, I want to view audit logs so I can review actions.",
       "acceptanceCriteria": [
-        "PATCH /api/v1/tickets/:id accepts: { status?, priority?, assigneeId?, tags? }",
-        "Require agent or admin role",
-        "Validate ticket exists and belongs to organization",
-        "Validate status transitions (new → open → pending/on-hold → resolved → closed)",
-        "Validate assigneeId exists and is an agent",
-        "Return 200 with updated ticket",
-        "Return 400 for invalid transitions",
-        "Return 403 for customers attempting updates",
-        "Return 404 for non-existent tickets",
+        "Create Admin Audit Logs page listing GET /api/v1/admin/audit-logs",
+        "Add filters for date range, user, and action (if supported by API)",
+        "Render empty state when no logs match",
+        "Verify in browser using dev-browser skill",
         "Typecheck passes"
       ],
       "priority": 18,
       "blockedBy": [
-        "US-006",
-        "US-012"
+        "US-006"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-019",
-      "title": "Assign Ticket Endpoint",
-      "description": "As an agent or admin, I want to assign tickets via PATCH /api/v1/tickets/:id/assign.",
+      "title": "Hosting and deployment integration",
+      "description": "As a developer, I want frontend hosting configured so the UI is available in production.",
       "acceptanceCriteria": [
-        "PATCH /api/v1/tickets/:id/assign accepts: { assigneeId }",
-        "Require agent or admin role",
-        "Validate assigneeId is a valid agent in organization",
-        "Update ticket assigneeId",
-        "If status is 'new', change to 'open'",
-        "Return 200 with updated ticket",
-        "Return 400 for invalid assigneeId",
+        "Update firebase.json to serve the SPA from web/dist",
+        "Proxy /api/** requests to the existing backend service",
+        "Update .env.example CORS_ORIGIN to include frontend dev and prod domains",
+        "Document frontend setup/run in README.md",
+        "Update docs/deployment/firebase-deployment.md with frontend build/deploy steps",
+        "Tests pass",
         "Typecheck passes"
       ],
       "priority": 19,
       "blockedBy": [
-        "US-018"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-020",
-      "title": "Add Comment Endpoint",
-      "description": "As a user, I want to add comments to tickets via POST /api/v1/tickets/:id/comments.",
-      "acceptanceCriteria": [
-        "POST /api/v1/tickets/:id/comments accepts: { body, isPublic? }",
-        "Validate ticket exists and user has access",
-        "Validate body (required, 1-10000 chars)",
-        "Default isPublic to true for customers, false for agents",
-        "Agents can explicitly set isPublic",
-        "Set authorId from authenticated user",
-        "If author is agent and isPublic, update ticket firstResponseAt if null",
-        "Return 201 with created comment",
-        "Return 400 for validation errors",
-        "Return 403 for unauthorized access",
-        "Typecheck passes"
-      ],
-      "priority": 20,
-      "blockedBy": [
-        "US-008",
-        "US-012"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-021",
-      "title": "List Comments Endpoint",
-      "description": "As a user, I want to view ticket comments via GET /api/v1/tickets/:id/comments.",
-      "acceptanceCriteria": [
-        "GET /api/v1/tickets/:id/comments returns all comments for ticket",
-        "Validate user has access to ticket",
-        "Customers only see public comments",
-        "Agents/admins see all comments",
-        "Sort by createdAt ascending (threaded conversation)",
-        "Include author details (displayName, role)",
-        "Support pagination (?page=, ?limit=)",
-        "Return 200 with comments array",
-        "Return 403 for unauthorized access",
-        "Typecheck passes"
-      ],
-      "priority": 21,
-      "blockedBy": [
-        "US-020"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-022",
-      "title": "Create User Endpoint",
-      "description": "As an admin, I want to create users via POST /api/v1/users.",
-      "acceptanceCriteria": [
-        "POST /api/v1/users accepts: { email, displayName, role }",
-        "Require admin role",
-        "Validate email format",
-        "Validate email unique within organization",
-        "Validate role enum",
-        "Create user in Firebase Auth",
-        "Create user record in database with organizationId",
-        "Return 201 with created user (exclude password)",
-        "Return 400 for validation errors",
-        "Return 409 for duplicate email",
-        "Return 403 for non-admin users",
-        "Typecheck passes"
-      ],
-      "priority": 22,
-      "blockedBy": [
-        "US-007",
-        "US-012"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-023",
-      "title": "List Users Endpoint",
-      "description": "As an admin, I want to view organization users via GET /api/v1/users.",
-      "acceptanceCriteria": [
-        "GET /api/v1/users returns users in organization",
-        "Require admin role",
-        "Support ?role= filter",
-        "Support pagination",
-        "Return 200 with users array",
-        "Exclude sensitive fields (password hashes)",
-        "Return 403 for non-admin users",
-        "Typecheck passes"
-      ],
-      "priority": 23,
-      "blockedBy": [
-        "US-022"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-024",
-      "title": "Get Current User Endpoint",
-      "description": "As a user, I want to view my profile via GET /api/v1/users/me.",
-      "acceptanceCriteria": [
-        "GET /api/v1/users/me returns authenticated user's profile",
-        "Require authentication",
-        "Return user details including role, organizationId",
-        "Return 200 with user JSON",
-        "Return 401 for unauthenticated requests",
-        "Typecheck passes"
-      ],
-      "priority": 24,
-      "blockedBy": [
-        "US-010"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-025",
-      "title": "SLA Breach Detection Service",
-      "description": "As a developer, I need a service to check and flag SLA breaches.",
-      "acceptanceCriteria": [
-        "Add checkBreach method to SLAService",
-        "Identify if current time exceeds firstResponseDue or resolutionDue",
-        "Update ticket.slaTimers.breached flag",
-        "Typecheck passes"
-      ],
-      "priority": 25,
-      "blockedBy": [
-        "US-014"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-026",
-      "title": "SLA Monitoring Background Job",
-      "description": "As a system, I need to periodically check for SLA breaches.",
-      "acceptanceCriteria": [
-        "Create scheduled job (Cloud Scheduler or Firebase Functions cron)",
-        "Run every 5 minutes",
-        "Query tickets with status in (new, open, pending)",
-        "Check SLA timers for each ticket using SLAService",
-        "Update breached flag if overdue",
-        "Log job execution results",
-        "Handle errors gracefully (retry logic)",
-        "Typecheck passes"
-      ],
-      "priority": 26,
-      "blockedBy": [
-        "US-025"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-027",
-      "title": "Notification Service Interface",
-      "description": "As a developer, I need a notification service abstraction.",
-      "acceptanceCriteria": [
-        "Create INotificationProvider interface: sendEmail(to, subject, body)",
-        "Create NotificationService using provider",
-        "Support HTML and plain text emails",
-        "Load notification templates (ticket created, replied, resolved)",
-        "Typecheck passes"
-      ],
-      "priority": 27,
-      "blockedBy": [
-        "US-004"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-028",
-      "title": "SMTP/SendGrid Email Provider",
-      "description": "As a developer, I need an email provider implementation.",
-      "acceptanceCriteria": [
-        "Implement SMTPProvider or SendGridAdapter",
-        "Queue notifications asynchronously (pub/sub or task queue)",
-        "Retry failed sends (exponential backoff)",
-        "Log notification delivery status",
-        "Typecheck passes"
-      ],
-      "priority": 28,
-      "blockedBy": [
-        "US-027"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-029",
-      "title": "Event-Driven Notification Handlers",
-      "description": "As a system, I want to send notifications when ticket events occur.",
-      "acceptanceCriteria": [
-        "Listen for 'ticket.created' event and send email to requester",
-        "Listen for 'comment.added' event and send email to requester when agent replies (isPublic)",
-        "Listen for 'ticket.updated' event and send email when status changes to 'resolved'",
-        "Include ticket ID, subject, and relevant details in emails",
-        "Typecheck passes"
-      ],
-      "priority": 29,
-      "blockedBy": [
-        "US-028"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-030",
-      "title": "Create SLA Rule Endpoint",
-      "description": "As an admin, I want to configure SLA rules via POST /api/v1/admin/sla-rules.",
-      "acceptanceCriteria": [
-        "POST /api/v1/admin/sla-rules accepts: { priority, firstResponseMinutes, resolutionMinutes }",
-        "Require admin role",
-        "Validate priority enum",
-        "Validate time values are positive integers",
-        "Create or update rule for organization and priority",
-        "Return 201 with created rule",
-        "Return 400 for validation errors",
-        "Return 403 for non-admin users",
-        "Typecheck passes"
-      ],
-      "priority": 30,
-      "blockedBy": [
-        "US-009",
-        "US-012"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-031",
-      "title": "List SLA Rules Endpoint",
-      "description": "As an admin, I want to view SLA rules via GET /api/v1/admin/sla-rules.",
-      "acceptanceCriteria": [
-        "GET /api/v1/admin/sla-rules returns all rules for organization",
-        "Require admin role",
-        "Return rules sorted by priority",
-        "Return 200 with rules array",
-        "Return 403 for non-admin users",
-        "Typecheck passes"
-      ],
-      "priority": 31,
-      "blockedBy": [
-        "US-030"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-032",
-      "title": "File Storage Provider Interface",
-      "description": "As a developer, I need a file storage abstraction for attachments.",
-      "acceptanceCriteria": [
-        "Create IStorageProvider interface: upload(file, path), download(path), delete(path), getSignedUrl(path)",
-        "Support file types: images (jpg, png, gif), documents (pdf, txt, docx), archives (zip)",
-        "Validate file size (max 10MB per file)",
-        "Generate unique file names (UUID + extension)",
-        "Store in organization-scoped paths: uploads/{organizationId}/{ticketId}/{filename}",
-        "Typecheck passes"
-      ],
-      "priority": 32,
-      "blockedBy": [
-        "US-004"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-033",
-      "title": "Firebase Storage Adapter",
-      "description": "As a developer, I need Firebase Storage implementation.",
-      "acceptanceCriteria": [
-        "Implement FirebaseStorageAdapter",
-        "Return secure signed URLs for downloads",
-        "Typecheck passes"
-      ],
-      "priority": 33,
-      "blockedBy": [
-        "US-032"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-034",
-      "title": "Upload Attachment Endpoint",
-      "description": "As a user, I want to upload files via POST /api/v1/tickets/:id/attachments.",
-      "acceptanceCriteria": [
-        "POST /api/v1/tickets/:id/attachments accepts multipart/form-data",
-        "Validate ticket exists and user has access",
-        "Validate file type against whitelist",
-        "Validate file size (max 10MB)",
-        "Upload to storage provider",
-        "Store attachment metadata in comment",
-        "Return 201 with attachment metadata (id, filename, url, size)",
-        "Return 400 for invalid file type/size",
-        "Return 403 for unauthorized access",
-        "Typecheck passes"
-      ],
-      "priority": 34,
-      "blockedBy": [
-        "US-033",
-        "US-020"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-035",
-      "title": "Input Validation Schemas",
-      "description": "As a developer, I need robust input validation to prevent injection attacks.",
-      "acceptanceCriteria": [
-        "Install Joi or Zod validation library",
-        "Create validation schemas for all endpoints",
-        "Sanitize string inputs (trim, escape HTML)",
-        "Validate email formats",
-        "Validate URL formats for attachments",
-        "Reject requests with invalid payloads (400 errors)",
-        "Log validation failures",
-        "Typecheck passes"
-      ],
-      "priority": 35,
-      "blockedBy": [
-        "US-013"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-036",
-      "title": "Rate Limiting Middleware",
-      "description": "As a developer, I need rate limiting to prevent abuse.",
-      "acceptanceCriteria": [
-        "Install express-rate-limit middleware",
-        "Apply global rate limit: 100 requests per 15 minutes per IP",
-        "Apply stricter limits on auth endpoints: 5 requests per 15 minutes",
-        "Apply per-user limits: 1000 requests per hour per user",
-        "Return 429 with Retry-After header when exceeded",
-        "Typecheck passes"
-      ],
-      "priority": 36,
-      "blockedBy": [
         "US-001"
       ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-037",
-      "title": "Security Headers & CORS",
-      "description": "As a developer, I need security headers and CORS configuration.",
-      "acceptanceCriteria": [
-        "Install helmet middleware",
-        "Enable HSTS (Strict-Transport-Security)",
-        "Set X-Content-Type-Options: nosniff",
-        "Set X-Frame-Options: DENY",
-        "Set CSP header (Content-Security-Policy)",
-        "Configure CORS with allowed origins from config",
-        "Restrict CORS to authenticated requests",
-        "Typecheck passes"
-      ],
-      "priority": 37,
-      "blockedBy": [
-        "US-002"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-038",
-      "title": "Audit Log Model & Repository",
-      "description": "As a developer, I need audit logging for ticket state changes.",
-      "acceptanceCriteria": [
-        "Create AuditLog interface (id, timestamp, userId, action, resourceType, resourceId, changes, organizationId)",
-        "Implement AuditLogRepository",
-        "Add methods: create, findByTicket, findByUser, findByDateRange",
-        "Add indexes for organizationId, resourceId, timestamp",
-        "Typecheck passes"
-      ],
-      "priority": 38,
-      "blockedBy": [
-        "US-005"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-039",
-      "title": "Audit Log Creation on Ticket Updates",
-      "description": "As a system, I need to create audit logs when tickets are updated.",
-      "acceptanceCriteria": [
-        "Create audit log entry on ticket update",
-        "Emit 'ticket.updated' event with changes",
-        "Include before/after values for changed fields",
-        "Typecheck passes"
-      ],
-      "priority": 39,
-      "blockedBy": [
-        "US-038",
-        "US-018"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-040",
-      "title": "Audit Log Endpoint",
-      "description": "As an admin, I want to view audit logs via GET /api/v1/admin/audit-logs.",
-      "acceptanceCriteria": [
-        "GET /api/v1/admin/audit-logs returns audit trail",
-        "Require admin role",
-        "Support filtering by ?ticketId=, ?userId=, ?action=",
-        "Support date range filters (?startDate=, ?endDate=)",
-        "Support pagination",
-        "Return logs with: timestamp, userId, action, resourceType, resourceId, changes",
-        "Sort by timestamp descending",
-        "Return 200 with logs array",
-        "Return 403 for non-admin users",
-        "Typecheck passes"
-      ],
-      "priority": 40,
-      "blockedBy": [
-        "US-039"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-041",
-      "title": "OpenAPI Specification",
-      "description": "As a developer, I need comprehensive API documentation.",
-      "acceptanceCriteria": [
-        "Create OpenAPI 3.0 specification in docs/api/openapi.yaml",
-        "Document all endpoints with descriptions",
-        "Document request schemas with examples",
-        "Document response schemas with status codes",
-        "Document authentication requirements",
-        "Document error response formats",
-        "Integrate Swagger UI at /api-docs endpoint",
-        "Typecheck passes"
-      ],
-      "priority": 41,
-      "blockedBy": [
-        "US-024"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-042",
-      "title": "Firebase Deployment Configuration",
-      "description": "As a developer, I need deployment configuration for Firebase.",
-      "acceptanceCriteria": [
-        "Create firebase.json with hosting and functions config",
-        "Configure Cloud Functions or Cloud Run for API",
-        "Set environment variables via .env (local) and Firebase config (production)",
-        "Configure Firestore indexes in firestore.indexes.json",
-        "Configure Firestore security rules in firestore.rules",
-        "Create deployment script scripts/deploy-firebase.sh",
-        "Document deployment steps in docs/deployment/firebase-deployment.md",
-        "Typecheck passes"
-      ],
-      "priority": 42,
-      "blockedBy": [
-        "US-001"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-043",
-      "title": "Local Development Setup Documentation",
-      "description": "As a developer, I need local development environment instructions.",
-      "acceptanceCriteria": [
-        "Create comprehensive README.md with quick start",
-        "Document prerequisites (Node.js 20, Firebase CLI)",
-        "Document installation steps (npm install, env setup)",
-        "Document running locally (npm run dev)",
-        "Document running with Firebase emulators",
-        "Document testing (npm test)",
-        "Document linting (npm run lint)",
-        "Create .env.example with all variables"
-      ],
-      "priority": 43,
-      "blockedBy": [
-        "US-042"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-044",
-      "title": "Production Logging Configuration",
-      "description": "As a developer, I need production monitoring and logging.",
-      "acceptanceCriteria": [
-        "Configure structured JSON logging",
-        "Log levels: debug (dev only), info, warn, error",
-        "Log all API requests (method, path, status, duration)",
-        "Log authentication failures",
-        "Log authorization failures",
-        "Integrate with Firebase Logging or GCP Cloud Logging",
-        "Logs queryable in production",
-        "Typecheck passes"
-      ],
-      "priority": 44,
-      "blockedBy": [
-        "US-003"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-045",
-      "title": "SAP BTP Migration Guide",
-      "description": "As a developer, I need documentation for migrating to SAP BTP.",
-      "acceptanceCriteria": [
-        "Create docs/architecture/sap-migration-guide.md",
-        "Document Firebase → SAP service mappings",
-        "Document authentication migration (Firebase Auth → XSUAA)",
-        "Document database migration (Firestore → HANA Cloud)",
-        "Document storage migration (Firebase Storage → Document Management)",
-        "Document event migration (Pub/Sub → Event Mesh)",
-        "Document deployment steps (Cloud Foundry manifest.yml)",
-        "Document environment variable mappings",
-        "Include code examples for adapter implementations"
-      ],
-      "priority": 45,
-      "blockedBy": [
-        "US-033"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-046",
-      "title": "Architecture Documentation",
-      "description": "As a developer, I need architecture documentation explaining design decisions.",
-      "acceptanceCriteria": [
-        "Create docs/architecture/cloud-portability.md",
-        "Document layered architecture (API, Domain, Infrastructure)",
-        "Document repository pattern and abstractions",
-        "Document event-driven architecture",
-        "Document multi-tenancy design",
-        "Document SLA calculation logic",
-        "Document technology choices and rationale",
-        "Document security architecture"
-      ],
-      "priority": 46,
-      "blockedBy": [
-        "US-045"
-      ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     }
   ]

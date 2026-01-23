@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_090819",
+    "created_at": "2026-01-23T09:08:19-08:00"
+  },
+  "task": {
+    "id": "US-001",
+    "title": "Frontend scaffold and build pipeline",
+    "description": "As a developer, I want a Vite + React + TypeScript workspace so the UI can be built and served.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/helpdesk-web-frontend",
+    "commit": "d8acad33fdc331824c7de41be5ddb522a58239af",
+    "dirty_files": 1,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json"
+    ]
+  }
+}
