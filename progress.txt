@@ -256,3 +256,21 @@ Automatically compacted on 2026-01-22 17:22:41
   - [PATTERN]: Role-based access: customers can only view their own tickets, agents/admins can view all org tickets
   - [INTEGRATION]: Use req.user! for authenticated user context (set by authMiddleware)
 ---
+
+## 2026-01-23T01:24:30.000Z - US-018
+- Implemented PATCH /api/v1/tickets/:id endpoint
+- Added updateTicket controller function with validation
+- Validates status transitions using isValidStatusTransition
+- Validates assigneeId exists and is an agent/admin in same organization
+- Validates priority and tags fields
+- Returns 403 for customers attempting updates
+- Returns 400 for invalid transitions
+- Returns 404 for non-existent tickets
+- Updated ticket.routes.ts with PATCH endpoint (agent/admin only)
+- Typecheck passes successfully
+- **Learnings for future iterations:**
+  - [PATTERN]: Use isValidStatusTransition for status change validation
+  - [PATTERN]: Validate assignee exists, is in same org, and has agent/admin role
+  - [INTEGRATION]: UserRepository used to verify assigneeId validity
+  - [GOTCHA]: Customers must be blocked from PATCH endpoint entirely
+---
