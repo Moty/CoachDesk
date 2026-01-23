@@ -274,3 +274,17 @@ Automatically compacted on 2026-01-22 17:22:41
   - [INTEGRATION]: UserRepository used to verify assigneeId validity
   - [GOTCHA]: Customers must be blocked from PATCH endpoint entirely
 ---
+
+## 2026-01-23T01:27:49.000Z - US-019
+- Implemented PATCH /api/v1/tickets/:id/assign endpoint
+- Added assignTicket controller function with assigneeId validation
+- Validates assignee is a valid agent/admin in organization
+- Automatically changes status from 'new' to 'open' when assigning
+- Returns 200 with updated ticket on success
+- Returns 400 for invalid assigneeId
+- Files changed: src/api/controllers/ticket.controller.ts, src/api/routes/ticket.routes.ts
+- **Learnings for future iterations:**
+  - [PATTERN]: Dedicated assign endpoint separate from general update for clear semantics
+  - [PATTERN]: Status transitions happen automatically (new → open on assignment)
+  - The ticket update pattern validates assignee role and organization match
+---
