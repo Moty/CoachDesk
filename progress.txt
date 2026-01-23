@@ -359,3 +359,21 @@ Started: Tue Jan 20 10:59:07 PST 2026
   - [PATTERN]: Services belong in src/domain/services/
   - Controllers instantiate services at module level for dependency injection
 ---
+
+## 2026-01-23T00:41:30.000Z - US-015
+- Implemented GET /api/v1/tickets endpoint with pagination
+- Added listTickets controller with role-based filtering
+- Customers see only their own tickets (requesterId filter)
+- Agents/admins see all organization tickets
+- Supports ?page= and ?limit= query parameters (default limit 50, max 100)
+- Returns { tickets: [], total: number, page: number, limit: number }
+- Returns empty array when no tickets exist
+- Typecheck passes
+- Files changed:
+  - src/api/controllers/ticket.controller.ts (added listTickets function)
+  - src/api/routes/ticket.routes.ts (added GET / route)
+- **Learnings for future iterations:**
+  - [PATTERN]: Role-based filtering in controllers using req.user.role comparison
+  - [PATTERN]: Pagination parameters: Math.max/Math.min for bounds, offset = (page - 1) * limit
+  - [PATTERN]: Return consistent paginated response: { items, total, page, limit }
+---
