@@ -3,9 +3,13 @@ import { TicketRepository } from '../../domain/repositories/TicketRepository.js'
 import { TicketPriority, TicketStatus } from '../../domain/models/Ticket.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { SLARuleRepository } from '../../domain/repositories/SLARuleRepository.js';
+import { SLAService } from '../../domain/services/SLAService.js';
 
 const firestoreAdapter = new FirestoreAdapter();
 const ticketRepository = new TicketRepository(firestoreAdapter);
+const slaRuleRepository = new SLARuleRepository(firestoreAdapter);
+const slaService = new SLAService(slaRuleRepository);
 
 interface CreateTicketRequest {
   subject: string;
@@ -80,6 +84,14 @@ export async function createTicket(
     const requesterId = req.user!.userId;
     const organizationId = req.user!.organizationId;
 
+    // Calculate SLA timers
+    const createdAt = new Date();
+    const slaTimers = await slaService.calculateTimers(
+      organizationId,
+      ticketPriority,
+      createdAt
+    );
+
     // Create ticket with status 'new'
     const ticket = await ticketRepository.create({
       organizationId,
@@ -89,9 +101,8 @@ export async function createTicket(
       subject: subject.trim(),
       description: description.trim(),
       tags: tags || [],
-      slaTimers: {
-        breached: false,
-      },
+      createdAt,
+      slaTimers,
     });
 
     // Return 201 with created ticket
