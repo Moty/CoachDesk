@@ -7,6 +7,8 @@ import { logger } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import ticketRoutes from './api/routes/ticket.routes.js';
 import userRoutes from './api/routes/user.routes.js';
+import { FirestoreAdapter } from './shared/database/adapters/firestore/FirestoreAdapter.js';
+import { SLAMonitoringJob } from './jobs/sla-monitoring.job.js';
 
 const app = express();
 
@@ -36,6 +38,11 @@ app.use(errorHandler);
 // Start server
 logger.info('Starting HelpDesk application...');
 logConfig();
+
+// Initialize database adapter and start background jobs
+const firestoreAdapter = new FirestoreAdapter();
+const slaMonitoringJob = new SLAMonitoringJob(firestoreAdapter);
+slaMonitoringJob.start();
 
 app.listen(config.port, () => {
   logger.info(`Server ready on port ${config.port}`);
