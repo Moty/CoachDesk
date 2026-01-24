@@ -7,6 +7,7 @@ import { AccessDenied } from './pages/AccessDenied';
 import { Tickets } from './pages/Tickets';
 import { TicketDetail } from './pages/TicketDetail';
 import { CreateTicket } from './pages/CreateTicket';
+import { AdminUsers } from './pages/AdminUsers';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -55,6 +56,14 @@ function App() {
             element={
               <PrivateRoute>
                 <TicketDetail />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/users"
+            element={
+              <PrivateRoute>
+                <AdminUsers />
               </PrivateRoute>
             }
           />

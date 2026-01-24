@@ -2,6 +2,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { signOut } from 'firebase/auth';
 import { auth } from '../firebase';
 import { useNavigate } from 'react-router-dom';
+import { UserRole } from '../types/user';
 
 export function Home() {
   const { user } = useAuth();
@@ -21,13 +22,18 @@ export function Home() {
             <p>Logged in as: <strong>{user.email}</strong></p>
             <p>Display Name: <strong>{user.displayName}</strong></p>
             <p>Role: <strong>{user.role}</strong></p>
-            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem', flexWrap: 'wrap' }}>
               <button onClick={() => navigate('/tickets')} style={styles.primaryButton}>
                 View Tickets
               </button>
               <button onClick={() => navigate('/tickets/new')} style={styles.successButton}>
                 Create Ticket
               </button>
+              {user.role === UserRole.ADMIN && (
+                <button onClick={() => navigate('/admin/users')} style={styles.adminButton}>
+                  Manage Users
+                </button>
+              )}
               <button onClick={handleSignOut} style={styles.button}>
                 Sign Out
               </button>
@@ -76,6 +82,7 @@ const styles = {
     fontWeight: '500',
     cursor: 'pointer',
     flex: 1,
+    minWidth: '140px',
   },
   successButton: {
     padding: '0.75rem',
@@ -87,6 +94,19 @@ const styles = {
     fontWeight: '500',
     cursor: 'pointer',
     flex: 1,
+    minWidth: '140px',
+  },
+  adminButton: {
+    padding: '0.75rem',
+    backgroundColor: '#6f42c1',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '16px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    flex: 1,
+    minWidth: '140px',
   },
   button: {
     padding: '0.75rem',
@@ -98,5 +118,6 @@ const styles = {
     fontWeight: '500',
     cursor: 'pointer',
     flex: 1,
+    minWidth: '140px',
   },
 };
