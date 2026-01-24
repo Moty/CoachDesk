@@ -75,3 +75,103 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [GOTCHA]: Must handle auth/user-not-found error code when checking existence
   - [INTEGRATION]: Seed script connects to Firestore using FirestoreAdapter
 ---
+## 2026-01-24T04:57:00Z - US-005
+- Implemented typed API client with error handling
+- Created web/src/lib/api.ts with full CRUD methods (GET, POST, PATCH, DELETE)
+- API client attaches Authorization Bearer token from Firebase Auth
+- Handles backend error format { code, message, details } with user-friendly messages
+- Supports pagination and filtering via query params
+- Supports file upload with multipart/form-data and field name 'file'
+- Files changed:
+  - web/src/lib/api.ts (new)
+  - web/src/lib/__tests__/api.test.ts (new)
+  - web/vite.config.ts (added vitest test config)
+  - web/package.json (added test scripts)
+  - web/package-lock.json (added vitest dependencies)
+- **Learnings for future iterations:**
+  - [PATTERN]: API client exports `api` object with get/post/patch/delete/uploadFile methods
+  - [PATTERN]: User-friendly error messages mapped from backend error codes in getUserFriendlyMessage()
+  - [PATTERN]: Authorization token automatically fetched from Firebase Auth currentUser
+  - [INTEGRATION]: API client uses VITE_API_BASE_URL from environment config
+  - [GOTCHA]: Vitest mocks require async beforeEach to properly reset auth.currentUser
+---
+## 2026-01-24T05:00:00Z - US-006
+- Implemented role-based routing and access denied state
+- Created UserRole enum and User type in web/src/types/user.ts
+- Updated AuthContext to fetch current user via GET /api/v1/users/me on app load
+- AuthContext now stores both Firebase user and application user with role
+- Created RoleRoute component for gating routes by role
+- Created AccessDenied page displayed when user lacks permission
+- Updated App.tsx to include /access-denied route
+- Updated Home page to display user role for verification
+- Files changed:
+  - web/src/types/user.ts (new)
+  - web/src/contexts/AuthContext.tsx
+  - web/src/components/RoleRoute.tsx (new)
+  - web/src/pages/AccessDenied.tsx (new)
+  - web/src/pages/Home.tsx
+  - web/src/App.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: User types should match backend domain models (UserRole enum matches src/domain/models/User.ts)
+  - [PATTERN]: AuthContext fetches user data after Firebase authentication to get role and organization
+  - [PATTERN]: RoleRoute component can be used to protect routes: <RoleRoute allowedRoles={[UserRole.ADMIN]}>
+  - [INTEGRATION]: GET /api/v1/users/me endpoint returns full user profile including role
+  - [GOTCHA]: Firebase User from auth lib doesn't include custom claims, must fetch from backend
+---
+## 2026-01-24T05:01:00Z - US-007
+- Implemented Tickets list page with pagination
+- Created ticket types (TicketStatus, TicketPriority, Ticket, TicketsResponse) in web/src/types/ticket.ts
+- Created Tickets page component that calls GET /api/v1/tickets with pagination
+- Renders ticket rows with subject, status, priority, requester, and updatedAt
+- Shows empty-state message when no tickets found
+- Added pagination controls with Previous/Next buttons
+- Updated Home page to include "View Tickets" button for navigation
+- Updated App.tsx to add /tickets route
+- Files changed:
+  - web/src/types/ticket.ts (new)
+  - web/src/pages/Tickets.tsx (new)
+  - web/src/App.tsx
+  - web/src/pages/Home.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Ticket types match backend domain models from src/domain/models/Ticket.ts
+  - [PATTERN]: List pages follow pattern: loading state, error state, empty state, data table
+  - [PATTERN]: Backend ticket API supports pagination via page/limit query params
+  - [INTEGRATION]: GET /api/v1/tickets returns { tickets, total, page, limit } response
+  - [GOTCHA]: Date strings from API need conversion using new Date() for formatting
+---
+## 2026-01-24T05:04:00Z - US-008
+- Implemented ticket list filters and sorting UI
+- Added filters for status (dropdown), priority (dropdown), assignee (text input), and tags (comma-separated text input)
+- Added sorting controls for createdAt, updatedAt, and priority with asc/desc order
+- Filters and sorting update API query params dynamically
+- Added reset filters button to clear all filters and sorting
+- All filters trigger page reset to 1 and reload tickets with updated params
+- Files changed:
+  - web/src/pages/Tickets.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Backend listTickets endpoint supports status, priority, assigneeId, tags filters and sortBy/order params
+  - [PATTERN]: Status and priority filters use enum dropdown for valid values
+  - [PATTERN]: Tags filter accepts comma-separated values matching backend array-contains-any logic
+  - [INTEGRATION]: All filter changes reset page to 1 to avoid empty result pages
+  - [GOTCHA]: Must import TicketStatus and TicketPriority enums to use in select options
+---
+## 2026-01-24T05:18:00Z - US-009
+- Implemented Ticket Detail page that loads GET /api/v1/tickets/:id
+- Displays ticket metadata: status, priority, assignee, requester, tags, created/updated dates
+- Shows SLA timers section with first response and resolution due/completed times
+- Displays SLA breach status with red styling when breached
+- Shows not-found state when ticket doesn't exist or user lacks permission
+- Made ticket rows in Tickets.tsx clickable to navigate to detail page
+- Added /tickets/:id route to App.tsx
+- Files changed:
+  - web/src/pages/TicketDetail.tsx (new)
+  - web/src/App.tsx
+  - web/src/pages/Tickets.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Detail pages follow pattern: loading, not-found, error, and data display states
+  - [PATTERN]: Use useParams hook from react-router-dom to get route params like :id
+  - [PATTERN]: Navigate function from react-router-dom enables programmatic navigation
+  - [PATTERN]: SLA timers should show breach status visually with red background/border
+  - [INTEGRATION]: Ticket detail page displays all SLATimer fields from backend model
+  - [GOTCHA]: Must handle undefined dates in SLA timers with fallback to 'N/A'
+---
