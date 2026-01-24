@@ -2,18 +2,31 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Ticket } from '../types/ticket';
+import { Comment, CommentsResponse } from '../types/comment';
+import { useAuth } from '../contexts/AuthContext';
+import { UserRole } from '../types/user';
 
 export function TicketDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [ticket, setTicket] = useState<Ticket | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentsPage, setCommentsPage] = useState(1);
+  const [commentsTotalPages, setCommentsTotalPages] = useState(1);
+  const [commentsLoading, setCommentsLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     loadTicket();
+    loadComments();
   }, [id]);
+
+  useEffect(() => {
+    loadComments();
+  }, [commentsPage]);
 
   async function loadTicket() {
     if (!id) {
@@ -36,6 +49,31 @@ export function TicketDetail() {
       }
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function loadComments() {
+    if (!id) return;
+
+    try {
+      setCommentsLoading(true);
+      const response = await api.get<CommentsResponse>(`/api/v1/tickets/${id}/comments`, {
+        page: commentsPage,
+        limit: 10,
+      });
+      
+      // Filter out internal comments for customers
+      let filteredComments = response.comments;
+      if (user?.role === UserRole.CUSTOMER) {
+        filteredComments = response.comments.filter((comment) => comment.isPublic);
+      }
+      
+      setComments(filteredComments);
+      setCommentsTotalPages(Math.ceil(response.total / response.limit));
+    } catch (err: any) {
+      console.error('Failed to load comments:', err);
+    } finally {
+      setCommentsLoading(false);
     }
   }
 
@@ -442,12 +480,156 @@ export function TicketDetail() {
           padding: '1.5rem',
           borderRadius: '8px',
           border: '1px solid #e0e0e0',
+          marginBottom: '2rem',
         }}
       >
         <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Description</h2>
         <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
           {ticket.description}
         </div>
+      </div>
+
+      {/* Comments Timeline Section */}
+      <div
+        style={{
+          backgroundColor: '#fff',
+          padding: '1.5rem',
+          borderRadius: '8px',
+          border: '1px solid #e0e0e0',
+        }}
+      >
+        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Comments</h2>
+
+        {commentsLoading && (
+          <p style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>
+            Loading comments...
+          </p>
+        )}
+
+        {!commentsLoading && comments.length === 0 && (
+          <p style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>
+            No comments yet.
+          </p>
+        )}
+
+        {!commentsLoading && comments.length > 0 && (
+          <div>
+            {/* Comments Timeline */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              {comments.map((comment) => (
+                <div
+                  key={comment.id}
+                  style={{
+                    padding: '1rem',
+                    backgroundColor: comment.isPublic ? '#f9f9f9' : '#fff9e6',
+                    border: `1px solid ${comment.isPublic ? '#e0e0e0' : '#ffd54f'}`,
+                    borderRadius: '8px',
+                  }}
+                >
+                  {/* Comment Header */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    <div>
+                      <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>
+                        {comment.authorId}
+                      </span>
+                      <span
+                        style={{
+                          marginLeft: '0.5rem',
+                          fontSize: '0.75rem',
+                          padding: '0.25rem 0.5rem',
+                          borderRadius: '4px',
+                          backgroundColor: comment.isPublic ? '#e3f2fd' : '#ffe0b2',
+                          color: comment.isPublic ? '#1976d2' : '#e65100',
+                        }}
+                      >
+                        {comment.isPublic ? 'Public' : 'Internal'}
+                      </span>
+                    </div>
+                    <span style={{ fontSize: '0.75rem', color: '#666' }}>
+                      {formatDateTime(comment.createdAt)}
+                    </span>
+                  </div>
+
+                  {/* Comment Body */}
+                  <div style={{ whiteSpace: 'pre-wrap', lineHeight: '1.6' }}>
+                    {comment.body}
+                  </div>
+
+                  {/* Attachments */}
+                  {comment.attachments && comment.attachments.length > 0 && (
+                    <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid #e0e0e0' }}>
+                      <div style={{ fontSize: '0.75rem', fontWeight: '600', color: '#555', marginBottom: '0.5rem' }}>
+                        Attachments:
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
+                        {comment.attachments.map((attachment) => (
+                          <div key={attachment.id} style={{ fontSize: '0.875rem' }}>
+                            📎 {attachment.fileName} ({Math.round(attachment.size / 1024)} KB)
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {commentsTotalPages > 1 && (
+              <div
+                style={{
+                  display: 'flex',
+                  justifyContent: 'center',
+                  gap: '1rem',
+                  marginTop: '1.5rem',
+                  paddingTop: '1rem',
+                  borderTop: '1px solid #e0e0e0',
+                }}
+              >
+                <button
+                  onClick={() => setCommentsPage((p) => Math.max(1, p - 1))}
+                  disabled={commentsPage === 1}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor: commentsPage === 1 ? '#e0e0e0' : '#007bff',
+                    color: commentsPage === 1 ? '#999' : 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor: commentsPage === 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Previous
+                </button>
+                <span style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem' }}>
+                  Page {commentsPage} of {commentsTotalPages}
+                </span>
+                <button
+                  onClick={() => setCommentsPage((p) => Math.min(commentsTotalPages, p + 1))}
+                  disabled={commentsPage === commentsTotalPages}
+                  style={{
+                    padding: '0.5rem 1rem',
+                    backgroundColor:
+                      commentsPage === commentsTotalPages ? '#e0e0e0' : '#007bff',
+                    color: commentsPage === commentsTotalPages ? '#999' : 'white',
+                    border: 'none',
+                    borderRadius: '4px',
+                    cursor:
+                      commentsPage === commentsTotalPages ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
