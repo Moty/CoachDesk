@@ -249,3 +249,17 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: Edit mode toggles between display and input controls for each field
   - [GOTCHA]: Must only send changed fields to avoid unnecessary updates and audit log entries
 ---
+## 2026-01-24T05:31:00Z - US-014
+- Implemented attachment uploader that posts to POST /api/v1/tickets/:id/attachments
+- Added file input with 10MB size validation before upload
+- Created attachments list section displaying uploaded files with download links
+- Attachments shown in comments timeline with download capability
+- Files changed:
+  - web/src/pages/TicketDetail.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: File upload uses api.uploadFile() with multipart/form-data and 'file' field name
+  - [PATTERN]: File size validation (10MB limit) happens client-side before API call
+  - [PATTERN]: Attachments displayed as downloadable links in timeline and dedicated section
+  - [INTEGRATION]: POST /api/v1/tickets/:id/attachments returns Attachment type with id, fileName, filePath, size, mimeType
+  - [GOTCHA]: Must reset file input value after successful upload to allow re-selecting same file
+---
