@@ -8,6 +8,7 @@ import { Tickets } from './pages/Tickets';
 import { TicketDetail } from './pages/TicketDetail';
 import { CreateTicket } from './pages/CreateTicket';
 import { AdminUsers } from './pages/AdminUsers';
+import { AdminSLARules } from './pages/AdminSLARules';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -64,6 +65,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AdminUsers />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/sla-rules"
+            element={
+              <PrivateRoute>
+                <AdminSLARules />
               </PrivateRoute>
             }
           />

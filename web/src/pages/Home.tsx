@@ -30,9 +30,14 @@ export function Home() {
                 Create Ticket
               </button>
               {user.role === UserRole.ADMIN && (
-                <button onClick={() => navigate('/admin/users')} style={styles.adminButton}>
-                  Manage Users
-                </button>
+                <>
+                  <button onClick={() => navigate('/admin/users')} style={styles.adminButton}>
+                    Manage Users
+                  </button>
+                  <button onClick={() => navigate('/admin/sla-rules')} style={styles.adminButton}>
+                    SLA Rules
+                  </button>
+                </>
               )}
               <button onClick={handleSignOut} style={styles.button}>
                 Sign Out
