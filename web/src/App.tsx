@@ -9,6 +9,7 @@ import { TicketDetail } from './pages/TicketDetail';
 import { CreateTicket } from './pages/CreateTicket';
 import { AdminUsers } from './pages/AdminUsers';
 import { AdminSLARules } from './pages/AdminSLARules';
+import { AdminAuditLogs } from './pages/AdminAuditLogs';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -73,6 +74,14 @@ function App() {
             element={
               <PrivateRoute>
                 <AdminSLARules />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/admin/audit-logs"
+            element={
+              <PrivateRoute>
+                <AdminAuditLogs />
               </PrivateRoute>
             }
           />

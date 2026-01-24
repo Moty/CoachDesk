@@ -37,6 +37,9 @@ export function Home() {
                   <button onClick={() => navigate('/admin/sla-rules')} style={styles.adminButton}>
                     SLA Rules
                   </button>
+                  <button onClick={() => navigate('/admin/audit-logs')} style={styles.adminButton}>
+                    Audit Logs
+                  </button>
                 </>
               )}
               <button onClick={handleSignOut} style={styles.button}>
