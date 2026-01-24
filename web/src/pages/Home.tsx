@@ -20,6 +20,7 @@ export function Home() {
           <div style={styles.userInfo}>
             <p>Logged in as: <strong>{user.email}</strong></p>
             <p>Display Name: <strong>{user.displayName}</strong></p>
+            <p>Role: <strong>{user.role}</strong></p>
             <button onClick={handleSignOut} style={styles.button}>
               Sign Out
             </button>

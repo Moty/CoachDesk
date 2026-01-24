@@ -1,21 +1,42 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, onAuthStateChanged } from 'firebase/auth';
+import { User as FirebaseUser, onAuthStateChanged } from 'firebase/auth';
 import { auth } from '../firebase';
+import { api } from '../lib/api';
+import { User } from '../types/user';
 
 interface AuthContextType {
+  firebaseUser: FirebaseUser | null;
   user: User | null;
   loading: boolean;
 }
 
-const AuthContext = createContext<AuthContextType>({ user: null, loading: true });
+const AuthContext = createContext<AuthContextType>({ 
+  firebaseUser: null, 
+  user: null, 
+  loading: true 
+});
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [firebaseUser, setFirebaseUser] = useState<FirebaseUser | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      setFirebaseUser(fbUser);
+      
+      if (fbUser) {
+        try {
+          const userData = await api.get<User>('/users/me');
+          setUser(userData);
+        } catch (error) {
+          console.error('Failed to fetch user data:', error);
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+      
       setLoading(false);
     });
 
@@ -23,7 +44,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading }}>
+    <AuthContext.Provider value={{ firebaseUser, user, loading }}>
       {children}
     </AuthContext.Provider>
   );
