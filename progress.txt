@@ -229,3 +229,23 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [GOTCHA]: Route order matters - /tickets/new must come before /tickets/:id in React Router to avoid "new" being treated as an ID
   - [INTEGRATION]: Priority uses TicketPriority enum from types/ticket.ts
 ---
+## 2026-01-24T05:27:00Z - US-013
+- Implemented agent/admin ticket update controls on ticket detail page
+- Added Edit Ticket button that shows Save/Cancel actions
+- Added status dropdown with valid transition enforcement (matches backend STATUS_TRANSITIONS)
+- Added priority dropdown with all TicketPriority enum values
+- Added assignee picker that loads agents/admins via GET /api/v1/users
+- Added tags input field accepting comma-separated values
+- Updates sent via PATCH /api/v1/tickets/:id only include changed fields
+- Displays backend validation errors (invalid transitions, missing assignee, etc)
+- Ticket refreshes in real-time after successful update without page reload
+- Edit controls only visible to agents/admins, hidden from customers
+- Files changed:
+  - web/src/pages/TicketDetail.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Ticket updates use PATCH /api/v1/tickets/:id accepting status, priority, assigneeId, tags
+  - [PATTERN]: Status transitions validated client-side using getValidStatusTransitions() matching backend
+  - [PATTERN]: Agent/admin users loaded from GET /api/v1/users with role filter
+  - [INTEGRATION]: Edit mode toggles between display and input controls for each field
+  - [GOTCHA]: Must only send changed fields to avoid unnecessary updates and audit log entries
+---
