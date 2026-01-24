@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
-import { Ticket } from '../types/ticket';
+import { Ticket, TicketStatus, TicketPriority } from '../types/ticket';
 import { Comment, CommentsResponse } from '../types/comment';
 import { useAuth } from '../contexts/AuthContext';
-import { UserRole } from '../types/user';
+import { UserRole, User } from '../types/user';
 
 export function TicketDetail() {
   const { id } = useParams<{ id: string }>();
@@ -25,9 +25,26 @@ export function TicketDetail() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
+  // Ticket update state
+  const [isEditing, setIsEditing] = useState(false);
+  const [editStatus, setEditStatus] = useState<TicketStatus | ''>('');
+  const [editPriority, setEditPriority] = useState<TicketPriority | ''>('');
+  const [editTags, setEditTags] = useState('');
+  const [editAssignee, setEditAssignee] = useState('');
+  const [updateError, setUpdateError] = useState<string | null>(null);
+  const [updating, setUpdating] = useState(false);
+  
+  // Available users for assignee picker
+  const [availableUsers, setAvailableUsers] = useState<User[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+
   useEffect(() => {
     loadTicket();
     loadComments();
+    // Load available users if agent/admin
+    if (user?.role === UserRole.AGENT || user?.role === UserRole.ADMIN) {
+      loadAvailableUsers();
+    }
   }, [id]);
 
   useEffect(() => {
@@ -81,6 +98,96 @@ export function TicketDetail() {
     } finally {
       setCommentsLoading(false);
     }
+  }
+
+  async function loadAvailableUsers() {
+    try {
+      setUsersLoading(true);
+      const response = await api.get<{ users: User[] }>('/api/v1/users', {
+        role: 'agent,admin',
+      });
+      setAvailableUsers(response.users);
+    } catch (err: any) {
+      console.error('Failed to load users:', err);
+      // Not critical, just means assignee picker won't work
+    } finally {
+      setUsersLoading(false);
+    }
+  }
+
+  function startEditing() {
+    if (!ticket) return;
+    setIsEditing(true);
+    setEditStatus(ticket.status);
+    setEditPriority(ticket.priority);
+    setEditTags(ticket.tags.join(', '));
+    setEditAssignee(ticket.assigneeId || '');
+    setUpdateError(null);
+  }
+
+  function cancelEditing() {
+    setIsEditing(false);
+    setEditStatus('');
+    setEditPriority('');
+    setEditTags('');
+    setEditAssignee('');
+    setUpdateError(null);
+  }
+
+  async function saveTicketUpdates() {
+    if (!id || !ticket) return;
+
+    try {
+      setUpdating(true);
+      setUpdateError(null);
+
+      const updates: any = {};
+      
+      // Only include changed fields
+      if (editStatus && editStatus !== ticket.status) {
+        updates.status = editStatus;
+      }
+      if (editPriority && editPriority !== ticket.priority) {
+        updates.priority = editPriority;
+      }
+      if (editAssignee !== ticket.assigneeId) {
+        updates.assigneeId = editAssignee || undefined;
+      }
+      
+      // Parse tags
+      const newTags = editTags
+        .split(',')
+        .map(t => t.trim())
+        .filter(t => t.length > 0);
+      if (JSON.stringify(newTags) !== JSON.stringify(ticket.tags)) {
+        updates.tags = newTags;
+      }
+
+      // Only make API call if there are changes
+      if (Object.keys(updates).length === 0) {
+        setIsEditing(false);
+        return;
+      }
+
+      const updatedTicket = await api.patch<Ticket>(`/api/v1/tickets/${id}`, updates);
+      setTicket(updatedTicket);
+      setIsEditing(false);
+    } catch (err: any) {
+      setUpdateError(err.message || 'Failed to update ticket');
+    } finally {
+      setUpdating(false);
+    }
+  }
+
+  function getValidStatusTransitions(currentStatus: TicketStatus): TicketStatus[] {
+    const transitions: Record<TicketStatus, TicketStatus[]> = {
+      [TicketStatus.NEW]: [TicketStatus.OPEN, TicketStatus.CLOSED],
+      [TicketStatus.OPEN]: [TicketStatus.PENDING, TicketStatus.RESOLVED, TicketStatus.CLOSED],
+      [TicketStatus.PENDING]: [TicketStatus.OPEN, TicketStatus.RESOLVED, TicketStatus.CLOSED],
+      [TicketStatus.RESOLVED]: [TicketStatus.OPEN, TicketStatus.CLOSED],
+      [TicketStatus.CLOSED]: [TicketStatus.OPEN],
+    };
+    return [currentStatus, ...(transitions[currentStatus] || [])];
   }
 
   async function handleSubmitComment(e: React.FormEvent) {
@@ -217,7 +324,66 @@ export function TicketDetail() {
           border: '1px solid #e0e0e0',
         }}
       >
-        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Ticket Information</h2>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+          <h2 style={{ margin: 0 }}>Ticket Information</h2>
+          {(user?.role === UserRole.AGENT || user?.role === UserRole.ADMIN) && !isEditing && (
+            <button
+              onClick={startEditing}
+              style={{
+                padding: '0.5rem 1rem',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontSize: '0.875rem',
+              }}
+            >
+              Edit Ticket
+            </button>
+          )}
+          {isEditing && (
+            <div style={{ display: 'flex', gap: '0.5rem' }}>
+              <button
+                onClick={saveTicketUpdates}
+                disabled={updating}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: updating ? '#ccc' : '#28a745',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: updating ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                }}
+              >
+                {updating ? 'Saving...' : 'Save'}
+              </button>
+              <button
+                onClick={cancelEditing}
+                disabled={updating}
+                style={{
+                  padding: '0.5rem 1rem',
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  cursor: updating ? 'not-allowed' : 'pointer',
+                  fontSize: '0.875rem',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+
+        {updateError && (
+          <p style={{ color: 'red', fontSize: '0.875rem', marginBottom: '1rem' }}>
+            {updateError}
+          </p>
+        )}
+
         <div
           style={{
             display: 'grid',
@@ -238,26 +404,46 @@ export function TicketDetail() {
             >
               Status
             </label>
-            <span
-              style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-                display: 'inline-block',
-                backgroundColor:
-                  ticket.status === 'new'
-                    ? '#e3f2fd'
-                    : ticket.status === 'open'
-                    ? '#fff3e0'
-                    : ticket.status === 'pending'
-                    ? '#fce4ec'
-                    : ticket.status === 'resolved'
-                    ? '#e8f5e9'
-                    : '#f5f5f5',
-              }}
-            >
-              {ticket.status}
-            </span>
+            {isEditing ? (
+              <select
+                value={editStatus}
+                onChange={(e) => setEditStatus(e.target.value as TicketStatus)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                }}
+              >
+                {getValidStatusTransitions(ticket.status).map((status) => (
+                  <option key={status} value={status}>
+                    {status}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span
+                style={{
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  display: 'inline-block',
+                  backgroundColor:
+                    ticket.status === 'new'
+                      ? '#e3f2fd'
+                      : ticket.status === 'open'
+                      ? '#fff3e0'
+                      : ticket.status === 'pending'
+                      ? '#fce4ec'
+                      : ticket.status === 'resolved'
+                      ? '#e8f5e9'
+                      : '#f5f5f5',
+                }}
+              >
+                {ticket.status}
+              </span>
+            )}
           </div>
 
           {/* Priority */}
@@ -273,24 +459,44 @@ export function TicketDetail() {
             >
               Priority
             </label>
-            <span
-              style={{
-                padding: '0.25rem 0.75rem',
-                borderRadius: '4px',
-                fontSize: '0.875rem',
-                display: 'inline-block',
-                backgroundColor:
-                  ticket.priority === 'urgent'
-                    ? '#ffebee'
-                    : ticket.priority === 'high'
-                    ? '#fff3e0'
-                    : ticket.priority === 'medium'
-                    ? '#e3f2fd'
-                    : '#f5f5f5',
-              }}
-            >
-              {ticket.priority}
-            </span>
+            {isEditing ? (
+              <select
+                value={editPriority}
+                onChange={(e) => setEditPriority(e.target.value as TicketPriority)}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                }}
+              >
+                {Object.values(TicketPriority).map((priority) => (
+                  <option key={priority} value={priority}>
+                    {priority}
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span
+                style={{
+                  padding: '0.25rem 0.75rem',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                  display: 'inline-block',
+                  backgroundColor:
+                    ticket.priority === 'urgent'
+                      ? '#ffebee'
+                      : ticket.priority === 'high'
+                      ? '#fff3e0'
+                      : ticket.priority === 'medium'
+                      ? '#e3f2fd'
+                      : '#f5f5f5',
+                }}
+              >
+                {ticket.priority}
+              </span>
+            )}
           </div>
 
           {/* Requester */}
@@ -322,9 +528,31 @@ export function TicketDetail() {
             >
               Assignee
             </label>
-            <span style={{ fontSize: '0.875rem' }}>
-              {ticket.assigneeId || 'Unassigned'}
-            </span>
+            {isEditing ? (
+              <select
+                value={editAssignee}
+                onChange={(e) => setEditAssignee(e.target.value)}
+                disabled={usersLoading}
+                style={{
+                  width: '100%',
+                  padding: '0.5rem',
+                  border: '1px solid #ddd',
+                  borderRadius: '4px',
+                  fontSize: '0.875rem',
+                }}
+              >
+                <option value="">Unassigned</option>
+                {availableUsers.map((u) => (
+                  <option key={u.id} value={u.id}>
+                    {u.displayName} ({u.email})
+                  </option>
+                ))}
+              </select>
+            ) : (
+              <span style={{ fontSize: '0.875rem' }}>
+                {ticket.assigneeId || 'Unassigned'}
+              </span>
+            )}
           </div>
 
           {/* Created At */}
@@ -365,19 +593,33 @@ export function TicketDetail() {
         </div>
 
         {/* Tags */}
-        {ticket.tags && ticket.tags.length > 0 && (
-          <div style={{ marginTop: '1rem' }}>
-            <label
+        <div style={{ marginTop: '1rem' }}>
+          <label
+            style={{
+              display: 'block',
+              fontSize: '0.875rem',
+              fontWeight: '600',
+              color: '#555',
+              marginBottom: '0.25rem',
+            }}
+          >
+            Tags
+          </label>
+          {isEditing ? (
+            <input
+              type="text"
+              value={editTags}
+              onChange={(e) => setEditTags(e.target.value)}
+              placeholder="Enter tags separated by commas"
               style={{
-                display: 'block',
+                width: '100%',
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
                 fontSize: '0.875rem',
-                fontWeight: '600',
-                color: '#555',
-                marginBottom: '0.25rem',
               }}
-            >
-              Tags
-            </label>
+            />
+          ) : ticket.tags && ticket.tags.length > 0 ? (
             <div style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
               {ticket.tags.map((tag, index) => (
                 <span
@@ -393,8 +635,10 @@ export function TicketDetail() {
                 </span>
               ))}
             </div>
-          </div>
-        )}
+          ) : (
+            <span style={{ fontSize: '0.875rem', color: '#999' }}>No tags</span>
+          )}
+        </div>
       </div>
 
       {/* SLA Timers Section */}
