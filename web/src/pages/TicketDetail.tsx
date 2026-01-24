@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Ticket, TicketStatus, TicketPriority } from '../types/ticket';
-import { Comment, CommentsResponse } from '../types/comment';
+import { Comment, CommentsResponse, Attachment } from '../types/comment';
 import { useAuth } from '../contexts/AuthContext';
 import { UserRole, User } from '../types/user';
 
@@ -24,6 +24,11 @@ export function TicketDetail() {
   const [isPublic, setIsPublic] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // Attachment uploader state
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [attachments, setAttachments] = useState<Attachment[]>([]);
 
   // Ticket update state
   const [isEditing, setIsEditing] = useState(false);
@@ -188,6 +193,53 @@ export function TicketDetail() {
       [TicketStatus.CLOSED]: [TicketStatus.OPEN],
     };
     return [currentStatus, ...(transitions[currentStatus] || [])];
+  }
+
+  function handleFileSelect(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Enforce 10MB limit
+    const maxSize = 10 * 1024 * 1024; // 10MB in bytes
+    if (file.size > maxSize) {
+      setUploadError('File size must be less than 10MB');
+      setSelectedFile(null);
+      e.target.value = '';
+      return;
+    }
+
+    setUploadError(null);
+    setSelectedFile(file);
+  }
+
+  async function handleUploadAttachment() {
+    if (!id || !selectedFile) return;
+
+    try {
+      setSubmitting(true);
+      setUploadError(null);
+
+      const attachment = await api.uploadFile<Attachment>(
+        `/api/v1/tickets/${id}/attachments`,
+        selectedFile
+      );
+
+      // Add to attachments list
+      setAttachments((prev) => [...prev, attachment]);
+      setSelectedFile(null);
+      
+      // Reset file input
+      const fileInput = document.getElementById('file-input') as HTMLInputElement;
+      if (fileInput) fileInput.value = '';
+
+      // Reload ticket to show attachment in timeline
+      loadTicket();
+      loadComments();
+    } catch (err: any) {
+      setUploadError(err.message || 'Failed to upload attachment');
+    } finally {
+      setSubmitting(false);
+    }
   }
 
   async function handleSubmitComment(e: React.FormEvent) {
@@ -763,6 +815,118 @@ export function TicketDetail() {
         </div>
       </div>
 
+      {/* Attachments Section */}
+      {attachments.length > 0 && (
+        <div
+          style={{
+            backgroundColor: '#fff',
+            padding: '1.5rem',
+            borderRadius: '8px',
+            border: '1px solid #e0e0e0',
+            marginBottom: '2rem',
+          }}
+        >
+          <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Attachments</h2>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+            {attachments.map((attachment) => (
+              <div
+                key={attachment.id}
+                style={{
+                  padding: '0.75rem',
+                  backgroundColor: '#f9f9f9',
+                  borderRadius: '4px',
+                  border: '1px solid #e0e0e0',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                }}
+              >
+                <div>
+                  <span style={{ fontWeight: '600', fontSize: '0.875rem' }}>
+                    📎 {attachment.fileName}
+                  </span>
+                  <span style={{ fontSize: '0.75rem', color: '#666', marginLeft: '0.5rem' }}>
+                    ({Math.round(attachment.size / 1024)} KB)
+                  </span>
+                </div>
+                <a
+                  href={attachment.filePath}
+                  download={attachment.fileName}
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    textDecoration: 'none',
+                    borderRadius: '4px',
+                    fontSize: '0.75rem',
+                  }}
+                >
+                  Download
+                </a>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Attachment Uploader */}
+      <div
+        style={{
+          backgroundColor: '#fff',
+          padding: '1.5rem',
+          borderRadius: '8px',
+          border: '1px solid #e0e0e0',
+          marginBottom: '2rem',
+        }}
+      >
+        <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Upload Attachment</h2>
+        <div style={{ display: 'flex', gap: '1rem', alignItems: 'flex-start', flexWrap: 'wrap' }}>
+          <div style={{ flex: '1', minWidth: '200px' }}>
+            <input
+              id="file-input"
+              type="file"
+              onChange={handleFileSelect}
+              style={{
+                padding: '0.5rem',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                fontSize: '0.875rem',
+                width: '100%',
+              }}
+            />
+            <p style={{ fontSize: '0.75rem', color: '#666', marginTop: '0.5rem' }}>
+              Maximum file size: 10MB
+            </p>
+          </div>
+          <button
+            onClick={handleUploadAttachment}
+            disabled={!selectedFile || submitting}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: !selectedFile || submitting ? '#ccc' : '#007bff',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: !selectedFile || submitting ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+              minHeight: '38px',
+            }}
+          >
+            {submitting ? 'Uploading...' : 'Upload'}
+          </button>
+        </div>
+        {selectedFile && (
+          <p style={{ fontSize: '0.875rem', color: '#555', marginTop: '0.75rem' }}>
+            Selected: {selectedFile.name} ({Math.round(selectedFile.size / 1024)} KB)
+          </p>
+        )}
+        {uploadError && (
+          <p style={{ color: 'red', fontSize: '0.875rem', marginTop: '0.75rem' }}>
+            {uploadError}
+          </p>
+        )}
+      </div>
+
       {/* Comments Timeline Section */}
       <div
         style={{
@@ -909,9 +1073,21 @@ export function TicketDetail() {
                       </div>
                       <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem' }}>
                         {comment.attachments.map((attachment) => (
-                          <div key={attachment.id} style={{ fontSize: '0.875rem' }}>
+                          <a
+                            key={attachment.id}
+                            href={attachment.filePath}
+                            download={attachment.fileName}
+                            style={{
+                              fontSize: '0.875rem',
+                              color: '#007bff',
+                              textDecoration: 'none',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.25rem',
+                            }}
+                          >
                             📎 {attachment.fileName} ({Math.round(attachment.size / 1024)} KB)
-                          </div>
+                          </a>
                         ))}
                       </div>
                     </div>
