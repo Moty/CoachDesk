@@ -22,6 +22,7 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 
 - Multi-tenant ticket management with organization isolation
 - Role-based access control (Admin, Agent, Customer)
+- Self-service user registration with email/password
 - SLA monitoring and breach detection
 - Real-time comment system
 - Notification service with email templates
@@ -202,6 +203,7 @@ The OpenAPI 3.0 specification is located at `docs/api/openapi.yaml`.
 |--------|-------------------------------|------------------------------------------------|------|
 | GET    | /health                       | Health check                                   | No   |
 | GET    | /api-docs                     | Swagger UI documentation                       | No   |
+| POST   | /api/v1/auth/register         | Register new user (self-service)               | No   |
 | POST   | /api/v1/tickets               | Create a new ticket                            | Yes  |
 | GET    | /api/v1/tickets               | List tickets with filters                      | Yes  |
 | GET    | /api/v1/tickets/:id           | Get ticket by ID                               | Yes  |
@@ -242,6 +244,9 @@ FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 # CORS - Comma-separated list of allowed origins
 CORS_ORIGIN=http://localhost:3000,http://localhost:5173
 
+# User Registration
+DEFAULT_ORGANIZATION_ID=org-default
+
 # Email/SMTP Configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -261,6 +266,7 @@ SMTP_FROM=noreply@helpdesk.com
 | `FIREBASE_SERVICE_ACCOUNT_PATH` | Path to service account JSON | `./serviceAccountKey.json` |
 | `FIREBASE_STORAGE_BUCKET` | Firebase storage bucket for attachments | `my-helpdesk-123.appspot.com` |
 | `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:3000` |
+| `DEFAULT_ORGANIZATION_ID` | Default organization for self-registered users | `org-default` |
 | `SMTP_HOST` | SMTP server hostname | `smtp.gmail.com` |
 | `SMTP_PORT` | SMTP server port | `587` |
 | `SMTP_USER` | SMTP username/email | `user@gmail.com` |
