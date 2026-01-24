@@ -302,3 +302,20 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: POST /api/v1/admin/sla-rules accepts { name, priority, firstResponseMinutes, resolutionMinutes }
   - [GOTCHA]: Must reload rules list after creating new rule to show updated data
 ---
+## 2026-01-24T05:33:00Z - US-017
+- Implemented edit and delete actions for SLA rules in Admin SLA Rules page
+- Added inline edit mode with Save/Cancel buttons for each rule
+- Edit fields update name, priority, firstResponseMinutes, resolutionMinutes
+- Updates sent via PATCH /api/v1/admin/sla-rules/:id
+- Delete action sends DELETE /api/v1/admin/sla-rules/:id with confirmation dialog
+- List updates without full page refresh after edit/delete operations
+- Files changed:
+  - web/src/pages/AdminSLARules.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Inline edit mode uses state to track editingRuleId and show/hide edit controls
+  - [PATTERN]: Delete operations require confirmation using browser confirm() dialog
+  - [PATTERN]: List updates after edit/delete using state update: setRules(prevRules => ...)
+  - [INTEGRATION]: PATCH /api/v1/admin/sla-rules/:id accepts { name, priority, firstResponseMinutes, resolutionMinutes }
+  - [INTEGRATION]: DELETE /api/v1/admin/sla-rules/:id removes rule
+  - [GOTCHA]: Must track deleting state per rule ID to show loading indicator on correct button
+---
