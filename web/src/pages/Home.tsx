@@ -25,6 +25,9 @@ export function Home() {
               <button onClick={() => navigate('/tickets')} style={styles.primaryButton}>
                 View Tickets
               </button>
+              <button onClick={() => navigate('/tickets/new')} style={styles.successButton}>
+                Create Ticket
+              </button>
               <button onClick={handleSignOut} style={styles.button}>
                 Sign Out
               </button>
@@ -66,6 +69,17 @@ const styles = {
   primaryButton: {
     padding: '0.75rem',
     backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '16px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    flex: 1,
+  },
+  successButton: {
+    padding: '0.75rem',
+    backgroundColor: '#28a745',
     color: 'white',
     border: 'none',
     borderRadius: '4px',

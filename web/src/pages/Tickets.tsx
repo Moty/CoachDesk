@@ -80,7 +80,21 @@ export function Tickets() {
 
   return (
     <div style={{ padding: '2rem' }}>
-      <h1>Tickets</h1>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+        <h1>Tickets</h1>
+        <button onClick={() => navigate('/tickets/new')} style={{
+          padding: '0.75rem 1.5rem',
+          backgroundColor: '#28a745',
+          color: 'white',
+          border: 'none',
+          borderRadius: '4px',
+          fontSize: '16px',
+          fontWeight: '500',
+          cursor: 'pointer',
+        }}>
+          Create New Ticket
+        </button>
+      </div>
 
       {/* Filters Section */}
       <div style={{ 
