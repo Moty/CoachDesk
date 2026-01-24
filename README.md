@@ -24,6 +24,9 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 - Multi-tenant ticket management with organization isolation
 - Role-based access control (Admin, Agent, Customer)
 - Self-service user registration with email/password
+- Ticket creation with subject, description, priority, and tags
+- Ticket list with filtering and sorting capabilities
+- Ticket detail view with comments and SLA tracking
 - SLA monitoring and breach detection
 - Real-time comment system
 - Notification service with email templates

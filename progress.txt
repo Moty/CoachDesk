@@ -175,3 +175,57 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: Ticket detail page displays all SLATimer fields from backend model
   - [GOTCHA]: Must handle undefined dates in SLA timers with fallback to 'N/A'
 ---
+## 2026-01-24T05:21:00Z - US-010
+- Implemented Ticket comments timeline that loads comments via GET /api/v1/tickets/:id/comments
+- Created Comment and CommentsResponse types in web/src/types/comment.ts
+- Updated TicketDetail page to load and display comments with pagination
+- Comments timeline shows author, timestamp, and visibility label (Public/Internal)
+- Internal comments are hidden from customers (filtered client-side)
+- Public comments have blue background, internal comments have yellow background
+- Added pagination controls for navigating through comments
+- Files changed:
+  - web/src/types/comment.ts (new)
+  - web/src/pages/TicketDetail.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Comments endpoint follows same pagination pattern as tickets (page/limit params)
+  - [PATTERN]: Internal comments filtered client-side for customers using user.role check
+  - [PATTERN]: Visual distinction between public (blue) and internal (yellow) comments
+  - [INTEGRATION]: Comment type matches backend Comment model from src/domain/models/Comment.ts
+  - [GOTCHA]: Must check user?.role against UserRole.CUSTOMER to filter internal comments
+---
+## 2026-01-24T05:21:30Z - US-011
+- Implemented comment composer with form submission to POST /api/v1/tickets/:id/comments
+- Added textarea for comment body and submit button
+- Agents/admins can choose public vs internal visibility via checkbox
+- Customers always post public comments (checkbox hidden for them)
+- New comments appended to timeline without full page refresh
+- Form clears and resets after successful submission
+- Shows error message if submission fails
+- Files changed:
+  - web/src/pages/TicketDetail.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Comment composer uses controlled form state with commentBody and isPublic
+  - [PATTERN]: Customers forced to post public comments regardless of checkbox
+  - [PATTERN]: New comments appended to state array to avoid full page reload
+  - [INTEGRATION]: POST /api/v1/tickets/:id/comments accepts { body, isPublic } payload
+  - [GOTCHA]: Must check user.role === UserRole.CUSTOMER to hide internal toggle
+---
+## 2026-01-24T05:24:00Z - US-012
+- Implemented Create Ticket page with form posting to POST /api/v1/tickets
+- Created CreateTicket.tsx with subject (1-255 chars) and description (1+ chars) validation
+- Supports priority dropdown (Low/Medium/High/Urgent) and tags input (comma-separated)
+- Navigates to new ticket detail page (/tickets/:id) on success
+- Added "Create Ticket" button to Home page and Tickets list page
+- Added /tickets/new route to App.tsx (placed before /tickets/:id to avoid route conflict)
+- Files changed:
+  - web/src/pages/CreateTicket.tsx (new)
+  - web/src/App.tsx
+  - web/src/pages/Home.tsx
+  - web/src/pages/Tickets.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Form pages follow pattern: controlled state, client-side validation, API call, navigation on success
+  - [PATTERN]: Create forms validate required fields before submission (subject 1-255 chars, description 1+ chars)
+  - [PATTERN]: POST /api/v1/tickets returns { id } which is used to navigate to detail page
+  - [GOTCHA]: Route order matters - /tickets/new must come before /tickets/:id in React Router to avoid "new" being treated as an ID
+  - [INTEGRATION]: Priority uses TicketPriority enum from types/ticket.ts
+---
