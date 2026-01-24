@@ -282,3 +282,23 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: POST /api/v1/users accepts { email, password, displayName, role }
   - [GOTCHA]: Must reload users list after creating new user to show updated data
 ---
+## 2026-01-24T05:32:00Z - US-016
+- Implemented Admin SLA Rules page listing rules via GET /api/v1/admin/sla-rules
+- Created SLARule and SLARulesResponse types in web/src/types/sla.ts
+- Added create SLA rule form with name, priority, firstResponseMinutes, resolutionMinutes fields
+- Form posts to POST /api/v1/admin/sla-rules and shows success/error messages
+- Added /admin/sla-rules route accessible only to admin users
+- Added "SLA Rules" button to Home page for admin users
+- Files changed:
+  - web/src/types/sla.ts (new)
+  - web/src/pages/AdminSLARules.tsx (new)
+  - web/src/App.tsx
+  - web/src/pages/Home.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: SLA rule creation requires name, priority, firstResponseMinutes, resolutionMinutes
+  - [PATTERN]: Success messages auto-dismiss after 3 seconds using setTimeout
+  - [PATTERN]: Priority field uses TicketPriority enum matching ticket priorities
+  - [INTEGRATION]: GET /api/v1/admin/sla-rules returns { rules, total, page, limit }
+  - [INTEGRATION]: POST /api/v1/admin/sla-rules accepts { name, priority, firstResponseMinutes, resolutionMinutes }
+  - [GOTCHA]: Must reload rules list after creating new rule to show updated data
+---
