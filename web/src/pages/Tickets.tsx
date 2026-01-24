@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { api } from '../lib/api';
 import { Ticket, TicketsResponse, TicketStatus, TicketPriority } from '../types/ticket';
 
 export function Tickets() {
+  const navigate = useNavigate();
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -231,6 +233,7 @@ export function Tickets() {
               {tickets.map((ticket) => (
                 <tr
                   key={ticket.id}
+                  onClick={() => navigate(`/tickets/${ticket.id}`)}
                   style={{
                     borderBottom: '1px solid #eee',
                     cursor: 'pointer',
