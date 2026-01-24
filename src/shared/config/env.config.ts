@@ -15,6 +15,7 @@ interface EnvConfig {
   smtpUser: string;
   smtpPassword: string;
   smtpFrom: string;
+  defaultOrganizationId: string;
 }
 
 function validateEnv(): EnvConfig {
@@ -31,6 +32,11 @@ function validateEnv(): EnvConfig {
 
   const smtpPort = parseInt(process.env.SMTP_PORT || '587', 10);
   
+  const defaultOrganizationId = process.env.DEFAULT_ORGANIZATION_ID;
+  if (!defaultOrganizationId) {
+    throw new Error('DEFAULT_ORGANIZATION_ID is required for user registration');
+  }
+  
   const config: EnvConfig = {
     nodeEnv: nodeEnv as 'development' | 'staging' | 'production' | 'test',
     port,
@@ -43,7 +49,8 @@ function validateEnv(): EnvConfig {
     smtpPort,
     smtpUser: process.env.SMTP_USER || '',
     smtpPassword: process.env.SMTP_PASSWORD || '',
-    smtpFrom: process.env.SMTP_FROM || 'noreply@coachdesk.com'
+    smtpFrom: process.env.SMTP_FROM || 'noreply@coachdesk.com',
+    defaultOrganizationId
   };
 
   return config;

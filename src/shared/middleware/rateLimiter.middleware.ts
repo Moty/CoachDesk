@@ -42,7 +42,7 @@ export const userRateLimiter = rateLimit({
   // Key generator uses userId from authenticated request
   keyGenerator: (req: Request) => {
     // Use userId from auth middleware if available, otherwise fall back to IP
-    return (req as any).user?.userId || ipKeyGenerator(req);
+    return (req as any).user?.userId || ipKeyGenerator(req.ip || '');
   },
   handler: (_req: Request, res: Response) => {
     res.status(429).set('Retry-After', '3600').json({
