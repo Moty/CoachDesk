@@ -39,7 +39,7 @@ app.use(helmet({
     directives: {
       defaultSrc: ["'self'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
-      scriptSrc: ["'self'"],
+      scriptSrc: ["'self'", "'unsafe-inline'", "'unsafe-eval'"],
       imgSrc: ["'self'", 'data:', 'https:'],
       connectSrc: ["'self'"],
       fontSrc: ["'self'"],
@@ -98,11 +98,24 @@ app.use(errorHandler);
 logger.info('Starting HelpDesk application...');
 logConfig();
 
-// Initialize database adapter and start background jobs
-const firestoreAdapter = new FirestoreAdapter();
-const slaMonitoringJob = new SLAMonitoringJob(firestoreAdapter);
-slaMonitoringJob.start();
+async function startServer(): Promise<void> {
+  // Initialize database adapter before background jobs
+  const firestoreAdapter = new FirestoreAdapter();
+  await firestoreAdapter.connect();
 
-app.listen(config.port, () => {
-  logger.info(`Server ready on port ${config.port}`);
+  // Start background jobs after database connection
+  const slaMonitoringJob = new SLAMonitoringJob(firestoreAdapter);
+  slaMonitoringJob.start();
+
+  app.listen(config.port, () => {
+    logger.info(`Server ready on port ${config.port}`);
+  });
+}
+
+startServer().catch((error) => {
+  logger.error('Failed to start server', {
+    error: error instanceof Error ? error.message : 'Unknown error',
+    stack: error instanceof Error ? error.stack : undefined,
+  });
+  process.exit(1);
 });

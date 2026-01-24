@@ -118,20 +118,25 @@ export class FirestoreAdapter implements IDatabaseAdapter {
   async connect(): Promise<void> {
     try {
       if (!this.app) {
-        // Initialize Firebase Admin SDK
-        const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
-        
-        if (serviceAccount) {
-          this.app = admin.initializeApp({
-            credential: admin.credential.cert(serviceAccount),
-          });
+        // Reuse existing app if already initialized elsewhere
+        if (admin.apps.length > 0) {
+          this.app = admin.app();
         } else {
-          // Use application default credentials (for GCP environments)
-          this.app = admin.initializeApp();
+          // Initialize Firebase Admin SDK
+          const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+
+          if (serviceAccount) {
+            this.app = admin.initializeApp({
+              credential: admin.credential.cert(serviceAccount),
+            });
+          } else {
+            // Use application default credentials (for GCP environments)
+            this.app = admin.initializeApp();
+          }
         }
 
-        this.db = admin.firestore();
-        
+        this.db = admin.firestore(this.app);
+
         // Configure Firestore settings
         this.db.settings({
           ignoreUndefinedProperties: true,
