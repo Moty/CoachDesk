@@ -8,6 +8,7 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Local Development](#local-development)
+- [Frontend Development](#frontend-development)
 - [Firebase Emulators](#firebase-emulators)
 - [Testing](#testing)
 - [Available Commands](#available-commands)
@@ -103,6 +104,64 @@ You should see:
 - **API Base URL**: `http://localhost:3000/api/v1`
 - **Health Check**: `http://localhost:3000/health`
 - **API Documentation**: `http://localhost:3000/api-docs` (Swagger UI)
+
+## Frontend Development
+
+The frontend is a React + TypeScript application built with Vite, located in the `web/` directory.
+
+### Quick Start
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173` with proxy to the backend API.
+
+### Frontend Structure
+
+```
+web/
+├── src/
+│   ├── contexts/       # React contexts (Auth)
+│   ├── pages/          # Page components (Login, Register, Home)
+│   ├── firebase.ts     # Firebase client config
+│   ├── App.tsx         # Main app component with routing
+│   └── main.tsx        # Application entry point
+├── vite.config.ts      # Vite configuration
+└── package.json
+```
+
+### Frontend Environment Variables
+
+Create `web/.env` with:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+### Frontend Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server on port 5173 |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run typecheck` | Run TypeScript type checking |
+
+### Features
+
+- **User Registration**: Self-service signup at `/register`
+- **Login/Logout**: Authentication with Firebase Auth
+- **Protected Routes**: Redirect to login if not authenticated
+- **Error Handling**: Display API validation errors in UI
 
 ## Firebase Emulators
 

@@ -34,3 +34,29 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: Registration uses config.defaultOrganizationId from env.config.ts
   - [GOTCHA]: Firebase Admin createUser accepts password directly, no need to hash
 ---
+## 2026-01-24T04:46:00Z - US-003
+- Implemented React + TypeScript frontend with registration UI flow
+- Created Vite-based React application in web/ directory
+- Added /register route with email, displayName, and password fields
+- Client-side validation for required fields and password length >= 8
+- Calls POST /api/v1/auth/register and displays API errors in UI
+- On success, signs in user with Firebase Auth and redirects to /
+- Files changed:
+  - web/package.json (new)
+  - web/vite.config.ts (new)
+  - web/tsconfig.json (new)
+  - web/src/main.tsx (new)
+  - web/src/App.tsx (new)
+  - web/src/firebase.ts (new)
+  - web/src/contexts/AuthContext.tsx (new)
+  - web/src/pages/Register.tsx (new)
+  - web/src/pages/Login.tsx (new)
+  - web/src/pages/Home.tsx (new)
+  - web/src/vite-env.d.ts (new)
+- **Learnings for future iterations:**
+  - [PATTERN]: Frontend uses React Router for routing with /login, /register, / paths
+  - [PATTERN]: AuthContext provides user authentication state across the app
+  - [PATTERN]: All API calls use VITE_API_BASE_URL from .env
+  - [INTEGRATION]: Firebase Auth client SDK handles authentication tokens
+  - [GOTCHA]: Must define ImportMetaEnv in vite-env.d.ts for Vite env variables
+---
