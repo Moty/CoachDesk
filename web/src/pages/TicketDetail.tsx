@@ -19,6 +19,12 @@ export function TicketDetail() {
   const [error, setError] = useState<string | null>(null);
   const [notFound, setNotFound] = useState(false);
 
+  // Comment composer state
+  const [commentBody, setCommentBody] = useState('');
+  const [isPublic, setIsPublic] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
   useEffect(() => {
     loadTicket();
     loadComments();
@@ -74,6 +80,30 @@ export function TicketDetail() {
       console.error('Failed to load comments:', err);
     } finally {
       setCommentsLoading(false);
+    }
+  }
+
+  async function handleSubmitComment(e: React.FormEvent) {
+    e.preventDefault();
+    if (!id || !commentBody.trim()) return;
+
+    try {
+      setSubmitting(true);
+      setSubmitError(null);
+
+      const newComment = await api.post<Comment>(`/api/v1/tickets/${id}/comments`, {
+        body: commentBody.trim(),
+        isPublic: user?.role === UserRole.CUSTOMER ? true : isPublic,
+      });
+
+      // Append new comment to timeline without full page refresh
+      setComments((prevComments) => [...prevComments, newComment]);
+      setCommentBody('');
+      setIsPublic(true);
+    } catch (err: any) {
+      setSubmitError(err.message || 'Failed to submit comment');
+    } finally {
+      setSubmitting(false);
     }
   }
 
@@ -499,6 +529,71 @@ export function TicketDetail() {
         }}
       >
         <h2 style={{ marginTop: 0, marginBottom: '1rem' }}>Comments</h2>
+
+        {/* Comment Composer */}
+        <form
+          onSubmit={handleSubmitComment}
+          style={{
+            marginBottom: '1.5rem',
+            padding: '1rem',
+            backgroundColor: '#f9f9f9',
+            borderRadius: '8px',
+            border: '1px solid #e0e0e0',
+          }}
+        >
+          <textarea
+            value={commentBody}
+            onChange={(e) => setCommentBody(e.target.value)}
+            placeholder="Write a comment..."
+            rows={4}
+            style={{
+              width: '100%',
+              padding: '0.75rem',
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '0.875rem',
+              fontFamily: 'inherit',
+              resize: 'vertical',
+            }}
+          />
+
+          {/* Public/Internal Toggle for Agents/Admins */}
+          {user?.role !== UserRole.CUSTOMER && (
+            <div style={{ marginTop: '0.75rem', marginBottom: '0.75rem' }}>
+              <label style={{ display: 'flex', alignItems: 'center', fontSize: '0.875rem' }}>
+                <input
+                  type="checkbox"
+                  checked={!isPublic}
+                  onChange={(e) => setIsPublic(!e.target.checked)}
+                  style={{ marginRight: '0.5rem' }}
+                />
+                Mark as internal (only visible to agents and admins)
+              </label>
+            </div>
+          )}
+
+          {submitError && (
+            <p style={{ color: 'red', fontSize: '0.875rem', marginBottom: '0.75rem' }}>
+              {submitError}
+            </p>
+          )}
+
+          <button
+            type="submit"
+            disabled={submitting || !commentBody.trim()}
+            style={{
+              padding: '0.5rem 1rem',
+              backgroundColor: submitting || !commentBody.trim() ? '#ccc' : '#28a745',
+              color: 'white',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: submitting || !commentBody.trim() ? 'not-allowed' : 'pointer',
+              fontSize: '0.875rem',
+            }}
+          >
+            {submitting ? 'Posting...' : 'Post Comment'}
+          </button>
+        </form>
 
         {commentsLoading && (
           <p style={{ color: '#666', textAlign: 'center', padding: '1rem' }}>
