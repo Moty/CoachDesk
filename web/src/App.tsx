@@ -4,6 +4,7 @@ import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { Home } from './pages/Home';
 import { AccessDenied } from './pages/AccessDenied';
+import { Tickets } from './pages/Tickets';
 
 function PrivateRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
@@ -28,6 +29,14 @@ function App() {
             element={
               <PrivateRoute>
                 <Home />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/tickets"
+            element={
+              <PrivateRoute>
+                <Tickets />
               </PrivateRoute>
             }
           />

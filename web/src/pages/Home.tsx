@@ -21,9 +21,14 @@ export function Home() {
             <p>Logged in as: <strong>{user.email}</strong></p>
             <p>Display Name: <strong>{user.displayName}</strong></p>
             <p>Role: <strong>{user.role}</strong></p>
-            <button onClick={handleSignOut} style={styles.button}>
-              Sign Out
-            </button>
+            <div style={{ display: 'flex', gap: '1rem', marginTop: '1rem' }}>
+              <button onClick={() => navigate('/tickets')} style={styles.primaryButton}>
+                View Tickets
+              </button>
+              <button onClick={handleSignOut} style={styles.button}>
+                Sign Out
+              </button>
+            </div>
           </div>
         )}
       </div>
@@ -58,6 +63,17 @@ const styles = {
     flexDirection: 'column' as const,
     gap: '1rem',
   },
+  primaryButton: {
+    padding: '0.75rem',
+    backgroundColor: '#007bff',
+    color: 'white',
+    border: 'none',
+    borderRadius: '4px',
+    fontSize: '16px',
+    fontWeight: '500',
+    cursor: 'pointer',
+    flex: 1,
+  },
   button: {
     padding: '0.75rem',
     backgroundColor: '#dc3545',
@@ -67,6 +83,6 @@ const styles = {
     fontSize: '16px',
     fontWeight: '500',
     cursor: 'pointer',
-    marginTop: '1rem',
+    flex: 1,
   },
 };
