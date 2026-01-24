@@ -60,3 +60,18 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: Firebase Auth client SDK handles authentication tokens
   - [GOTCHA]: Must define ImportMetaEnv in vite-env.d.ts for Vite env variables
 ---
+## 2026-01-24T04:47:00Z - US-004
+- Created idempotent seed script for initial admin user
+- Script creates Firebase Auth user moty.moshin@gmail.com with password 12345678
+- Sets custom claims: role=admin, organizationId=DEFAULT_ORGANIZATION_ID
+- Creates Firestore users document if missing
+- Safe to re-run without creating duplicates
+- Files changed:
+  - scripts/seed-admin.ts (new)
+  - package.json (added seed:admin script)
+- **Learnings for future iterations:**
+  - [PATTERN]: Seed scripts use tsx to run TypeScript directly
+  - [PATTERN]: Check for existing user with getUserByEmail before creating
+  - [GOTCHA]: Must handle auth/user-not-found error code when checking existence
+  - [INTEGRATION]: Seed script connects to Firestore using FirestoreAdapter
+---

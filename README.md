@@ -72,6 +72,16 @@ Before you begin, ensure you have the following installed:
      - Save the JSON file securely in your project directory
    - Update `.env` with your Firebase project ID and service account path
 
+5. **Seed Initial Admin User** (optional but recommended):
+   ```bash
+   npm run seed:admin
+   ```
+   
+   This creates an admin user:
+   - Email: `moty.moshin@gmail.com`
+   - Password: `12345678`
+   - Role: `admin`
+
 ## Local Development
 
 ### Quick Start
@@ -247,6 +257,7 @@ Tests are written using Vitest and cover:
 | `npm test` | Run unit tests |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:ui` | Run tests with UI |
+| `npm run seed:admin` | Seed initial admin user (moty.moshin@gmail.com / 12345678) |
 
 ## API Documentation
 
