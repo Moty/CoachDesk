@@ -340,3 +340,21 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: GET /api/v1/admin/audit-logs returns { logs, total, page, limit }
   - [GOTCHA]: Must set page to 1 when changing filters to avoid empty result pages
 ---
+## 2026-01-24T05:35:00Z - US-019
+- Configured Firebase hosting to serve frontend SPA from web/dist
+- Updated firebase.json to proxy /api/** requests to backend Cloud Function
+- Added frontend dev (localhost:5173) and prod domains to CORS_ORIGIN in .env.example
+- README.md already contains comprehensive frontend setup/run documentation
+- Updated docs/deployment/firebase-deployment.md with frontend build/deploy steps
+- All typechecks pass (backend and frontend)
+- Files changed:
+  - firebase.json
+  - .env.example
+  - docs/deployment/firebase-deployment.md
+- **Learnings for future iterations:**
+  - [PATTERN]: Firebase hosting serves SPA from web/dist with /api/** rewrite to backend service
+  - [PATTERN]: Frontend production build uses VITE_API_BASE_URL=/api for relative API calls
+  - [PATTERN]: CORS_ORIGIN must include both dev (localhost:5173) and prod domains
+  - [INTEGRATION]: firebase.json rewrites /api/** to Cloud Function, all other routes to index.html for SPA
+  - [GOTCHA]: Must build frontend (cd web && npm run build) before deploying hosting
+---
