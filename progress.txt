@@ -263,3 +263,22 @@ Started: Thu Jan 22 23:47:56 PST 2026
   - [INTEGRATION]: POST /api/v1/tickets/:id/attachments returns Attachment type with id, fileName, filePath, size, mimeType
   - [GOTCHA]: Must reset file input value after successful upload to allow re-selecting same file
 ---
+## 2026-01-24T05:31:30Z - US-015
+- Implemented Admin Users page listing users via GET /api/v1/users
+- Added role filter dropdown to filter users by customer/agent/admin
+- Created user creation form with email, displayName, password, and role fields
+- Form posts to POST /api/v1/users and displays API validation errors
+- Added /admin/users route accessible only to admin users
+- Added "Manage Users" button to Home page for admin users
+- Files changed:
+  - web/src/pages/AdminUsers.tsx (new)
+  - web/src/App.tsx
+  - web/src/pages/Home.tsx
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin pages check user.role === UserRole.ADMIN and show access denied for non-admins
+  - [PATTERN]: List pages support pagination and filtering with page/limit and role query params
+  - [PATTERN]: Create user form validates email format and password length >= 8
+  - [INTEGRATION]: GET /api/v1/users returns { users, total, page, limit } with optional role filter
+  - [INTEGRATION]: POST /api/v1/users accepts { email, password, displayName, role }
+  - [GOTCHA]: Must reload users list after creating new user to show updated data
+---
