@@ -1,82 +1,78 @@
 {
   "project": "HelpDesk",
-  "branchName": "ralph/helpdesk-web-frontend",
-  "description": "Web frontend for HelpDesk using existing REST API and Firebase Auth.",
+  "branchName": "ralph/self-serve-registration",
+  "description": "Self-serve registration flow with backend endpoint, UI signup, default organization handling, and admin seed script.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Frontend scaffold and build pipeline",
-      "description": "As a developer, I want a Vite + React + TypeScript workspace so the UI can be built and served.",
+      "title": "Default organization config for registration",
+      "description": "As a system owner, I want new users assigned to a default organization so tenancy rules keep working.",
       "acceptanceCriteria": [
-        "Create web/ workspace with Vite + React + TypeScript",
-        "Add npm scripts for dev, build, preview, and test",
-        "Create web/src/main.tsx and web/src/App.tsx with a basic render",
-        "Configure build output to web/dist",
-        "Add web/tsconfig.json and web/vite.config.ts",
-        "Add web/.env.example with VITE_API_BASE_URL and VITE_FIREBASE_* placeholders",
-        "Tests pass",
+        "Add required DEFAULT_ORGANIZATION_ID env config used by registration",
+        "Registration fails with clear error when DEFAULT_ORGANIZATION_ID is missing",
         "Typecheck passes"
       ],
       "priority": 1,
       "blockedBy": [],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
       "id": "US-002",
-      "title": "App shell and routing skeleton",
-      "description": "As a user, I want a basic app shell and routes so I can navigate the UI.",
+      "title": "Public registration endpoint",
+      "description": "As a new user, I want to register so I can access the system without admin creation.",
       "acceptanceCriteria": [
-        "Install and configure React Router in web/",
-        "Create layout with header, navigation, and main content slot",
-        "Define route placeholders for Tickets, Ticket Detail, Create Ticket, and Admin sections",
-        "Add a not-found route",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
+        "Add POST /api/v1/auth/register accepting email, password, displayName",
+        "Creates Firebase Auth user and sets custom claims role and organizationId",
+        "Creates Firestore users document with id, email, displayName, role, organizationId",
+        "Default role is customer for self-service registration",
+        "Responds with sanitized user payload without password",
+        "Typecheck passes",
+        "Tests pass"
       ],
       "priority": 2,
       "blockedBy": [
         "US-001"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Firebase Auth SDK and context",
-      "description": "As a user, I want Firebase authentication available in the app so I can sign in and obtain tokens.",
+      "title": "Registration UI flow",
+      "description": "As a new user, I want a registration form so I can create an account from the login screen.",
       "acceptanceCriteria": [
-        "Configure Firebase Web SDK using VITE_FIREBASE_* env vars",
-        "Create AuthProvider/context with user, loading state, and getIdToken helper",
-        "Expose signIn and signOut helpers for configured providers",
-        "Auth state is accessible app-wide",
-        "Tests pass",
-        "Typecheck passes"
+        "Add /register route or login toggle with email, display name, and password fields",
+        "Client validates required fields and password length >= 8",
+        "On success, user is signed in and redirected to /",
+        "API errors (email exists, validation, rate limit) display in UI",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
       "blockedBy": [
-        "US-001"
+        "US-002"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
       "id": "US-004",
-      "title": "Authentication UI and route guard",
-      "description": "As a user, I want to sign in and access protected routes only when authenticated.",
+      "title": "Seed initial admin user",
+      "description": "As a developer, I want an initial admin user so I can access admin features on a fresh environment.",
       "acceptanceCriteria": [
-        "Add login page that supports Firebase Auth sign-in",
-        "Redirect unauthenticated users to login for protected routes",
-        "Add sign-out action in the header user menu",
-        "Verify in browser using dev-browser skill",
+        "Add idempotent seed script creating Firebase Auth user moty.moshin@gmail.com with password 12345678",
+        "Script sets custom claims role=admin and organizationId=DEFAULT_ORGANIZATION_ID",
+        "Script creates Firestore users document if missing",
+        "Script is safe to re-run without duplicates",
+        "Document how to run the seed script",
         "Typecheck passes"
       ],
       "priority": 4,
       "blockedBy": [
-        "US-002",
-        "US-003"
+        "US-002"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -96,7 +92,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -115,7 +111,7 @@
         "US-004",
         "US-005"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -133,7 +129,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -151,7 +147,7 @@
       "blockedBy": [
         "US-007"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -169,7 +165,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -187,7 +183,7 @@
       "blockedBy": [
         "US-009"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -205,7 +201,7 @@
       "blockedBy": [
         "US-010"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -224,7 +220,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -242,7 +238,7 @@
       "blockedBy": [
         "US-009"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -260,7 +256,7 @@
       "blockedBy": [
         "US-009"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -278,7 +274,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -296,7 +292,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -313,7 +309,7 @@
       "blockedBy": [
         "US-016"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -331,7 +327,7 @@
       "blockedBy": [
         "US-006"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -351,7 +347,7 @@
       "blockedBy": [
         "US-001"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

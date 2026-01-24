@@ -8,6 +8,7 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 - [Prerequisites](#prerequisites)
 - [Installation](#installation)
 - [Local Development](#local-development)
+- [Frontend Development](#frontend-development)
 - [Firebase Emulators](#firebase-emulators)
 - [Testing](#testing)
 - [Available Commands](#available-commands)
@@ -22,6 +23,10 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 
 - Multi-tenant ticket management with organization isolation
 - Role-based access control (Admin, Agent, Customer)
+- Self-service user registration with email/password
+- Ticket creation with subject, description, priority, and tags
+- Ticket list with filtering and sorting capabilities
+- Ticket detail view with comments and SLA tracking
 - SLA monitoring and breach detection
 - Real-time comment system
 - Notification service with email templates
@@ -70,6 +75,16 @@ Before you begin, ensure you have the following installed:
      - Save the JSON file securely in your project directory
    - Update `.env` with your Firebase project ID and service account path
 
+5. **Seed Initial Admin User** (optional but recommended):
+   ```bash
+   npm run seed:admin
+   ```
+   
+   This creates an admin user:
+   - Email: `moty.moshin@gmail.com`
+   - Password: `12345678`
+   - Role: `admin`
+
 ## Local Development
 
 ### Quick Start
@@ -102,6 +117,64 @@ You should see:
 - **API Base URL**: `http://localhost:3000/api/v1`
 - **Health Check**: `http://localhost:3000/health`
 - **API Documentation**: `http://localhost:3000/api-docs` (Swagger UI)
+
+## Frontend Development
+
+The frontend is a React + TypeScript application built with Vite, located in the `web/` directory.
+
+### Quick Start
+
+```bash
+cd web
+npm install
+npm run dev
+```
+
+The frontend will start on `http://localhost:5173` with proxy to the backend API.
+
+### Frontend Structure
+
+```
+web/
+├── src/
+│   ├── contexts/       # React contexts (Auth)
+│   ├── pages/          # Page components (Login, Register, Home)
+│   ├── firebase.ts     # Firebase client config
+│   ├── App.tsx         # Main app component with routing
+│   └── main.tsx        # Application entry point
+├── vite.config.ts      # Vite configuration
+└── package.json
+```
+
+### Frontend Environment Variables
+
+Create `web/.env` with:
+
+```env
+VITE_API_BASE_URL=http://localhost:3000
+VITE_FIREBASE_API_KEY=your_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_sender_id
+VITE_FIREBASE_APP_ID=your_app_id
+```
+
+### Frontend Commands
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start development server on port 5173 |
+| `npm run build` | Build for production |
+| `npm run preview` | Preview production build |
+| `npm run typecheck` | Run TypeScript type checking |
+
+### Features
+
+- **User Registration**: Self-service signup at `/register`
+- **Login/Logout**: Authentication with Firebase Auth
+- **Protected Routes**: Redirect to login if not authenticated
+- **Error Handling**: Display API validation errors in UI
 
 ## Firebase Emulators
 
@@ -187,6 +260,7 @@ Tests are written using Vitest and cover:
 | `npm test` | Run unit tests |
 | `npm run test:watch` | Run tests in watch mode |
 | `npm run test:ui` | Run tests with UI |
+| `npm run seed:admin` | Seed initial admin user (moty.moshin@gmail.com / 12345678) |
 
 ## API Documentation
 
@@ -202,6 +276,7 @@ The OpenAPI 3.0 specification is located at `docs/api/openapi.yaml`.
 |--------|-------------------------------|------------------------------------------------|------|
 | GET    | /health                       | Health check                                   | No   |
 | GET    | /api-docs                     | Swagger UI documentation                       | No   |
+| POST   | /api/v1/auth/register         | Register new user (self-service)               | No   |
 | POST   | /api/v1/tickets               | Create a new ticket                            | Yes  |
 | GET    | /api/v1/tickets               | List tickets with filters                      | Yes  |
 | GET    | /api/v1/tickets/:id           | Get ticket by ID                               | Yes  |
@@ -242,6 +317,9 @@ FIREBASE_STORAGE_BUCKET=your-project-id.appspot.com
 # CORS - Comma-separated list of allowed origins
 CORS_ORIGIN=http://localhost:3000,http://localhost:5173
 
+# User Registration
+DEFAULT_ORGANIZATION_ID=org-default
+
 # Email/SMTP Configuration
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
@@ -261,6 +339,7 @@ SMTP_FROM=noreply@helpdesk.com
 | `FIREBASE_SERVICE_ACCOUNT_PATH` | Path to service account JSON | `./serviceAccountKey.json` |
 | `FIREBASE_STORAGE_BUCKET` | Firebase storage bucket for attachments | `my-helpdesk-123.appspot.com` |
 | `CORS_ORIGIN` | Allowed CORS origins (comma-separated) | `http://localhost:3000` |
+| `DEFAULT_ORGANIZATION_ID` | Default organization for self-registered users | `org-default` |
 | `SMTP_HOST` | SMTP server hostname | `smtp.gmail.com` |
 | `SMTP_PORT` | SMTP server port | `587` |
 | `SMTP_USER` | SMTP username/email | `user@gmail.com` |

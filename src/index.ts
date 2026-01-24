@@ -15,6 +15,7 @@ import {
 } from './shared/middleware/rateLimiter.middleware.js';
 import ticketRoutes from './api/routes/ticket.routes.js';
 import userRoutes from './api/routes/user.routes.js';
+import authRoutes from './api/routes/auth.routes.js';
 import slaRuleRoutes from './api/routes/admin/sla-rule.routes.js';
 import auditLogRoutes from './api/routes/admin/audit-log.routes.js';
 import { FirestoreAdapter } from './shared/database/adapters/firestore/FirestoreAdapter.js';
@@ -86,6 +87,7 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiDocument));
 app.use('/api', userRateLimiter);
 
 // API routes
+app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/tickets', ticketRoutes);
 app.use('/api/v1/users', userRoutes);
 app.use('/api/v1/admin/sla-rules', slaRuleRoutes);

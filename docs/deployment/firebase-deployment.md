@@ -96,19 +96,30 @@ Use the provided deployment script:
 ```
 
 This script will:
-1. Build the project
-2. Run type checks
-3. Run tests
-4. Deploy Firestore rules
-5. Deploy Firestore indexes
-6. Deploy Cloud Functions
-7. Deploy hosting configuration
+1. Build the backend project
+2. Build the frontend (web/) project
+3. Run type checks
+4. Run tests
+5. Deploy Firestore rules
+6. Deploy Firestore indexes
+7. Deploy Cloud Functions
+8. Deploy hosting (frontend) configuration
 
 ### Manual Deployment
 
 #### Deploy Everything
 
 ```bash
+# Build backend
+npm run build
+
+# Build frontend
+cd web
+npm install
+npm run build
+cd ..
+
+# Deploy all Firebase services
 firebase deploy
 ```
 
@@ -129,9 +140,32 @@ firebase deploy --only firestore:indexes
 firebase deploy --only functions
 ```
 
-**Hosting Only:**
+**Hosting (Frontend) Only:**
 ```bash
+cd web
+npm run build
+cd ..
 firebase deploy --only hosting
+```
+
+### Frontend Build Configuration
+
+The frontend build process:
+1. Located in `web/` directory
+2. Built with Vite to `web/dist/`
+3. Configured in `firebase.json` to serve from `web/dist`
+4. Proxies `/api/**` requests to backend Cloud Function
+
+Environment variables for frontend production build should be set in `web/.env.production`:
+
+```env
+VITE_API_BASE_URL=/api
+VITE_FIREBASE_API_KEY=your-api-key
+VITE_FIREBASE_AUTH_DOMAIN=your-project.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=your-project-id
+VITE_FIREBASE_STORAGE_BUCKET=your-project.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=your-sender-id
+VITE_FIREBASE_APP_ID=your-app-id
 ```
 
 ## Cloud Functions Configuration
