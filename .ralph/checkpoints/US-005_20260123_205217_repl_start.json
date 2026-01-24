@@ -1,0 +1,24 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_205217",
+    "created_at": "2026-01-23T20:52:18-08:00"
+  },
+  "task": {
+    "id": "US-005",
+    "title": "Typed API client and error handling",
+    "description": "As a developer, I want a consistent API client so UI calls match existing endpoints.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/self-serve-registration",
+    "commit": "f29240c97dc292eda29bd01c4eac4357b31494b3",
+    "dirty_files": 4,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      ".ralph/repl/US-005_state.json"
+    ]
+  }
+}

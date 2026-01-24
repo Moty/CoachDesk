@@ -1,0 +1,25 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_212704",
+    "created_at": "2026-01-23T21:27:04-08:00"
+  },
+  "task": {
+    "id": "US-013",
+    "title": "Agent/admin ticket updates",
+    "description": "As an agent/admin, I want to update ticket fields so I can manage tickets.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/self-serve-registration",
+    "commit": "78879d5029acf269232ec6b362d4b1882c9efc22",
+    "dirty_files": 12,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      ".ralph/repl/US-005_state.json",
+      ".ralph/repl/US-006_state.json"
+    ]
+  }
+}

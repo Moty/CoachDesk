@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_204237",
+    "created_at": "2026-01-23T20:42:37-08:00"
+  },
+  "task": {
+    "id": "US-002",
+    "title": "Public registration endpoint",
+    "description": "As a new user, I want to register so I can access the system without admin creation.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/self-serve-registration",
+    "commit": "c8106fab88541c0533cf7499486a9a7a90b907ae",
+    "dirty_files": 2,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json"
+    ]
+  }
+}

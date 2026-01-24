@@ -1,0 +1,27 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_210428",
+    "created_at": "2026-01-23T21:04:29-08:00"
+  },
+  "task": {
+    "id": "US-008",
+    "title": "Ticket list filters and sorting",
+    "description": "As a user, I want to filter and sort tickets so I can find work quickly.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/self-serve-registration",
+    "commit": "df4faecd2412b2bf6f7b63b98f4f3865655fc01d",
+    "dirty_files": 10,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      ".ralph/repl/US-005_state.json",
+      ".ralph/repl/US-006_state.json",
+      "prd.json",
+      "progress.txt"
+    ]
+  }
+}

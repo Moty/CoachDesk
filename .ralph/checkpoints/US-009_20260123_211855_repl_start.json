@@ -1,0 +1,27 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260123_211855",
+    "created_at": "2026-01-23T21:18:55-08:00"
+  },
+  "task": {
+    "id": "US-009",
+    "title": "Ticket detail page",
+    "description": "As a user, I want to view ticket details so I can understand the request.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/self-serve-registration",
+    "commit": "80728cbe342bd5214324f755b3424112c6843ed7",
+    "dirty_files": 11,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      ".ralph/repl/US-005_state.json",
+      ".ralph/repl/US-006_state.json",
+      "prd.json",
+      "progress.txt"
+    ]
+  }
+}
