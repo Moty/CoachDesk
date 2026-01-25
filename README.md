@@ -614,6 +614,52 @@ Example authentication and authorization logging:
 }
 ```
 
+### Firestore Adapter Logging
+The application provides structured logging for Firestore database operations with consistent metadata:
+
+**Connection Logging** (`info` level for success, `error` level for failures):
+- Successful connections log operation name and outcome
+- Failed connections include error messages and details
+- Structured context for database health monitoring
+
+**Health Check Logging** (`info` level for success, `error` level for failures):
+- Regular health check results with operation outcome
+- Connection status and connectivity test results
+- Detailed error information when health checks fail
+
+**Disconnect Logging** (`info` level for success, `error` level for failures):
+- Clean disconnection events with operation outcome
+- Failed disconnection attempts with error details
+- Consistent structure for database lifecycle tracking
+
+**Firestore Log Context Type**:
+- `FirestoreLogContext`: Includes operation name, outcome (success/failure), error message, and additional details
+- Helper function: `createFirestoreLogContext` for consistent database operation logging
+
+Example Firestore adapter logging:
+```json
+{
+  "level": "info",
+  "message": "Firestore connection established",
+  "operation": "connect",
+  "outcome": "success"
+}
+{
+  "level": "info",
+  "message": "Firestore health check passed",
+  "operation": "health_check",
+  "outcome": "success"
+}
+{
+  "level": "error",
+  "message": "Firestore health check failed",
+  "operation": "health_check",
+  "outcome": "failure",
+  "error": "Connection timeout",
+  "details": { "error": "..." }
+}
+```
+
 ### Shutdown Handling
 The application includes graceful shutdown handling for:
 - SIGTERM signals

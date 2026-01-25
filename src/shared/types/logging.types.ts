@@ -44,6 +44,13 @@ export interface RbacSuccessLogContext extends RequestLogContext {
   requiredRoles: string[];
 }
 
+export interface FirestoreLogContext {
+  operation: string;
+  outcome: 'success' | 'failure';
+  error?: string;
+  details?: unknown;
+}
+
 export interface LogContextHelper {
   createRequestContext(req: any): RequestLogContext;
   createCompletionContext(req: any, res: any, startTime: number): RequestCompletionLogContext;

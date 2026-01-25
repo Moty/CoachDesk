@@ -3,6 +3,7 @@ import { Firestore } from 'firebase-admin/firestore';
 import { IDatabaseAdapter, ITransaction } from '../../interfaces/IDatabaseAdapter.js';
 import { QueryOptions } from '../../interfaces/IRepository.js';
 import { logger } from '../../../utils/logger.js';
+import { createFirestoreLogContext } from '../../../utils/logContext.js';
 
 /**
  * Firestore collection wrapper
@@ -142,34 +143,48 @@ export class FirestoreAdapter implements IDatabaseAdapter {
           ignoreUndefinedProperties: true,
         });
 
-        logger.info('Firestore connection established');
+        const logContext = createFirestoreLogContext('connect', 'success');
+        logger.info('Firestore connection established', logContext);
       }
     } catch (error) {
-      logger.error('Failed to connect to Firestore', { error });
+      const logContext = createFirestoreLogContext('connect', 'failure', error instanceof Error ? error.message : 'Unknown error', { error });
+      logger.error('Failed to connect to Firestore', logContext);
       throw error;
     }
   }
 
   async disconnect(): Promise<void> {
     if (this.app) {
-      await this.app.delete();
-      this.app = null;
-      this.db = null;
-      logger.info('Firestore connection closed');
+      try {
+        await this.app.delete();
+        this.app = null;
+        this.db = null;
+        const logContext = createFirestoreLogContext('disconnect', 'success');
+        logger.info('Firestore connection closed', logContext);
+      } catch (error) {
+        const logContext = createFirestoreLogContext('disconnect', 'failure', error instanceof Error ? error.message : 'Unknown error', { error });
+        logger.error('Failed to disconnect from Firestore', logContext);
+        throw error;
+      }
     }
   }
 
   async healthCheck(): Promise<boolean> {
     if (!this.db) {
+      const logContext = createFirestoreLogContext('health_check', 'failure', 'Database not connected');
+      logger.error('Firestore health check failed - no database connection', logContext);
       return false;
     }
 
     try {
       // Try to read a dummy collection to check connectivity
       await this.db.collection('_health').limit(1).get();
+      const logContext = createFirestoreLogContext('health_check', 'success');
+      logger.info('Firestore health check passed', logContext);
       return true;
     } catch (error) {
-      logger.error('Firestore health check failed', { error });
+      const logContext = createFirestoreLogContext('health_check', 'failure', error instanceof Error ? error.message : 'Unknown error', { error });
+      logger.error('Firestore health check failed', logContext);
       return false;
     }
   }

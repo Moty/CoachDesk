@@ -7,7 +7,8 @@ import {
   AuthSuccessLogContext,
   AuthFailureLogContext,
   RbacFailureLogContext,
-  RbacSuccessLogContext
+  RbacSuccessLogContext,
+  FirestoreLogContext
 } from '../types/logging.types.js';
 
 export function createRequestLogContext(req: Request): RequestLogContext {
@@ -147,5 +148,19 @@ export function createRbacSuccessLogContext(
     userId,
     userRole,
     requiredRoles,
+  };
+}
+
+export function createFirestoreLogContext(
+  operation: string,
+  outcome: 'success' | 'failure',
+  error?: string,
+  details?: unknown
+): FirestoreLogContext {
+  return {
+    operation,
+    outcome,
+    error,
+    details,
   };
 }
