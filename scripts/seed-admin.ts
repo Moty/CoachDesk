@@ -1,4 +1,7 @@
-import admin from 'firebase-admin';
+import fs from 'fs';
+import path from 'path';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
+import { getAuth } from 'firebase-admin/auth';
 import { config } from '../src/shared/config/env.config.js';
 import { FirestoreAdapter } from '../src/shared/database/adapters/firestore/FirestoreAdapter.js';
 import { UserRepository } from '../src/domain/repositories/UserRepository.js';
@@ -7,6 +10,20 @@ import { UserRole } from '../src/domain/models/User.js';
 const ADMIN_EMAIL = 'moty.moshin@gmail.com';
 const ADMIN_PASSWORD = '12345678';
 const ADMIN_DISPLAY_NAME = 'Admin User';
+
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+if (!serviceAccountPath) {
+  throw new Error('FIREBASE_SERVICE_ACCOUNT_PATH environment variable is required');
+}
+
+if (getApps().length === 0) {
+  const serviceAccount = JSON.parse(fs.readFileSync(path.resolve(serviceAccountPath), 'utf8'));
+  initializeApp({
+    credential: cert(serviceAccount),
+    projectId: process.env.FIRESTORE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET,
+  });
+}
 
 async function seedAdminUser() {
   console.log('Starting admin user seed...');
@@ -21,12 +38,12 @@ async function seedAdminUser() {
     // Check if user already exists in Firebase Auth
     let firebaseUser;
     try {
-      firebaseUser = await admin.auth().getUserByEmail(ADMIN_EMAIL);
+      firebaseUser = await getAuth().getUserByEmail(ADMIN_EMAIL);
       console.log(`✓ Firebase Auth user already exists: ${ADMIN_EMAIL}`);
     } catch (error: any) {
       if (error.code === 'auth/user-not-found') {
         // Create new user in Firebase Auth
-        firebaseUser = await admin.auth().createUser({
+        firebaseUser = await getAuth().createUser({
           email: ADMIN_EMAIL,
           password: ADMIN_PASSWORD,
           displayName: ADMIN_DISPLAY_NAME,
@@ -38,7 +55,7 @@ async function seedAdminUser() {
     }
 
     // Set custom claims
-    await admin.auth().setCustomUserClaims(firebaseUser.uid, {
+    await getAuth().setCustomUserClaims(firebaseUser.uid, {
       role: UserRole.ADMIN,
       organizationId,
     });
