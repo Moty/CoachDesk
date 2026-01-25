@@ -27,7 +27,7 @@ const prodFormat = winston.format.combine(
 const isProduction = config.nodeEnv === 'production';
 
 export const logger = winston.createLogger({
-  level: config.nodeEnv === 'development' ? 'debug' : 'info',
+  level: config.logLevel,
   format: isProduction ? prodFormat : devFormat,
   defaultMeta: {
     service: 'helpdesk-api',
@@ -41,3 +41,28 @@ export const logger = winston.createLogger({
     }),
   ],
 });
+
+/**
+ * Logs application startup with configuration summary (non-sensitive)
+ */
+export function logApplicationStart(): void {
+  logger.info('Application starting up', {
+    config: {
+      nodeEnv: config.nodeEnv,
+      logLevel: config.logLevel,
+      port: config.port,
+      dbType: config.dbType,
+      service: 'helpdesk-api'
+    }
+  });
+}
+
+/**
+ * Logs application shutdown
+ */
+export function logApplicationShutdown(reason?: string): void {
+  logger.info('Application shutting down', {
+    reason: reason || 'Process exit',
+    service: 'helpdesk-api'
+  });
+}

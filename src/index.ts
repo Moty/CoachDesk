@@ -4,9 +4,10 @@ import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import YAML from 'yamljs';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { config, logConfig } from './shared/config/env.config.js';
-import { logger } from './shared/utils/logger.js';
+import { logger, logApplicationStart, logApplicationShutdown } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
 import { requestLogger } from './shared/middleware/requestLogger.middleware.js';
 import {
@@ -18,8 +19,9 @@ import userRoutes from './api/routes/user.routes.js';
 import authRoutes from './api/routes/auth.routes.js';
 import slaRuleRoutes from './api/routes/admin/sla-rule.routes.js';
 import auditLogRoutes from './api/routes/admin/audit-log.routes.js';
-import { FirestoreAdapter } from './shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from './shared/database/firestore.js';
 import { SLAMonitoringJob } from './jobs/sla-monitoring.job.js';
+import { initializeApp, cert, getApps } from 'firebase-admin/app';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -96,13 +98,11 @@ app.use('/api/v1/admin/audit-logs', auditLogRoutes);
 // Error handler must be last
 app.use(errorHandler);
 
-// Start server
-logger.info('Starting HelpDesk application...');
-logConfig();
+// Start server with lifecycle logging
+logApplicationStart();
 
 async function startServer(): Promise<void> {
   // Initialize database adapter before background jobs
-  const firestoreAdapter = new FirestoreAdapter();
   await firestoreAdapter.connect();
 
   // Start background jobs after database connection
@@ -119,5 +119,51 @@ startServer().catch((error) => {
     error: error instanceof Error ? error.message : 'Unknown error',
     stack: error instanceof Error ? error.stack : undefined,
   });
+  process.exit(1);
+});
+
+// Initialize Firebase Admin SDK
+const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH;
+if (!serviceAccountPath) {
+  throw new Error('FIREBASE_SERVICE_ACCOUNT_PATH environment variable is required');
+}
+
+const serviceAccount = JSON.parse(fs.readFileSync(path.resolve(serviceAccountPath), 'utf8'));
+
+if (getApps().length === 0) {
+  initializeApp({
+    credential: cert(serviceAccount),
+    projectId: process.env.FIRESTORE_PROJECT_ID,
+    storageBucket: process.env.FIREBASE_STORAGE_BUCKET
+  });
+}
+
+// Graceful shutdown handling
+process.on('SIGTERM', () => {
+  logApplicationShutdown('SIGTERM');
+  process.exit(0);
+});
+
+process.on('SIGINT', () => {
+  logApplicationShutdown('SIGINT');
+  process.exit(0);
+});
+
+process.on('uncaughtException', (error) => {
+  logger.error('Uncaught exception', {
+    error: error.message,
+    stack: error.stack,
+  });
+  logApplicationShutdown('Uncaught exception');
+  process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+  logger.error('Unhandled rejection', {
+    reason: reason instanceof Error ? reason.message : String(reason),
+    stack: reason instanceof Error ? reason.stack : undefined,
+    promise: String(promise),
+  });
+  logApplicationShutdown('Unhandled rejection');
   process.exit(1);
 });

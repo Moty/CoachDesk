@@ -418,11 +418,41 @@ const ticketRepo = new TicketRepository(dbAdapter, 'tickets');
 
 ## Logging & Error Handling
 
-The application uses Winston for structured logging with the following levels:
+The application uses Winston for structured, configurable logging with the following features:
+
+### Configuration
+- **LOG_LEVEL environment variable**: Controls logging level (debug, info, warn, error)
+- **Environment-aware formatting**: JSON format for production/non-development environments, human-readable format for development
+- **Base metadata**: All logs include service name and environment information
+- **Lifecycle logging**: Application startup and shutdown events are logged with configuration summary
+
+### Log Levels
 - `debug` - Development debugging information
-- `info` - General informational messages
+- `info` - General informational messages, startup/shutdown events
 - `warn` - Warning messages
 - `error` - Error messages with stack traces (in development)
+
+### Startup Logging
+The application logs startup events with configuration summary (non-sensitive information):
+```json
+{
+  "message": "Application starting up",
+  "config": {
+    "nodeEnv": "development",
+    "logLevel": "info",
+    "port": 3000,
+    "dbType": "firestore",
+    "service": "helpdesk-api"
+  }
+}
+```
+
+### Shutdown Handling
+The application includes graceful shutdown handling for:
+- SIGTERM signals
+- SIGINT signals (Ctrl+C)
+- Uncaught exceptions
+- Unhandled promise rejections
 
 All errors return a consistent JSON format:
 ```json
