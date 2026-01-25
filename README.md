@@ -447,6 +447,24 @@ The application logs startup events with configuration summary (non-sensitive in
 }
 ```
 
+### Request Correlation
+Each request is assigned a unique correlation ID to enable end-to-end tracing:
+
+- **X-Request-Id header**: Clients can provide their own correlation ID via the `X-Request-Id` header
+- **Auto-generation**: If no header is provided, a UUID is automatically generated
+- **Response header**: The correlation ID is returned in the `X-Request-Id` response header
+- **Request logging**: All request start/end logs include the correlation ID for traceability
+
+Example request/response flow:
+```bash
+# Request with correlation ID
+curl -H "X-Request-Id: my-custom-id-123" http://localhost:3000/api/v1/tickets
+
+# Response includes the same correlation ID
+HTTP/1.1 200 OK
+X-Request-Id: my-custom-id-123
+```
+
 ### Shutdown Handling
 The application includes graceful shutdown handling for:
 - SIGTERM signals
