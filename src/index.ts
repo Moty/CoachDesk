@@ -9,6 +9,7 @@ import { fileURLToPath } from 'url';
 import { config, logConfig } from './shared/config/env.config.js';
 import { logger, logApplicationStart, logApplicationShutdown } from './shared/utils/logger.js';
 import { errorHandler } from './shared/middleware/errorHandler.js';
+import { correlationIdMiddleware } from './shared/middleware/correlationId.middleware.js';
 import { requestLogger } from './shared/middleware/requestLogger.middleware.js';
 import {
   globalRateLimiter,
@@ -66,10 +67,13 @@ app.use(cors({
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Request-Id']
 }));
 
 app.use(express.json());
+
+// Correlation ID middleware (must be before request logger)
+app.use(correlationIdMiddleware);
 
 // Request logging middleware
 app.use(requestLogger);

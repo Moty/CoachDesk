@@ -10,6 +10,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
     path: req.path,
     ip: req.ip,
     userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
   });
 
   // Capture response
@@ -23,6 +24,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction) {
       statusCode: res.statusCode,
       duration: `${duration}ms`,
       ip: req.ip,
+      correlationId: req.correlationId,
     });
   });
 
