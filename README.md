@@ -465,6 +465,49 @@ HTTP/1.1 200 OK
 X-Request-Id: my-custom-id-123
 ```
 
+### Enhanced Request Logging
+The application provides comprehensive request logging with structured metadata:
+
+**Request Start Logs** (`info` level):
+- HTTP method, path, IP address, user agent
+- Unique correlation ID for end-to-end tracing
+- Consistent structured format for search and analysis
+
+**Request Completion Logs** (variable level):
+- All request start metadata plus status code, duration
+- Response size when available (from Content-Length header)
+- Smart log levels: `info` for 2xx/3xx, `warn` for 4xx, `error` for 5xx
+
+**Shared Log Context**:
+- Reusable helper functions (`createRequestLogContext`, `createRequestCompletionLogContext`)
+- Consistent metadata structure across all request logs
+- Type-safe interfaces (`RequestLogContext`, `RequestCompletionLogContext`)
+
+Example log output:
+```json
+{
+  "level": "info",
+  "message": "Incoming request",
+  "method": "GET",
+  "path": "/api/v1/tickets",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+}
+{
+  "level": "info",
+  "message": "Request completed",
+  "method": "GET",
+  "path": "/api/v1/tickets",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "statusCode": 200,
+  "duration": "45ms",
+  "responseSize": 1234
+}
+```
+
 ### Shutdown Handling
 The application includes graceful shutdown handling for:
 - SIGTERM signals
