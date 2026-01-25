@@ -22,6 +22,28 @@ export interface ValidationErrorLogContext extends RequestLogContext {
   validationDetails: unknown;
 }
 
+export interface AuthSuccessLogContext extends RequestLogContext {
+  userId: string;
+  email: string;
+  role: string;
+}
+
+export interface AuthFailureLogContext extends RequestLogContext {
+  reason: string;
+}
+
+export interface RbacFailureLogContext extends RequestLogContext {
+  userId: string;
+  userRole: string;
+  requiredRoles: string[];
+}
+
+export interface RbacSuccessLogContext extends RequestLogContext {
+  userId: string;
+  userRole: string;
+  requiredRoles: string[];
+}
+
 export interface LogContextHelper {
   createRequestContext(req: any): RequestLogContext;
   createCompletionContext(req: any, res: any, startTime: number): RequestCompletionLogContext;

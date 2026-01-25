@@ -556,6 +556,64 @@ app.get('/users', validateQuery(paginationSchema), controller);
 app.get('/users/:id', validateParams(userParamsSchema), controller);
 ```
 
+### Authentication and Authorization Logging
+The application provides comprehensive logging for authentication and authorization events with structured metadata:
+
+**Authentication Success Logging** (`info` level):
+- User ID, email, and role information
+- Request metadata including correlation ID for traceability
+- Structured context for consistent search and monitoring
+
+**Authentication Failure Logging** (`warn` level):
+- Failure reason with request metadata
+- Correlation ID and request details for debugging
+- Consistent structure for security monitoring
+
+**Authorization (RBAC) Success Logging** (`info` level):
+- User role and required roles for the endpoint
+- Request metadata for audit trail
+- Successful access attempts with full context
+
+**Authorization (RBAC) Failure Logging** (`warn` level):
+- User role, required roles, and request metadata
+- Detailed context for security audit and troubleshooting
+- Clear indication of insufficient permissions
+
+**Auth Log Context Types**:
+- `AuthSuccessLogContext`: User authentication success with user details
+- `AuthFailureLogContext`: Authentication failure with reason
+- `RbacSuccessLogContext`: Authorization success with role information
+- `RbacFailureLogContext`: Authorization failure with role mismatch details
+- Helper functions: `createAuthSuccessLogContext`, `createAuthFailureLogContext`, `createRbacSuccessLogContext`, `createRbacFailureLogContext`
+
+Example authentication and authorization logging:
+```json
+{
+  "level": "info",
+  "message": "User authentication successful",
+  "method": "GET",
+  "path": "/api/v1/tickets",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "userId": "user123",
+  "email": "user@example.com",
+  "role": "agent"
+}
+{
+  "level": "warn",
+  "message": "Authorization failed: insufficient permissions",
+  "method": "DELETE",
+  "path": "/api/v1/admin/users",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "userId": "user123",
+  "userRole": "agent",
+  "requiredRoles": ["admin"]
+}
+```
+
 ### Shutdown Handling
 The application includes graceful shutdown handling for:
 - SIGTERM signals

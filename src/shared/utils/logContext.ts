@@ -1,5 +1,14 @@
 import { Request, Response } from 'express';
-import { RequestLogContext, RequestCompletionLogContext, ErrorLogContext, ValidationErrorLogContext } from '../types/logging.types.js';
+import {
+  RequestLogContext,
+  RequestCompletionLogContext,
+  ErrorLogContext,
+  ValidationErrorLogContext,
+  AuthSuccessLogContext,
+  AuthFailureLogContext,
+  RbacFailureLogContext,
+  RbacSuccessLogContext
+} from '../types/logging.types.js';
 
 export function createRequestLogContext(req: Request): RequestLogContext {
   return {
@@ -71,4 +80,72 @@ export function getLogLevelForStatusCode(statusCode: number): 'info' | 'warn' | 
   } else {
     return 'info';
   }
+}
+
+export function createAuthSuccessLogContext(
+  req: Request,
+  userId: string,
+  email: string,
+  role: string
+): AuthSuccessLogContext {
+  return {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
+    userId,
+    email,
+    role,
+  };
+}
+
+export function createAuthFailureLogContext(
+  req: Request,
+  reason: string
+): AuthFailureLogContext {
+  return {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
+    reason,
+  };
+}
+
+export function createRbacFailureLogContext(
+  req: Request,
+  userId: string,
+  userRole: string,
+  requiredRoles: string[]
+): RbacFailureLogContext {
+  return {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
+    userId,
+    userRole,
+    requiredRoles,
+  };
+}
+
+export function createRbacSuccessLogContext(
+  req: Request,
+  userId: string,
+  userRole: string,
+  requiredRoles: string[]
+): RbacSuccessLogContext {
+  return {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
+    userId,
+    userRole,
+    requiredRoles,
+  };
 }
