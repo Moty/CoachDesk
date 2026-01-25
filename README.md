@@ -508,6 +508,54 @@ Example log output:
 }
 ```
 
+### Standardized Error Logging
+The application provides comprehensive error logging with structured metadata for consistent error tracking:
+
+**Error Handler Logging**:
+- **AppError instances**: Logs include error code, details, and request metadata when available
+- **Unknown errors**: Include full stack traces and request metadata for debugging
+- **Context awareness**: All error logs include correlation ID and request information for traceability
+
+**Validation Middleware Logging**:
+- **Warning-level logs**: Validation failures are logged as warnings (user-caused, not server failures)
+- **Structured validation details**: Include specific validation errors and attempted input values
+- **Request metadata**: All validation logs include correlation ID, path, method for context
+
+**Error Log Context Types**:
+- `ErrorLogContext`: Extends request context with error code, details, and stack trace
+- `ValidationErrorLogContext`: Extends request context with validation failure details
+- Helper functions: `createErrorLogContext`, `createValidationErrorLogContext`
+
+Example error logging output:
+```json
+{
+  "level": "error",
+  "message": "AppError: Invalid email format",
+  "method": "POST",
+  "path": "/api/v1/auth/register",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "errorCode": "VALIDATION_ERROR",
+  "errorDetails": { "field": "email", "value": "invalid-email" }
+}
+```
+
+**Validation Middleware Usage**:
+```typescript
+import { validateBody, validateQuery, validateParams } from '../shared/middleware/validation.middleware.js';
+import { createUserSchema, paginationSchema } from '../shared/validation/schemas.js';
+
+// Validate request body against Zod schema
+app.post('/users', validateBody(createUserSchema), controller);
+
+// Validate query parameters
+app.get('/users', validateQuery(paginationSchema), controller);
+
+// Validate path parameters
+app.get('/users/:id', validateParams(userParamsSchema), controller);
+```
+
 ### Shutdown Handling
 The application includes graceful shutdown handling for:
 - SIGTERM signals

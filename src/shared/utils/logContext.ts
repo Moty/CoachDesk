@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { RequestLogContext, RequestCompletionLogContext } from '../types/logging.types.js';
+import { RequestLogContext, RequestCompletionLogContext, ErrorLogContext, ValidationErrorLogContext } from '../types/logging.types.js';
 
 export function createRequestLogContext(req: Request): RequestLogContext {
   return {
@@ -28,6 +28,38 @@ export function createRequestCompletionLogContext(
     statusCode: res.statusCode,
     duration: `${duration}ms`,
     responseSize,
+  };
+}
+
+export function createErrorLogContext(
+  req: Request,
+  errorCode?: string,
+  errorDetails?: unknown,
+  stack?: string
+): ErrorLogContext {
+  return {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
+    errorCode,
+    errorDetails,
+    stack,
+  };
+}
+
+export function createValidationErrorLogContext(
+  req: Request,
+  validationDetails: unknown
+): ValidationErrorLogContext {
+  return {
+    method: req.method,
+    path: req.path,
+    ip: req.ip,
+    userAgent: req.get('user-agent'),
+    correlationId: req.correlationId,
+    validationDetails,
   };
 }
 
