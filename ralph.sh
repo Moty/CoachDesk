@@ -827,11 +827,22 @@ run_agent() {
       fi
       CLAUDE_FLAGS+=("--system-prompt" "$SYS_INSTRUCTIONS")
 
+      # Use script command to create PTY (prevents output buffering when piped)
+      # macOS: script -q /dev/null command...
+      # Linux: script -q -c "command..." /dev/null
+      local RUN_CMD
+      if [[ "$OSTYPE" == "darwin"* ]]; then
+        RUN_CMD=(script -q /dev/null "$CLAUDE_CMD" "${CLAUDE_FLAGS[@]}" "$CLAUDE_PROMPT")
+      else
+        # Linux script syntax
+        RUN_CMD=(script -q -c "$CLAUDE_CMD ${CLAUDE_FLAGS[*]} '$CLAUDE_PROMPT'" /dev/null)
+      fi
+
       # Run with timeout if run_with_timeout function exists and timeout > 0
       if type run_with_timeout >/dev/null 2>&1 && [ "$AGENT_TIMEOUT" -gt 0 ] 2>/dev/null; then
-        run_with_timeout "$AGENT_TIMEOUT" "$CLAUDE_CMD" "${CLAUDE_FLAGS[@]}" "$CLAUDE_PROMPT"
+        run_with_timeout "$AGENT_TIMEOUT" "${RUN_CMD[@]}"
       else
-        "$CLAUDE_CMD" "${CLAUDE_FLAGS[@]}" "$CLAUDE_PROMPT"
+        "${RUN_CMD[@]}"
       fi
       ;;
     codex)
@@ -1394,12 +1405,20 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
 
   set +e
   # Use REPL-aware runner if we have task details
+  # Use temp file to capture output while displaying in real-time
+  TEMP_OUTPUT=$(mktemp)
+  trap "rm -f '$TEMP_OUTPUT'" EXIT
+
+  # Run agent and capture output to file while streaming to terminal
+  # The | cat at the end helps with buffering on some systems
   if [ -n "$CURRENT_TASK_ID" ] && [ "$REPL_LIBRARY_LOADED" = true ]; then
-    OUTPUT=$(run_agent_with_repl "$ACTIVE_AGENT" "$CURRENT_TASK_ID" "$CURRENT_TASK_DESC" "$CURRENT_AC_COUNT" 2>&1 | tee /dev/stderr)
+    run_agent_with_repl "$ACTIVE_AGENT" "$CURRENT_TASK_ID" "$CURRENT_TASK_DESC" "$CURRENT_AC_COUNT" 2>&1 | tee "$TEMP_OUTPUT"
   else
-    OUTPUT=$(run_agent "$ACTIVE_AGENT" 2>&1 | tee /dev/stderr)
+    run_agent "$ACTIVE_AGENT" 2>&1 | tee "$TEMP_OUTPUT"
   fi
-  STATUS=$?
+  STATUS=${PIPESTATUS[0]}
+  OUTPUT=$(cat "$TEMP_OUTPUT" 2>/dev/null || echo "")
+  rm -f "$TEMP_OUTPUT"
   set -e
 
   # Parse usage metrics from output
