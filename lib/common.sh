@@ -307,7 +307,7 @@ validate_agent_yaml() {
   fi
 
   # Validate agent-rotation list entries if present
-  local rotation_agents=$(yq eval '.agent-rotation[]? // empty' "$agent_file" 2>/dev/null)
+  local rotation_agents=$(yq eval '.agent-rotation[]?' "$agent_file" 2>/dev/null)
   if [ -n "$rotation_agents" ]; then
     while IFS= read -r rot_agent; do
       [ -z "$rot_agent" ] && continue
@@ -331,7 +331,7 @@ validate_agent_yaml() {
   done
 
   # Validate commands section if present
-  local commands_list=$(yq eval '.commands | keys[]? // empty' "$agent_file" 2>/dev/null)
+  local commands_list=$(yq eval '.commands | keys[]?' "$agent_file" 2>/dev/null)
   if [ -n "$commands_list" ]; then
     while IFS= read -r cmd_name; do
       [ -z "$cmd_name" ] && continue

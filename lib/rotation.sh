@@ -30,10 +30,10 @@ get_rotation_strategy() {
 
 get_agent_models() {
   local agent="$1"
-  local models=$(yq ".[\"$agent\"].models[]? // empty" "$AGENT_CONFIG" 2>/dev/null)
+  local models=$(yq ".[\"$agent\"].models[]?" "$AGENT_CONFIG" 2>/dev/null)
   if [ -z "$models" ]; then
     # Fallback to single model field
-    local single_model=$(yq ".[\"$agent\"].model // empty" "$AGENT_CONFIG" 2>/dev/null)
+    local single_model=$(yq ".[\"$agent\"].model // \"\"" "$AGENT_CONFIG" 2>/dev/null)
     if [ -n "$single_model" ] && [ "$single_model" != "null" ]; then
       echo "$single_model"
     fi
@@ -43,11 +43,11 @@ get_agent_models() {
 }
 
 get_agent_rotation_list() {
-  local list=$(yq '.agent-rotation[]? // empty' "$AGENT_CONFIG" 2>/dev/null)
+  local list=$(yq '.agent-rotation[]?' "$AGENT_CONFIG" 2>/dev/null)
   if [ -z "$list" ]; then
     # Fallback: primary then fallback
-    local primary=$(yq '.agent.primary // empty' "$AGENT_CONFIG" 2>/dev/null)
-    local fallback=$(yq '.agent.fallback // empty' "$AGENT_CONFIG" 2>/dev/null)
+    local primary=$(yq '.agent.primary // ""' "$AGENT_CONFIG" 2>/dev/null)
+    local fallback=$(yq '.agent.fallback // ""' "$AGENT_CONFIG" 2>/dev/null)
     [ -n "$primary" ] && [ "$primary" != "null" ] && echo "$primary"
     [ -n "$fallback" ] && [ "$fallback" != "null" ] && echo "$fallback"
   else
@@ -57,7 +57,7 @@ get_agent_rotation_list() {
 
 get_command_agent_rotation() {
   local cmd="$1"
-  local list=$(yq ".commands.[\"$cmd\"].agent-rotation[]? // empty" "$AGENT_CONFIG" 2>/dev/null)
+  local list=$(yq ".commands.[\"$cmd\"].agent-rotation[]?" "$AGENT_CONFIG" 2>/dev/null)
   if [ -n "$list" ]; then
     echo "$list"
   else
