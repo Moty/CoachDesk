@@ -304,8 +304,6 @@ else
   REPL_LIBRARY_LOADED=false
 fi
 
-rotate_log_if_needed
-
 # Load dynamic context library if present
 if [ -f "$SCRIPT_DIR/lib/dynamic-context.sh" ]; then
   source "$SCRIPT_DIR/lib/dynamic-context.sh"
@@ -592,6 +590,8 @@ print_iteration_summary() {
     echo -e "${BLUE}→ Iteration $iteration finished${NC} ($duration_str)"
   fi
 }
+
+rotate_log_if_needed
 
 cleanup() {
   if [ -n "$CAFFEINATE_PID" ]; then
