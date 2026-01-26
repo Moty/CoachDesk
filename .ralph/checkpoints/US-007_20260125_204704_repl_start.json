@@ -1,0 +1,23 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260125_204704",
+    "created_at": "2026-01-25T20:47:04-08:00"
+  },
+  "task": {
+    "id": "US-007",
+    "title": "Standardize Firebase storage logging",
+    "description": "As a developer, I want storage adapter logs to be consistent so storage operations are traceable.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/comprehensive-application-logging",
+    "commit": "712d69d9032fc4039f5b1ed648777553d3d16aaa",
+    "dirty_files": 4,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/repl/US-011_state.json"
+    ]
+  }
+}
