@@ -304,6 +304,8 @@ else
   REPL_LIBRARY_LOADED=false
 fi
 
+rotate_log_if_needed
+
 # Load dynamic context library if present
 if [ -f "$SCRIPT_DIR/lib/dynamic-context.sh" ]; then
   source "$SCRIPT_DIR/lib/dynamic-context.sh"
@@ -502,6 +504,39 @@ check_rate_limit() {
     return 0
   fi
   return 1
+}
+
+rotate_log_if_needed() {
+  local max_mb="${RALPH_LOG_MAX_SIZE_MB:-10}"
+  local retention_days="${RALPH_LOG_RETENTION_DAYS:-14}"
+  local log_file="$LOG_FILE"
+  local logs_dir="$SCRIPT_DIR/logs"
+
+  [ -f "$log_file" ] || return 0
+  [ "$max_mb" -gt 0 ] 2>/dev/null || return 0
+
+  local size_bytes
+  size_bytes=$(wc -c < "$log_file" 2>/dev/null || echo "0")
+  local max_bytes=$((max_mb * 1024 * 1024))
+
+  if [ "$size_bytes" -ge "$max_bytes" ]; then
+    mkdir -p "$logs_dir"
+    local ts
+    ts=$(date '+%Y%m%d-%H%M%S')
+    mv "$log_file" "$logs_dir/ralph_${ts}.log" 2>/dev/null || true
+    touch "$log_file" 2>/dev/null || true
+  fi
+
+  if [ -d "$logs_dir" ]; then
+    find "$logs_dir" -name "*.log" -type f -mtime "+$retention_days" -delete 2>/dev/null || true
+  fi
+}
+
+cleanup_old_logs() {
+  local days="${1:-14}"
+  local logs_dir="$SCRIPT_DIR/logs"
+  [ -d "$logs_dir" ] || return 0
+  find "$logs_dir" -name "*.log" -type f -mtime "+$days" -delete 2>/dev/null || true
 }
 
 check_error() {
@@ -1322,6 +1357,12 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   if [ "$CHECKPOINTING_ENABLED" = true ] && [ $((i % 5)) -eq 1 ]; then
     clean_old_checkpoints 2>/dev/null || true
   fi
+  if [ "$REPL_LIBRARY_LOADED" = true ] && [ $((i % 5)) -eq 1 ]; then
+    cleanup_old_repl "${RALPH_REPL_RETENTION_DAYS:-1}" 2>/dev/null || true
+  fi
+  if [ $((i % 5)) -eq 1 ]; then
+    cleanup_old_logs "${RALPH_LOG_RETENTION_DAYS:-14}" 2>/dev/null || true
+  fi
 
   # Get current task details for REPL integration
   TASK_DETAILS=$(get_current_task_details)
@@ -1339,7 +1380,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     # Verify selected agent is available
     if ! check_agent_available "$ACTIVE_AGENT"; then
       log_warn "Selected agent $ACTIVE_AGENT not available, rotating" 2>/dev/null || true
-      rotate_agent 2>/dev/null || true
+      rotate_agent "$CURRENT_COMMAND" 2>/dev/null || true
       SELECTION=$(select_agent_and_model "$CURRENT_TASK_ID" "$CURRENT_COMMAND")
       ACTIVE_AGENT=$(echo "$SELECTION" | cut -d'|' -f1)
       RALPH_OVERRIDE_MODEL=$(echo "$SELECTION" | cut -d'|' -f2)
@@ -1377,7 +1418,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
       update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "rate_limit" 2>/dev/null || true
       echo -e "${YELLOW}⚠ Rate limit hit on $ACTIVE_AGENT — rotating to next agent${NC}"
       set +e
-      rotate_agent 2>/dev/null
+      rotate_agent "$CURRENT_COMMAND" 2>/dev/null
       ROTATE_RESULT=$?
       set -e
       if [ $ROTATE_RESULT -eq 2 ]; then
@@ -1409,7 +1450,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
       update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "failure" 2>/dev/null || true
       if should_rotate "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" 2>/dev/null; then
         echo -e "${YELLOW}Failure threshold reached for $ACTIVE_AGENT ($RALPH_OVERRIDE_MODEL) — rotating${NC}"
-        rotate_model "$ACTIVE_AGENT" 2>/dev/null || true
+        rotate_model "$ACTIVE_AGENT" "$CURRENT_COMMAND" 2>/dev/null || true
       fi
       # Continue to next iteration (retry with rotated model/agent)
       sleep 2
@@ -1451,6 +1492,10 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     # Auto-commit uncommitted changes if agent made progress but forgot to commit
     # Check if story progress was made (comparing before/after)
     STORIES_AFTER=$(jq '[.userStories[] | select(.passes == true)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
+    STORY_PROGRESS_MADE=false
+    if [ "$STORIES_AFTER" -gt "$STORIES_BEFORE" ]; then
+      STORY_PROGRESS_MADE=true
+    fi
     if ! git diff-index --quiet HEAD -- 2>/dev/null; then
       # There are uncommitted changes
       UNCOMMITTED_SRC=$(git diff --name-only HEAD 2>/dev/null | grep -c '^src/' || echo "0")
@@ -1472,7 +1517,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     # Push if enabled and timing is "iteration"
     if should_push; then
       PUSH_TIMING=$(get_git_push_timing 2>/dev/null || echo "iteration")
-      if [ "$PUSH_TIMING" = "iteration" ]; then
+      if [ "$PUSH_TIMING" = "iteration" ] && [ "$STORY_PROGRESS_MADE" = true ]; then
         push_branch "$BRANCH_NAME"
       fi
     fi
