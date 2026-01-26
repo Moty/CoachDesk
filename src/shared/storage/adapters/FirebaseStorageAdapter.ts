@@ -61,11 +61,15 @@ export class FirebaseStorageAdapter implements IStorageProvider {
         },
       });
 
-      logger.info('File uploaded to Firebase Storage', {
+      logger.info('Storage upload successful', {
+        operation: 'upload',
+        outcome: 'success',
         filePath,
         fileName,
-        size: file.length,
-        mimeType,
+        fileSize: file.length,
+        contentType: mimeType,
+        organizationId,
+        ticketId,
       });
 
       return {
@@ -74,8 +78,12 @@ export class FirebaseStorageAdapter implements IStorageProvider {
         size: file.length,
       };
     } catch (error) {
-      logger.error('Failed to upload file to Firebase Storage', {
+      logger.error('Storage upload failed', {
+        operation: 'upload',
+        outcome: 'failure',
         filePath,
+        fileSize: file.length,
+        contentType: mimeType,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new AppError(
@@ -93,16 +101,22 @@ export class FirebaseStorageAdapter implements IStorageProvider {
       const fileRef = bucket.file(path);
 
       const [buffer] = await fileRef.download();
+      const [metadata] = await fileRef.getMetadata();
 
-      logger.info('File downloaded from Firebase Storage', {
-        path,
-        size: buffer.length,
+      logger.info('Storage download successful', {
+        operation: 'download',
+        outcome: 'success',
+        filePath: path,
+        fileSize: buffer.length,
+        contentType: metadata.contentType,
       });
 
       return buffer;
     } catch (error) {
-      logger.error('Failed to download file from Firebase Storage', {
-        path,
+      logger.error('Storage download failed', {
+        operation: 'download',
+        outcome: 'failure',
+        filePath: path,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new AppError(
@@ -121,10 +135,16 @@ export class FirebaseStorageAdapter implements IStorageProvider {
 
       await fileRef.delete();
 
-      logger.info('File deleted from Firebase Storage', { path });
+      logger.info('Storage delete successful', {
+        operation: 'delete',
+        outcome: 'success',
+        filePath: path,
+      });
     } catch (error) {
-      logger.error('Failed to delete file from Firebase Storage', {
-        path,
+      logger.error('Storage delete failed', {
+        operation: 'delete',
+        outcome: 'failure',
+        filePath: path,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new AppError(
@@ -150,15 +170,19 @@ export class FirebaseStorageAdapter implements IStorageProvider {
         expires: Date.now() + expiresInMinutes * 60 * 1000,
       });
 
-      logger.info('Signed URL generated', {
-        path,
+      logger.info('Storage signed URL generated', {
+        operation: 'getSignedUrl',
+        outcome: 'success',
+        filePath: path,
         expiresInMinutes,
       });
 
       return url;
     } catch (error) {
-      logger.error('Failed to generate signed URL', {
-        path,
+      logger.error('Storage signed URL generation failed', {
+        operation: 'getSignedUrl',
+        outcome: 'failure',
+        filePath: path,
         error: error instanceof Error ? error.message : 'Unknown error',
       });
       throw new AppError(
