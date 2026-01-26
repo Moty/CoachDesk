@@ -105,10 +105,14 @@ export async function uploadAttachment(
     });
 
     logger.info('Attachment uploaded', {
+      controller: 'attachment',
+      action: 'uploadAttachment',
       ticketId,
       attachmentId: attachment.id,
       fileName: attachment.fileName,
-      size: attachment.size,
+      fileSize: attachment.size,
+      uploadedBy: req.user?.userId,
+      correlationId: req.correlationId,
     });
 
     res.status(201).json({
