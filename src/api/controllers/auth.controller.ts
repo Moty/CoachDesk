@@ -6,6 +6,7 @@ import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { isValidEmail } from '../../shared/utils/validation.js';
 import { config } from '../../shared/config/env.config.js';
+import { logger } from '../../shared/utils/logger.js';
 
 const userRepository = new UserRepository(firestoreAdapter);
 
@@ -113,6 +114,15 @@ export async function register(
       displayName,
       role,
       organizationId,
+    });
+
+    logger.info('User registered successfully', {
+      controller: 'auth',
+      action: 'register',
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      correlationId: req.correlationId,
     });
 
     // Return 201 with created user (exclude password)

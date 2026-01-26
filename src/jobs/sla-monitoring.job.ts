@@ -44,8 +44,13 @@ export class SLAMonitoringJob {
    * Execute the SLA monitoring check
    */
   async execute(): Promise<void> {
+    const runId = `run-${Date.now()}-${Math.random().toString(36).substring(7)}`;
     const startTime = Date.now();
-    logger.info('SLA monitoring job started');
+    
+    logger.info('Job execution started', {
+      job: 'sla-monitoring',
+      runId,
+    });
 
     try {
       // Query tickets with status in (new, open, pending)
@@ -61,7 +66,11 @@ export class SLAMonitoringJob {
       }
 
       const tickets = allTickets;
-      logger.info(`Found ${tickets.length} tickets to check for SLA breaches`);
+      logger.info(`Found tickets to check for SLA breaches`, {
+        job: 'sla-monitoring',
+        runId,
+        ticketCount: tickets.length,
+      });
 
       let breachedCount = 0;
       let updatedCount = 0;
@@ -71,7 +80,12 @@ export class SLAMonitoringJob {
       for (const ticket of tickets) {
         try {
           if (!ticket.slaTimers) {
-            logger.warn(`Ticket ${ticket.id} has no SLA timers, skipping`);
+            logger.warn('Ticket has no SLA timers, skipping', {
+              job: 'sla-monitoring',
+              runId,
+              ticketId: ticket.id,
+              organizationId: ticket.organizationId,
+            });
             continue;
           }
 
@@ -86,7 +100,9 @@ export class SLAMonitoringJob {
 
             if (updatedTimers.breached) {
               breachedCount++;
-              logger.warn(`Ticket ${ticket.id} SLA breached`, {
+              logger.warn('Ticket SLA breached', {
+                job: 'sla-monitoring',
+                runId,
                 ticketId: ticket.id,
                 organizationId: ticket.organizationId,
                 subject: ticket.subject,
@@ -97,16 +113,21 @@ export class SLAMonitoringJob {
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : 'Unknown error';
           errors.push({ ticketId: ticket.id, error: errorMessage });
-          logger.error(`Error checking SLA for ticket ${ticket.id}`, {
-            error: errorMessage,
+          logger.error('Error checking SLA for ticket', {
+            job: 'sla-monitoring',
+            runId,
             ticketId: ticket.id,
+            organizationId: ticket.organizationId,
+            error: errorMessage,
           });
         }
       }
 
       const duration = Date.now() - startTime;
-      logger.info('SLA monitoring job completed', {
-        duration: `${duration}ms`,
+      logger.info('Job execution completed', {
+        job: 'sla-monitoring',
+        runId,
+        durationMs: duration,
         totalTickets: tickets.length,
         breachedCount,
         updatedCount,
@@ -115,14 +136,21 @@ export class SLAMonitoringJob {
 
       // Log errors summary if any
       if (errors.length > 0) {
-        logger.error('SLA monitoring job completed with errors', {
+        logger.warn('Job completed with errors', {
+          job: 'sla-monitoring',
+          runId,
           errorCount: errors.length,
           errors: errors.slice(0, 10), // Log first 10 errors
         });
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      logger.error('SLA monitoring job failed', {
+      const duration = Date.now() - startTime;
+      
+      logger.error('Job execution failed', {
+        job: 'sla-monitoring',
+        runId,
+        durationMs: duration,
         error: errorMessage,
         stack: error instanceof Error ? error.stack : undefined,
       });

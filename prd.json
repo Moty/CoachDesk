@@ -119,7 +119,7 @@
       ],
       "priority": 7,
       "blockedBy": [],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -134,7 +134,7 @@
       ],
       "priority": 8,
       "blockedBy": [],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -150,7 +150,7 @@
       ],
       "priority": 9,
       "blockedBy": [],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -169,7 +169,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -188,7 +188,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -206,7 +206,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     }
   ]

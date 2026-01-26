@@ -101,3 +101,97 @@ Started: Sun Jan 25 01:49:52 PST 2026
   - [GOTCHA]: Pre-existing auth controller test failures continue to exist, unrelated to Firestore adapter logging changes
   - [INTEGRATION]: Firestore logging context provides structured metadata for database health monitoring and troubleshooting
 ---
+
+## 2026-01-26 09:23:30 - US-007
+- Standardized Firebase storage logging with consistent structure and outcomes
+- Updated upload logs to include operation, outcome, filePath, fileName, fileSize, contentType, organizationId, and ticketId
+- Updated download logs to include operation, outcome, filePath, fileSize, and contentType (fetched from metadata)
+- Updated delete logs to include operation, outcome, and filePath
+- Updated getSignedUrl logs to include operation, outcome, filePath, and expiresInMinutes
+- All error logs now include operation, outcome, filePath, and error message
+- **Files changed**: src/shared/storage/adapters/FirebaseStorageAdapter.ts, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Storage operation logs follow consistent structure with operation, outcome, and resource identifiers
+  - [PATTERN]: Include fileSize and contentType in logs when available for better traceability
+  - [INTEGRATION]: Firebase Storage adapter fetches metadata during download to include contentType in logs
+---
+
+## 2026-01-26 09:24:50 - US-008
+- Standardized SMTP provider logging with message identifiers and outcomes
+- Added unique messageId to each email (format: msg-{timestamp}-{random})
+- Updated queue email logs to include operation, outcome, messageId, recipient, and subject
+- Updated success logs to include operation, outcome, messageId, recipient, and subject
+- Changed retry logs from error to warn level with operation, outcome, messageId, attemptNumber, maxRetries, and error
+- Updated final failure logs to include operation, outcome, messageId, attemptNumber, and error
+- **Files changed**: src/shared/notifications/providers/SMTPProvider.ts, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: SMTP logs use consistent message identifiers for traceability across retry attempts
+  - [PATTERN]: Retry attempts log at warn level, not error, to distinguish transient from permanent failures
+  - [PATTERN]: Include attemptNumber and maxRetries in retry logs for better diagnostics
+---
+
+## 2026-01-26 09:25:58 - US-009
+- Improved background job logging with run IDs and lifecycle tracking
+- Added unique runId to each job execution (format: run-{timestamp}-{random})
+- Updated job start logs to include job name and runId
+- Updated job end logs to include job name, runId, durationMs, and summary stats
+- Changed ticket-level warnings to include job name, runId, ticketId, and organizationId
+- Changed ticket-level errors to include job name, runId, ticketId, organizationId, and error
+- Changed error summary logs from error to warn level for better signal/noise ratio
+- Updated job failure logs to include job name, runId, durationMs, error, and stack trace
+- **Files changed**: src/jobs/sla-monitoring.job.ts, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Background jobs use unique run IDs for tracing execution across logs
+  - [PATTERN]: Job logs include consistent job name and runId for better filtering and correlation
+  - [PATTERN]: Use durationMs (not duration string) for consistent numeric logging
+  - [PATTERN]: Recoverable issues within jobs log at warn level, not error
+---
+
+## 2026-01-26 09:27:15 - US-010
+- Standardized auth and user controller logging with success messages
+- Added logger import to auth.controller and user.controller
+- Added success log after user registration in auth.controller with userId, email, role, and correlationId
+- Added success log after user creation by admin in user.controller with userId, email, role, createdBy, and correlationId
+- Added success log after listing users with resultCount, requestedBy, and correlationId
+- Added success log for user auto-creation on first access with userId, email, role, and correlationId
+- Added success log after retrieving current user with userId and correlationId
+- **Files changed**: src/api/controllers/auth.controller.ts, src/api/controllers/user.controller.ts, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Controller logs include controller name, action, and correlationId for request tracing
+  - [PATTERN]: Success logs include relevant entity identifiers (userId, email, role) for audit trail
+  - [PATTERN]: Admin actions log requestedBy or createdBy for accountability
+  - [INTEGRATION]: Correlation IDs are already available on req.correlationId from middleware
+---
+
+## 2026-01-26 09:31:55 - US-011
+- Standardized ticket, comment, and attachment controller logging with success messages
+- Added logger import to ticket.controller, comment.controller, comment-list.controller
+- Added success logs for ticket operations: createTicket, getTicketById, listTickets, updateTicket, assignTicket
+- Added success log for comment.controller addComment operation
+- Added success log for comment-list.controller listComments operation
+- Updated attachment.controller uploadAttachment log to include controller, action, uploadedBy, and correlationId
+- All logs include correlationId and user context (createdBy, requestedBy, updatedBy, assignedBy, uploadedBy as appropriate)
+- Ticket logs include relevant identifiers: ticketId, resultCount, changes keys
+- Comment logs include ticketId and commentId
+- Attachment logs include ticketId, attachmentId, fileName, and fileSize
+- **Files changed**: src/api/controllers/ticket.controller.ts, src/api/controllers/comment.controller.ts, src/api/controllers/comment-list.controller.ts, src/api/controllers/attachment.controller.ts, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Controller success logs follow consistent structure: controller, action, entity IDs, actor (createdBy/requestedBy), correlationId
+  - [PATTERN]: List operations log resultCount for metrics and troubleshooting
+  - [PATTERN]: Update operations log changes keys to identify what was modified without exposing sensitive data
+  - [INTEGRATION]: attachment.controller already had logging but needed standardization to match pattern
+---
+
+## 2026-01-26 09:33:20 - US-012
+- Standardized admin controller logging with success messages
+- Updated audit-log.controller listAuditLogs to include controller, action, resultCount, organizationId, requestedBy, and correlationId
+- Updated sla-rule.controller createSLARule to include controller, action, operation (create/update), organizationId, priority, slaRuleId, createdBy/updatedBy, and correlationId
+- Updated sla-rule.controller listSLARules to include controller, action, organizationId, resultCount, requestedBy, and correlationId
+- Both admin controllers already had logger imported and basic logging in place
+- **Files changed**: src/api/controllers/admin/audit-log.controller.ts, src/api/controllers/admin/sla-rule.controller.ts, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Admin controllers follow same logging pattern as other controllers: controller, action, identifiers, actor, correlationId
+  - [PATTERN]: Upsert operations (create or update) include 'operation' field to distinguish the actual operation performed
+  - [PATTERN]: Use consistent naming: resultCount (not count) for list operations
+  - [INTEGRATION]: Admin controllers were already partially instrumented with logging but needed standardization
+---

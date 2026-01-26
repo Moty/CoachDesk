@@ -9,6 +9,7 @@ import { UserRole } from '../../domain/models/User.js';
 import { UserRepository } from '../../domain/repositories/UserRepository.js';
 import { AuditLogRepository } from '../../domain/repositories/AuditLogRepository.js';
 import { eventBus } from '../../shared/events/EventBus.js';
+import { logger } from '../../shared/utils/logger.js';
 
 const ticketRepository = new TicketRepository(firestoreAdapter);
 const slaRuleRepository = new SLARuleRepository(firestoreAdapter);
@@ -110,6 +111,14 @@ export async function createTicket(
       slaTimers,
     });
 
+    logger.info('Ticket created', {
+      controller: 'ticket',
+      action: 'createTicket',
+      ticketId: ticket.id,
+      createdBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
+
     // Return 201 with created ticket
     res.status(201).json(ticket);
   } catch (error) {
@@ -159,6 +168,14 @@ export async function getTicketById(
     }
 
     // Agents/admins can view all organization tickets (already validated above)
+
+    logger.info('Ticket retrieved', {
+      controller: 'ticket',
+      action: 'getTicketById',
+      ticketId: ticket.id,
+      requestedBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
 
     res.status(200).json(ticket);
   } catch (error) {
@@ -229,6 +246,14 @@ export async function listTickets(
       orderBy: [{ field: finalSortBy, direction: finalOrder as 'asc' | 'desc' }],
       limit,
       offset,
+    });
+
+    logger.info('Tickets listed', {
+      controller: 'ticket',
+      action: 'listTickets',
+      resultCount: tickets.length,
+      requestedBy: req.user?.userId,
+      correlationId: req.correlationId,
     });
 
     res.status(200).json({
@@ -410,6 +435,15 @@ export async function updateTicket(
       requesterEmail: requester?.email || '',
     });
 
+    logger.info('Ticket updated', {
+      controller: 'ticket',
+      action: 'updateTicket',
+      ticketId,
+      updatedBy: req.user?.userId,
+      changes: Object.keys(changes),
+      correlationId: req.correlationId,
+    });
+
     res.status(200).json(updatedTicket);
   } catch (error) {
     next(error);
@@ -506,6 +540,15 @@ export async function assignTicket(
 
     // Update the ticket
     const updatedTicket = await ticketRepository.update(ticketId, updates);
+
+    logger.info('Ticket assigned', {
+      controller: 'ticket',
+      action: 'assignTicket',
+      ticketId,
+      assignedTo: assigneeId,
+      assignedBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
 
     res.status(200).json(updatedTicket);
   } catch (error) {

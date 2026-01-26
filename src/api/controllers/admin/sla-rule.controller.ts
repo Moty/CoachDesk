@@ -65,9 +65,14 @@ export async function createSLARule(
     });
 
     logger.info('SLA rule updated', {
+      controller: 'sla-rule',
+      action: 'createSLARule',
+      operation: 'update',
       organizationId,
       priority,
       slaRuleId: existingRule.id,
+      updatedBy: req.user?.userId,
+      correlationId: req.correlationId,
     });
   } else {
     // Create new rule
@@ -80,9 +85,14 @@ export async function createSLARule(
     });
 
     logger.info('SLA rule created', {
+      controller: 'sla-rule',
+      action: 'createSLARule',
+      operation: 'create',
       organizationId,
       priority,
       slaRuleId: slaRule.id,
+      createdBy: req.user?.userId,
+      correlationId: req.correlationId,
     });
   }
 
@@ -120,8 +130,12 @@ export async function listSLARules(
     });
 
     logger.info('SLA rules listed', {
+      controller: 'sla-rule',
+      action: 'listSLARules',
       organizationId,
-      count: sortedRules.length,
+      resultCount: sortedRules.length,
+      requestedBy: req.user?.userId,
+      correlationId: req.correlationId,
     });
 
     res.status(200).json(sortedRules);

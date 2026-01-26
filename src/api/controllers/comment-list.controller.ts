@@ -5,6 +5,7 @@ import { TicketRepository } from '../../domain/repositories/TicketRepository.js'
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { UserRole } from '../../domain/models/User.js';
+import { logger } from '../../shared/utils/logger.js';
 
 const commentRepository = new CommentRepository(firestoreAdapter);
 const userRepository = new UserRepository(firestoreAdapter);
@@ -108,6 +109,15 @@ export async function listComments(
           }
         : null,
     }));
+
+    logger.info('Comments listed', {
+      controller: 'comment-list',
+      action: 'listComments',
+      ticketId,
+      resultCount: enrichedComments.length,
+      requestedBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
 
     res.status(200).json({
       comments: enrichedComments,

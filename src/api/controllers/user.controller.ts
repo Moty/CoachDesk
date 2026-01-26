@@ -6,6 +6,7 @@ import { config } from '../../shared/config/env.config.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { isValidEmail } from '../../shared/utils/validation.js';
+import { logger } from '../../shared/utils/logger.js';
 
 const userRepository = new UserRepository(firestoreAdapter);
 
@@ -124,6 +125,16 @@ export async function createUser(
       organizationId,
     });
 
+    logger.info('User created by admin', {
+      controller: 'user',
+      action: 'createUser',
+      userId: user.id,
+      email: user.email,
+      role: user.role,
+      createdBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
+
     // Return 201 with created user (exclude password)
     res.status(201).json({
       id: user.id,
@@ -200,6 +211,14 @@ export async function listUsers(
       updatedAt: user.updatedAt,
     }));
 
+    logger.info('Users listed', {
+      controller: 'user',
+      action: 'listUsers',
+      resultCount: sanitizedUsers.length,
+      requestedBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
+
     res.status(200).json({
       users: sanitizedUsers,
       total,
@@ -256,7 +275,23 @@ export async function getCurrentUser(
         role,
         organizationId,
       });
+      
+      logger.info('User auto-created on first access', {
+        controller: 'user',
+        action: 'getCurrentUser',
+        userId: user.id,
+        email: user.email,
+        role: user.role,
+        correlationId: req.correlationId,
+      });
     }
+
+    logger.info('Current user retrieved', {
+      controller: 'user',
+      action: 'getCurrentUser',
+      userId: user.id,
+      correlationId: req.correlationId,
+    });
 
     res.status(200).json({
       id: user.id,

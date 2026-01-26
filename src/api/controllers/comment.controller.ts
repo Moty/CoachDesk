@@ -4,6 +4,7 @@ import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { TicketRepository } from '../../domain/repositories/TicketRepository.js';
 import { UserRole } from '../../domain/models/User.js';
+import { logger } from '../../shared/utils/logger.js';
 
 const commentRepository = new CommentRepository(firestoreAdapter);
 const ticketRepository = new TicketRepository(firestoreAdapter);
@@ -108,6 +109,15 @@ export async function addComment(
       };
       await ticketRepository.update(ticketId, updates);
     }
+
+    logger.info('Comment added', {
+      controller: 'comment',
+      action: 'addComment',
+      commentId: comment.id,
+      ticketId,
+      createdBy: req.user?.userId,
+      correlationId: req.correlationId,
+    });
 
     res.status(201).json(comment);
   } catch (error) {
