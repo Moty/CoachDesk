@@ -77,15 +77,12 @@ export async function listAuditLogs(
     const logs = await auditLogRepository.findAll(queryOptions);
 
     logger.info('Audit logs retrieved', {
+      controller: 'audit-log',
+      action: 'listAuditLogs',
+      resultCount: logs.length,
       organizationId,
-      count: logs.length,
-      filters: {
-        ticketId: req.query.ticketId,
-        userId: req.query.userId,
-        action: req.query.action,
-        startDate: req.query.startDate,
-        endDate: req.query.endDate,
-      },
+      requestedBy: req.user?.userId,
+      correlationId: req.correlationId,
     });
 
     res.status(200).json(logs);
