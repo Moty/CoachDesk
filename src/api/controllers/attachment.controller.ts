@@ -2,14 +2,13 @@ import { Request, Response, NextFunction } from 'express';
 import multer from 'multer';
 import { TicketRepository } from '../../domain/repositories/TicketRepository.js';
 import { CommentRepository } from '../../domain/repositories/CommentRepository.js';
-import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { FirebaseStorageAdapter } from '../../shared/storage/adapters/FirebaseStorageAdapter.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
 import { UserRole } from '../../domain/models/User.js';
 import { logger } from '../../shared/utils/logger.js';
 import { v4 as uuidv4 } from 'uuid';
 
-const firestoreAdapter = new FirestoreAdapter();
 const ticketRepository = new TicketRepository(firestoreAdapter);
 const commentRepository = new CommentRepository(firestoreAdapter);
 const storageAdapter = new FirebaseStorageAdapter();

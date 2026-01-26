@@ -1,11 +1,10 @@
 import { Request, Response, NextFunction } from 'express';
 import { CommentRepository } from '../../domain/repositories/CommentRepository.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
-import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { TicketRepository } from '../../domain/repositories/TicketRepository.js';
 import { UserRole } from '../../domain/models/User.js';
 
-const firestoreAdapter = new FirestoreAdapter();
 const commentRepository = new CommentRepository(firestoreAdapter);
 const ticketRepository = new TicketRepository(firestoreAdapter);
 

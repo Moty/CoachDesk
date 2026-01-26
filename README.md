@@ -418,11 +418,254 @@ const ticketRepo = new TicketRepository(dbAdapter, 'tickets');
 
 ## Logging & Error Handling
 
-The application uses Winston for structured logging with the following levels:
+The application uses Winston for structured, configurable logging with the following features:
+
+### Configuration
+- **LOG_LEVEL environment variable**: Controls logging level (debug, info, warn, error)
+- **Environment-aware formatting**: JSON format for production/non-development environments, human-readable format for development
+- **Base metadata**: All logs include service name and environment information
+- **Lifecycle logging**: Application startup and shutdown events are logged with configuration summary
+
+### Log Levels
 - `debug` - Development debugging information
-- `info` - General informational messages
+- `info` - General informational messages, startup/shutdown events
 - `warn` - Warning messages
 - `error` - Error messages with stack traces (in development)
+
+### Startup Logging
+The application logs startup events with configuration summary (non-sensitive information):
+```json
+{
+  "message": "Application starting up",
+  "config": {
+    "nodeEnv": "development",
+    "logLevel": "info",
+    "port": 3000,
+    "dbType": "firestore",
+    "service": "helpdesk-api"
+  }
+}
+```
+
+### Request Correlation
+Each request is assigned a unique correlation ID to enable end-to-end tracing:
+
+- **X-Request-Id header**: Clients can provide their own correlation ID via the `X-Request-Id` header
+- **Auto-generation**: If no header is provided, a UUID is automatically generated
+- **Response header**: The correlation ID is returned in the `X-Request-Id` response header
+- **Request logging**: All request start/end logs include the correlation ID for traceability
+
+Example request/response flow:
+```bash
+# Request with correlation ID
+curl -H "X-Request-Id: my-custom-id-123" http://localhost:3000/api/v1/tickets
+
+# Response includes the same correlation ID
+HTTP/1.1 200 OK
+X-Request-Id: my-custom-id-123
+```
+
+### Enhanced Request Logging
+The application provides comprehensive request logging with structured metadata:
+
+**Request Start Logs** (`info` level):
+- HTTP method, path, IP address, user agent
+- Unique correlation ID for end-to-end tracing
+- Consistent structured format for search and analysis
+
+**Request Completion Logs** (variable level):
+- All request start metadata plus status code, duration
+- Response size when available (from Content-Length header)
+- Smart log levels: `info` for 2xx/3xx, `warn` for 4xx, `error` for 5xx
+
+**Shared Log Context**:
+- Reusable helper functions (`createRequestLogContext`, `createRequestCompletionLogContext`)
+- Consistent metadata structure across all request logs
+- Type-safe interfaces (`RequestLogContext`, `RequestCompletionLogContext`)
+
+Example log output:
+```json
+{
+  "level": "info",
+  "message": "Incoming request",
+  "method": "GET",
+  "path": "/api/v1/tickets",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000"
+}
+{
+  "level": "info",
+  "message": "Request completed",
+  "method": "GET",
+  "path": "/api/v1/tickets",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "statusCode": 200,
+  "duration": "45ms",
+  "responseSize": 1234
+}
+```
+
+### Standardized Error Logging
+The application provides comprehensive error logging with structured metadata for consistent error tracking:
+
+**Error Handler Logging**:
+- **AppError instances**: Logs include error code, details, and request metadata when available
+- **Unknown errors**: Include full stack traces and request metadata for debugging
+- **Context awareness**: All error logs include correlation ID and request information for traceability
+
+**Validation Middleware Logging**:
+- **Warning-level logs**: Validation failures are logged as warnings (user-caused, not server failures)
+- **Structured validation details**: Include specific validation errors and attempted input values
+- **Request metadata**: All validation logs include correlation ID, path, method for context
+
+**Error Log Context Types**:
+- `ErrorLogContext`: Extends request context with error code, details, and stack trace
+- `ValidationErrorLogContext`: Extends request context with validation failure details
+- Helper functions: `createErrorLogContext`, `createValidationErrorLogContext`
+
+Example error logging output:
+```json
+{
+  "level": "error",
+  "message": "AppError: Invalid email format",
+  "method": "POST",
+  "path": "/api/v1/auth/register",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "errorCode": "VALIDATION_ERROR",
+  "errorDetails": { "field": "email", "value": "invalid-email" }
+}
+```
+
+**Validation Middleware Usage**:
+```typescript
+import { validateBody, validateQuery, validateParams } from '../shared/middleware/validation.middleware.js';
+import { createUserSchema, paginationSchema } from '../shared/validation/schemas.js';
+
+// Validate request body against Zod schema
+app.post('/users', validateBody(createUserSchema), controller);
+
+// Validate query parameters
+app.get('/users', validateQuery(paginationSchema), controller);
+
+// Validate path parameters
+app.get('/users/:id', validateParams(userParamsSchema), controller);
+```
+
+### Authentication and Authorization Logging
+The application provides comprehensive logging for authentication and authorization events with structured metadata:
+
+**Authentication Success Logging** (`info` level):
+- User ID, email, and role information
+- Request metadata including correlation ID for traceability
+- Structured context for consistent search and monitoring
+
+**Authentication Failure Logging** (`warn` level):
+- Failure reason with request metadata
+- Correlation ID and request details for debugging
+- Consistent structure for security monitoring
+
+**Authorization (RBAC) Success Logging** (`info` level):
+- User role and required roles for the endpoint
+- Request metadata for audit trail
+- Successful access attempts with full context
+
+**Authorization (RBAC) Failure Logging** (`warn` level):
+- User role, required roles, and request metadata
+- Detailed context for security audit and troubleshooting
+- Clear indication of insufficient permissions
+
+**Auth Log Context Types**:
+- `AuthSuccessLogContext`: User authentication success with user details
+- `AuthFailureLogContext`: Authentication failure with reason
+- `RbacSuccessLogContext`: Authorization success with role information
+- `RbacFailureLogContext`: Authorization failure with role mismatch details
+- Helper functions: `createAuthSuccessLogContext`, `createAuthFailureLogContext`, `createRbacSuccessLogContext`, `createRbacFailureLogContext`
+
+Example authentication and authorization logging:
+```json
+{
+  "level": "info",
+  "message": "User authentication successful",
+  "method": "GET",
+  "path": "/api/v1/tickets",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "userId": "user123",
+  "email": "user@example.com",
+  "role": "agent"
+}
+{
+  "level": "warn",
+  "message": "Authorization failed: insufficient permissions",
+  "method": "DELETE",
+  "path": "/api/v1/admin/users",
+  "ip": "::1",
+  "userAgent": "curl/7.68.0",
+  "correlationId": "550e8400-e29b-41d4-a716-446655440000",
+  "userId": "user123",
+  "userRole": "agent",
+  "requiredRoles": ["admin"]
+}
+```
+
+### Firestore Adapter Logging
+The application provides structured logging for Firestore database operations with consistent metadata:
+
+**Connection Logging** (`info` level for success, `error` level for failures):
+- Successful connections log operation name and outcome
+- Failed connections include error messages and details
+- Structured context for database health monitoring
+
+**Health Check Logging** (`info` level for success, `error` level for failures):
+- Regular health check results with operation outcome
+- Connection status and connectivity test results
+- Detailed error information when health checks fail
+
+**Disconnect Logging** (`info` level for success, `error` level for failures):
+- Clean disconnection events with operation outcome
+- Failed disconnection attempts with error details
+- Consistent structure for database lifecycle tracking
+
+**Firestore Log Context Type**:
+- `FirestoreLogContext`: Includes operation name, outcome (success/failure), error message, and additional details
+- Helper function: `createFirestoreLogContext` for consistent database operation logging
+
+Example Firestore adapter logging:
+```json
+{
+  "level": "info",
+  "message": "Firestore connection established",
+  "operation": "connect",
+  "outcome": "success"
+}
+{
+  "level": "info",
+  "message": "Firestore health check passed",
+  "operation": "health_check",
+  "outcome": "success"
+}
+{
+  "level": "error",
+  "message": "Firestore health check failed",
+  "operation": "health_check",
+  "outcome": "failure",
+  "error": "Connection timeout",
+  "details": { "error": "..." }
+}
+```
+
+### Shutdown Handling
+The application includes graceful shutdown handling for:
+- SIGTERM signals
+- SIGINT signals (Ctrl+C)
+- Uncaught exceptions
+- Unhandled promise rejections
 
 All errors return a consistent JSON format:
 ```json

@@ -982,6 +982,11 @@ if [ -f "$PRD_FILE" ] && [ -f "$LAST_BRANCH_FILE" ]; then
     echo "# Ralph Progress Log" > "$PROGRESS_FILE"
     echo "Started: $(date)" >> "$PROGRESS_FILE"
     echo "---" >> "$PROGRESS_FILE"
+    # Reset rotation state for new PRD - start fresh with primary agent
+    if [ -f "$SCRIPT_DIR/.ralph/rotation-state.json" ]; then
+      echo -e "${CYAN}Resetting rotation state for new PRD${NC}"
+      rm -f "$SCRIPT_DIR/.ralph/rotation-state.json"
+    fi
   fi
 fi
 
@@ -1295,8 +1300,11 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   # Ensure we're on the feature branch and pull latest before each iteration
   if [ "$GIT_LIBRARY_LOADED" = true ] && [ -n "$BRANCH_NAME" ]; then
     if get_git_auto_checkout_branch 2>/dev/null; then
-      git checkout "$BRANCH_NAME" 2>/dev/null || true
-      git pull origin "$BRANCH_NAME" 2>/dev/null || true
+      GIT_TERMINAL_PROMPT=0 git checkout "$BRANCH_NAME" 2>/dev/null || true
+      # Only pull if we're behind origin, not ahead; use GIT_TERMINAL_PROMPT=0 to prevent hanging on auth
+      if git rev-list --count HEAD..origin/"$BRANCH_NAME" 2>/dev/null | grep -q '^[1-9]'; then
+        GIT_TERMINAL_PROMPT=0 git pull --no-edit origin "$BRANCH_NAME" 2>/dev/null || true
+      fi
     fi
   fi
 
@@ -1338,6 +1346,9 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     fi
   fi
 
+  # Track story progress before agent runs (for auto-commit detection)
+  STORIES_BEFORE=$(jq '[.userStories[] | select(.passes == true)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
+
   print_status $i $MAX_ITERATIONS
 
   set +e
@@ -1361,11 +1372,14 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
     RATE_LIMITED=true
     if should_use_rotation && [ "$ROTATION_LIBRARY_LOADED" = true ]; then
       # Rotation enabled: record rate limit, rotate, and continue
-      record_rate_limit "$ACTIVE_AGENT"
-      update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "rate_limit"
+      # Note: || true prevents set -e from exiting on rotation function failures
+      record_rate_limit "$ACTIVE_AGENT" 2>/dev/null || true
+      update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "rate_limit" 2>/dev/null || true
       echo -e "${YELLOW}⚠ Rate limit hit on $ACTIVE_AGENT — rotating to next agent${NC}"
+      set +e
       rotate_agent 2>/dev/null
       ROTATE_RESULT=$?
+      set -e
       if [ $ROTATE_RESULT -eq 2 ]; then
         # All agents exhausted
         echo -e "${RED}All agents exhausted after rate limits. Waiting for cooldown...${NC}"
@@ -1391,8 +1405,9 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   if [ $STATUS -ne 0 ]; then
     if should_use_rotation && [ "$ROTATION_LIBRARY_LOADED" = true ]; then
       # Rotation enabled: track failure, possibly rotate
-      update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "failure"
-      if should_rotate "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL"; then
+      # Note: || true prevents set -e from exiting on rotation function failures
+      update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "failure" 2>/dev/null || true
+      if should_rotate "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" 2>/dev/null; then
         echo -e "${YELLOW}Failure threshold reached for $ACTIVE_AGENT ($RALPH_OVERRIDE_MODEL) — rotating${NC}"
         rotate_model "$ACTIVE_AGENT" 2>/dev/null || true
       fi
@@ -1411,7 +1426,7 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
   else
     # Success: update rotation state
     if should_use_rotation && [ "$ROTATION_LIBRARY_LOADED" = true ] && [ -n "$CURRENT_TASK_ID" ]; then
-      update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "success"
+      update_rotation_state "$CURRENT_TASK_ID" "$ACTIVE_AGENT" "$RALPH_OVERRIDE_MODEL" "success" 2>/dev/null || true
       reset_story_state "$CURRENT_TASK_ID" 2>/dev/null || true
     fi
   fi
@@ -1431,6 +1446,27 @@ for i in $(seq 1 "$MAX_ITERATIONS"); do
         git commit -m "chore: auto-commit uncommitted agent work before branch restore" 2>/dev/null || true
       fi
       git checkout "$BRANCH_NAME" 2>/dev/null || true
+    fi
+
+    # Auto-commit uncommitted changes if agent made progress but forgot to commit
+    # Check if story progress was made (comparing before/after)
+    STORIES_AFTER=$(jq '[.userStories[] | select(.passes == true)] | length' "$PRD_FILE" 2>/dev/null || echo "0")
+    if ! git diff-index --quiet HEAD -- 2>/dev/null; then
+      # There are uncommitted changes
+      UNCOMMITTED_SRC=$(git diff --name-only HEAD 2>/dev/null | grep -c '^src/' || echo "0")
+      UNCOMMITTED_PRD=$(git diff --name-only HEAD 2>/dev/null | grep -c 'prd.json' || echo "0")
+
+      if [ "$STORIES_AFTER" -gt "$STORIES_BEFORE" ]; then
+        # Story progress was made but changes weren't committed - auto-commit
+        echo -e "${YELLOW}⚠ Agent made progress but didn't commit - auto-committing${NC}"
+        COMPLETED_STORY=$(jq -r ".userStories[] | select(.passes == true) | .id" "$PRD_FILE" 2>/dev/null | tail -1)
+        git add -A
+        git commit -m "feat: ${COMPLETED_STORY:-story} - auto-commit by Ralph (agent forgot to commit)" 2>/dev/null || true
+      elif [ "$UNCOMMITTED_SRC" -gt 0 ] || [ "$UNCOMMITTED_PRD" -gt 0 ]; then
+        # Source or PRD changes exist - warn but don't auto-commit (might be incomplete work)
+        echo -e "${YELLOW}⚠ Uncommitted changes detected (${UNCOMMITTED_SRC} src files, prd: ${UNCOMMITTED_PRD})${NC}"
+        log_warn "Uncommitted changes after iteration: $UNCOMMITTED_SRC src files" 2>/dev/null || true
+      fi
     fi
 
     # Push if enabled and timing is "iteration"

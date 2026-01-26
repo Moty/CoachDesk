@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import * as admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
 import { UserRepository } from '../../domain/repositories/UserRepository.js';
 import { UserRole, isValidRole } from '../../domain/models/User.js';
+import { config } from '../../shared/config/env.config.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
-import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { isValidEmail } from '../../shared/utils/validation.js';
 
-const firestoreAdapter = new FirestoreAdapter();
 const userRepository = new UserRepository(firestoreAdapter);
 
 interface CreateUserRequest {
@@ -87,7 +87,7 @@ export async function createUser(
     // Create user in Firebase Auth
     let firebaseUser;
     try {
-      firebaseUser = await admin.auth().createUser({
+      firebaseUser = await getAuth().createUser({
         email,
         displayName,
       });
@@ -110,7 +110,7 @@ export async function createUser(
     }
 
     // Set custom claims for role and organizationId
-    await admin.auth().setCustomUserClaims(firebaseUser.uid, {
+    await getAuth().setCustomUserClaims(firebaseUser.uid, {
       role,
       organizationId,
     });
@@ -226,14 +226,36 @@ export async function getCurrentUser(
     }
 
     const userId = req.user.userId;
-    const user = await userRepository.findById(userId);
+    const email = req.user.email || '';
+    const organizationId = req.user.organizationId || config.defaultOrganizationId;
+    
+    // First try to find by ID
+    let user = await userRepository.findById(userId);
 
+    // If not found by ID, try to find by email (handles legacy/mismatched IDs)
+    if (!user && email) {
+      user = await userRepository.findByEmail(email, organizationId);
+      
+      // If found by email but with different ID, update the ID to match Firebase UID
+      if (user && user.id !== userId) {
+        // User exists with different ID - return it as-is for now
+        // In production you might want to migrate the ID
+      }
+    }
+
+    // If still not found, create the user
     if (!user) {
-      throw new AppError(
-        ErrorCode.NOT_FOUND,
-        'User not found',
-        404
-      );
+      const role = isValidRole(req.user.role)
+        ? (req.user.role as UserRole)
+        : UserRole.CUSTOMER;
+
+      user = await userRepository.create({
+        id: userId,
+        email,
+        displayName: email,
+        role,
+        organizationId,
+      });
     }
 
     res.status(200).json({

@@ -3,6 +3,7 @@ import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { AppError, ErrorCode } from '../errors/AppError.js';
 import { logger } from '../utils/logger.js';
+import { createAuthSuccessLogContext, createAuthFailureLogContext } from '../utils/logContext.js';
 
 // Initialize Firebase Admin if not already initialized
 if (getApps().length === 0) {
@@ -70,18 +71,22 @@ export async function authMiddleware(
       organizationId,
     };
 
-    logger.debug('User authenticated', { userId, email, role });
+    // Log successful authentication with structured context
+    const successContext = createAuthSuccessLogContext(req, userId, email, role);
+    logger.info('User authentication successful', successContext);
+
     next();
   } catch (error) {
     if (error instanceof AppError) {
+      // Log structured auth failure for AppError instances
+      const failureContext = createAuthFailureLogContext(req, error.message);
+      logger.warn('Authentication failed', failureContext);
       next(error);
     } else {
-      logger.warn('Authentication failed', {
-        error: error instanceof Error ? error.message : 'Unknown error',
-        path: req.path,
-        method: req.method,
-        ip: req.ip,
-      });
+      // Log structured auth failure for unexpected errors
+      const reason = error instanceof Error ? error.message : 'Unknown authentication error';
+      const failureContext = createAuthFailureLogContext(req, reason);
+      logger.warn('Authentication failed', failureContext);
       next(new AppError(ErrorCode.UNAUTHORIZED, 'Invalid or expired token', 401));
     }
   }

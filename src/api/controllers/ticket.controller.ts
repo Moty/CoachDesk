@@ -2,7 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { TicketRepository } from '../../domain/repositories/TicketRepository.js';
 import { TicketPriority, TicketStatus, isValidStatusTransition } from '../../domain/models/Ticket.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
-import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { SLARuleRepository } from '../../domain/repositories/SLARuleRepository.js';
 import { SLAService } from '../../domain/services/SLAService.js';
 import { UserRole } from '../../domain/models/User.js';
@@ -10,7 +10,6 @@ import { UserRepository } from '../../domain/repositories/UserRepository.js';
 import { AuditLogRepository } from '../../domain/repositories/AuditLogRepository.js';
 import { eventBus } from '../../shared/events/EventBus.js';
 
-const firestoreAdapter = new FirestoreAdapter();
 const ticketRepository = new TicketRepository(firestoreAdapter);
 const slaRuleRepository = new SLARuleRepository(firestoreAdapter);
 const slaService = new SLAService(slaRuleRepository);

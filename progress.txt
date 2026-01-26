@@ -1,360 +1,103 @@
 # Ralph Progress Log
-Started: Thu Jan 22 23:47:56 PST 2026
+Started: Sun Jan 25 01:49:52 PST 2026
+
+## Codebase Patterns
+- Winston logger is configured in `src/shared/utils/logger.ts` with environment-aware formatting
+- Use `logApplicationStart()` and `logApplicationShutdown()` for lifecycle events
+- Environment configuration is centralized in `src/shared/config/env.config.ts` with validation
+- Graceful shutdown handling should be added to main entry point for process signals
+- Correlation ID middleware extends Express Request interface and must be positioned before request logger
+- Use X-Request-Id header for request correlation across request/response cycle
+
 ---
-## 2026-01-24T02:35:00Z - US-001
-- Implemented DEFAULT_ORGANIZATION_ID env config for user registration
-- Added validation to env.config.ts requiring DEFAULT_ORGANIZATION_ID
-- Updated .env.example and .env with new config field
-- Fixed pre-existing typecheck error in rateLimiter.middleware.ts (ipKeyGenerator expects IP string, not Request object)
-- Files changed:
-  - src/shared/config/env.config.ts
-  - .env.example
-  - .env
-  - src/shared/middleware/rateLimiter.middleware.ts
+
+## 2026-01-25 02:08:30 - US-001
+- Implemented standardized logger configuration with Winston
+- Added LOG_LEVEL environment variable support (already existed in config)
+- Updated logger to use config.logLevel instead of hardcoded level
+- Added logApplicationStart() and logApplicationShutdown() lifecycle functions
+- Added graceful shutdown handling in main entry point for SIGTERM, SIGINT, uncaught exceptions, and unhandled rejections
+- Updated README.md with comprehensive logging documentation including configuration, log levels, startup logging, and shutdown handling
+- **Files changed**: src/shared/utils/logger.ts, src/index.ts, README.md
 - **Learnings for future iterations:**
-  - [PATTERN]: Config validation is centralized in src/shared/config/env.config.ts
-  - [GOTCHA]: express-rate-limit ipKeyGenerator expects req.ip string, not the Request object
-  - [INTEGRATION]: Registration will use config.defaultOrganizationId for new user assignment
+  - [PATTERN]: Use lifecycle logging functions for application startup/shutdown
+  - [PATTERN]: Winston logger uses environment-aware formatting (JSON for prod, human-readable for dev)
+  - [GOTCHA]: Existing tests had pre-existing failures unrelated to logging changes
+  - [INTEGRATION]: Logger configuration is in env.config.ts and used by logger.ts
 ---
-## 2026-01-24T04:45:00Z - US-002
-- Implemented POST /api/v1/auth/register endpoint for self-service user registration
-- Created auth.controller.ts with register function accepting email, password, displayName
-- Creates Firebase Auth user with password and sets custom claims (role: customer, organizationId)
-- Creates Firestore users document with complete user profile
-- Returns sanitized user payload (excludes password)
-- Files changed:
-  - src/api/controllers/auth.controller.ts (new)
-  - src/api/routes/auth.routes.ts (new)
-  - src/index.ts (added auth routes)
-  - tests/api/controllers/auth.controller.test.ts (new)
+
+## 2026-01-25 02:33:15 - US-002
+- Implemented request correlation IDs using X-Request-Id header
+- Created correlationIdMiddleware that generates UUIDs or uses existing header values
+- Extended Express Request interface with correlationId property using global namespace declaration
+- Updated requestLogger to include correlationId in all request lifecycle logs
+- Added X-Request-Id to CORS allowed headers for client access
+- **Files changed**: src/shared/middleware/correlationId.middleware.ts, src/shared/middleware/requestLogger.middleware.ts, src/shared/middleware/index.ts, src/index.ts, prd.json
 - **Learnings for future iterations:**
-  - [PATTERN]: Auth endpoints go in /api/v1/auth namespace
-  - [PATTERN]: Self-registration always uses default customer role from UserRole.CUSTOMER
-  - [PATTERN]: All auth controller methods follow same validation pattern: email, password, displayName
-  - [INTEGRATION]: Registration uses config.defaultOrganizationId from env.config.ts
-  - [GOTCHA]: Firebase Admin createUser accepts password directly, no need to hash
+  - [PATTERN]: Correlation ID middleware must be placed before request logger for proper inclusion in logs
+  - [PATTERN]: Extend Express Request interface using global namespace declaration in TypeScript
+  - [GOTCHA]: Pre-existing test failures in auth controller are unrelated to logging changes
+  - [INTEGRATION]: CORS headers must include X-Request-Id for proper client/server correlation
 ---
-## 2026-01-24T04:46:00Z - US-003
-- Implemented React + TypeScript frontend with registration UI flow
-- Created Vite-based React application in web/ directory
-- Added /register route with email, displayName, and password fields
-- Client-side validation for required fields and password length >= 8
-- Calls POST /api/v1/auth/register and displays API errors in UI
-- On success, signs in user with Firebase Auth and redirects to /
-- Files changed:
-  - web/package.json (new)
-  - web/vite.config.ts (new)
-  - web/tsconfig.json (new)
-  - web/src/main.tsx (new)
-  - web/src/App.tsx (new)
-  - web/src/firebase.ts (new)
-  - web/src/contexts/AuthContext.tsx (new)
-  - web/src/pages/Register.tsx (new)
-  - web/src/pages/Login.tsx (new)
-  - web/src/pages/Home.tsx (new)
-  - web/src/vite-env.d.ts (new)
+
+## 2026-01-25 02:48:30 - US-003
+- Implemented comprehensive request logging with structured metadata
+- Created shared log context types and helper functions for consistent request metadata structure
+- Added RequestLogContext and RequestCompletionLogContext interfaces for type safety
+- Enhanced request logger to include response size from Content-Length header
+- Fixed log levels: info for 2xx/3xx, warn for 4xx, error for 5xx responses
+- Updated README.md with detailed enhanced request logging documentation
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/requestLogger.middleware.ts, README.md, prd.json
 - **Learnings for future iterations:**
-  - [PATTERN]: Frontend uses React Router for routing with /login, /register, / paths
-  - [PATTERN]: AuthContext provides user authentication state across the app
-  - [PATTERN]: All API calls use VITE_API_BASE_URL from .env
-  - [INTEGRATION]: Firebase Auth client SDK handles authentication tokens
-  - [GOTCHA]: Must define ImportMetaEnv in vite-env.d.ts for Vite env variables
+  - [PATTERN]: Use shared log context helpers (createRequestLogContext, createRequestCompletionLogContext) for consistent request metadata
+  - [PATTERN]: Type-safe logging interfaces prevent metadata structure drift across components
+  - [GOTCHA]: Express req.ip and req.get('user-agent') can be undefined, handle with optional types
+  - [INTEGRATION]: Response size extracted from Content-Length header when available, may be undefined
 ---
-## 2026-01-24T04:47:00Z - US-004
-- Created idempotent seed script for initial admin user
-- Script creates Firebase Auth user moty.moshin@gmail.com with password 12345678
-- Sets custom claims: role=admin, organizationId=DEFAULT_ORGANIZATION_ID
-- Creates Firestore users document if missing
-- Safe to re-run without creating duplicates
-- Files changed:
-  - scripts/seed-admin.ts (new)
-  - package.json (added seed:admin script)
+
+## 2026-01-25 03:28:30 - US-004
+- Implemented standardized error logging with structured metadata and consistent context
+- Enhanced error handler to include correlation ID and request metadata for both AppError and unknown errors
+- Created ErrorLogContext and ValidationErrorLogContext interfaces for type-safe error logging
+- Added helper functions createErrorLogContext and createValidationErrorLogContext for consistent metadata structure
+- Implemented validation middleware with warning-level logs for user-caused validation failures
+- Added validation middleware exports to shared middleware index
+- Updated README.md with comprehensive error logging documentation including usage examples
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/errorHandler.ts, src/shared/middleware/validation.middleware.ts, src/shared/middleware/index.ts, README.md, prd.json
 - **Learnings for future iterations:**
-  - [PATTERN]: Seed scripts use tsx to run TypeScript directly
-  - [PATTERN]: Check for existing user with getUserByEmail before creating
-  - [GOTCHA]: Must handle auth/user-not-found error code when checking existence
-  - [INTEGRATION]: Seed script connects to Firestore using FirestoreAdapter
+  - [PATTERN]: Use createErrorLogContext and createValidationErrorLogContext helpers for consistent error metadata across all error scenarios
+  - [PATTERN]: Validation middleware logs warnings (user-caused) vs error handler logs errors (server failures)
+  - [GOTCHA]: ZodError uses `.issues` property, not `.errors` for validation error details
+  - [INTEGRATION]: Validation middleware provides validateBody, validateQuery, validateParams functions for different request parts
 ---
-## 2026-01-24T04:57:00Z - US-005
-- Implemented typed API client with error handling
-- Created web/src/lib/api.ts with full CRUD methods (GET, POST, PATCH, DELETE)
-- API client attaches Authorization Bearer token from Firebase Auth
-- Handles backend error format { code, message, details } with user-friendly messages
-- Supports pagination and filtering via query params
-- Supports file upload with multipart/form-data and field name 'file'
-- Files changed:
-  - web/src/lib/api.ts (new)
-  - web/src/lib/__tests__/api.test.ts (new)
-  - web/vite.config.ts (added vitest test config)
-  - web/package.json (added test scripts)
-  - web/package-lock.json (added vitest dependencies)
+
+## 2026-01-25 03:30:30 - US-005
+- Implemented structured authentication and authorization (RBAC) logging with enhanced context
+- Added auth success logging with user ID, email, role, and correlation ID at info level
+- Enhanced auth failure logging with structured reason and request metadata at warn level
+- Enhanced RBAC failure logging with user role, required roles, and request metadata at warn level
+- Created AuthSuccessLogContext, AuthFailureLogContext, RbacSuccessLogContext, and RbacFailureLogContext interfaces
+- Added helper functions createAuthSuccessLogContext, createAuthFailureLogContext, createRbacSuccessLogContext, createRbacFailureLogContext
+- Updated README.md with comprehensive authentication and authorization logging documentation
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/auth.middleware.ts, src/shared/middleware/rbac.middleware.ts, README.md, prd.json
 - **Learnings for future iterations:**
-  - [PATTERN]: API client exports `api` object with get/post/patch/delete/uploadFile methods
-  - [PATTERN]: User-friendly error messages mapped from backend error codes in getUserFriendlyMessage()
-  - [PATTERN]: Authorization token automatically fetched from Firebase Auth currentUser
-  - [INTEGRATION]: API client uses VITE_API_BASE_URL from environment config
-  - [GOTCHA]: Vitest mocks require async beforeEach to properly reset auth.currentUser
+  - [PATTERN]: Use structured auth logging contexts for consistent security event tracking across authentication and authorization layers
+  - [PATTERN]: Auth success logs at info level, auth/RBAC failures at warn level for proper security monitoring
+  - [GOTCHA]: Pre-existing auth controller test failures are unrelated to logging enhancements
+  - [INTEGRATION]: Auth and RBAC logging contexts extend base RequestLogContext for consistent metadata structure
 ---
-## 2026-01-24T05:00:00Z - US-006
-- Implemented role-based routing and access denied state
-- Created UserRole enum and User type in web/src/types/user.ts
-- Updated AuthContext to fetch current user via GET /api/v1/users/me on app load
-- AuthContext now stores both Firebase user and application user with role
-- Created RoleRoute component for gating routes by role
-- Created AccessDenied page displayed when user lacks permission
-- Updated App.tsx to include /access-denied route
-- Updated Home page to display user role for verification
-- Files changed:
-  - web/src/types/user.ts (new)
-  - web/src/contexts/AuthContext.tsx
-  - web/src/components/RoleRoute.tsx (new)
-  - web/src/pages/AccessDenied.tsx (new)
-  - web/src/pages/Home.tsx
-  - web/src/App.tsx
+
+## 2026-01-25 08:18:45 - US-006
+- Implemented standardized Firestore adapter logging with structured metadata and consistent context
+- Added FirestoreLogContext interface for type-safe database operation logging
+- Created createFirestoreLogContext helper function for consistent metadata structure across database operations
+- Enhanced FirestoreAdapter connect, disconnect, and healthCheck methods with structured success/failure logging
+- Added proper error handling and detailed error information in failure scenarios
+- Updated README.md with comprehensive Firestore adapter logging documentation including usage examples
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/database/adapters/firestore/FirestoreAdapter.ts, README.md, prd.json
 - **Learnings for future iterations:**
-  - [PATTERN]: User types should match backend domain models (UserRole enum matches src/domain/models/User.ts)
-  - [PATTERN]: AuthContext fetches user data after Firebase authentication to get role and organization
-  - [PATTERN]: RoleRoute component can be used to protect routes: <RoleRoute allowedRoles={[UserRole.ADMIN]}>
-  - [INTEGRATION]: GET /api/v1/users/me endpoint returns full user profile including role
-  - [GOTCHA]: Firebase User from auth lib doesn't include custom claims, must fetch from backend
----
-## 2026-01-24T05:01:00Z - US-007
-- Implemented Tickets list page with pagination
-- Created ticket types (TicketStatus, TicketPriority, Ticket, TicketsResponse) in web/src/types/ticket.ts
-- Created Tickets page component that calls GET /api/v1/tickets with pagination
-- Renders ticket rows with subject, status, priority, requester, and updatedAt
-- Shows empty-state message when no tickets found
-- Added pagination controls with Previous/Next buttons
-- Updated Home page to include "View Tickets" button for navigation
-- Updated App.tsx to add /tickets route
-- Files changed:
-  - web/src/types/ticket.ts (new)
-  - web/src/pages/Tickets.tsx (new)
-  - web/src/App.tsx
-  - web/src/pages/Home.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Ticket types match backend domain models from src/domain/models/Ticket.ts
-  - [PATTERN]: List pages follow pattern: loading state, error state, empty state, data table
-  - [PATTERN]: Backend ticket API supports pagination via page/limit query params
-  - [INTEGRATION]: GET /api/v1/tickets returns { tickets, total, page, limit } response
-  - [GOTCHA]: Date strings from API need conversion using new Date() for formatting
----
-## 2026-01-24T05:04:00Z - US-008
-- Implemented ticket list filters and sorting UI
-- Added filters for status (dropdown), priority (dropdown), assignee (text input), and tags (comma-separated text input)
-- Added sorting controls for createdAt, updatedAt, and priority with asc/desc order
-- Filters and sorting update API query params dynamically
-- Added reset filters button to clear all filters and sorting
-- All filters trigger page reset to 1 and reload tickets with updated params
-- Files changed:
-  - web/src/pages/Tickets.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Backend listTickets endpoint supports status, priority, assigneeId, tags filters and sortBy/order params
-  - [PATTERN]: Status and priority filters use enum dropdown for valid values
-  - [PATTERN]: Tags filter accepts comma-separated values matching backend array-contains-any logic
-  - [INTEGRATION]: All filter changes reset page to 1 to avoid empty result pages
-  - [GOTCHA]: Must import TicketStatus and TicketPriority enums to use in select options
----
-## 2026-01-24T05:18:00Z - US-009
-- Implemented Ticket Detail page that loads GET /api/v1/tickets/:id
-- Displays ticket metadata: status, priority, assignee, requester, tags, created/updated dates
-- Shows SLA timers section with first response and resolution due/completed times
-- Displays SLA breach status with red styling when breached
-- Shows not-found state when ticket doesn't exist or user lacks permission
-- Made ticket rows in Tickets.tsx clickable to navigate to detail page
-- Added /tickets/:id route to App.tsx
-- Files changed:
-  - web/src/pages/TicketDetail.tsx (new)
-  - web/src/App.tsx
-  - web/src/pages/Tickets.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Detail pages follow pattern: loading, not-found, error, and data display states
-  - [PATTERN]: Use useParams hook from react-router-dom to get route params like :id
-  - [PATTERN]: Navigate function from react-router-dom enables programmatic navigation
-  - [PATTERN]: SLA timers should show breach status visually with red background/border
-  - [INTEGRATION]: Ticket detail page displays all SLATimer fields from backend model
-  - [GOTCHA]: Must handle undefined dates in SLA timers with fallback to 'N/A'
----
-## 2026-01-24T05:21:00Z - US-010
-- Implemented Ticket comments timeline that loads comments via GET /api/v1/tickets/:id/comments
-- Created Comment and CommentsResponse types in web/src/types/comment.ts
-- Updated TicketDetail page to load and display comments with pagination
-- Comments timeline shows author, timestamp, and visibility label (Public/Internal)
-- Internal comments are hidden from customers (filtered client-side)
-- Public comments have blue background, internal comments have yellow background
-- Added pagination controls for navigating through comments
-- Files changed:
-  - web/src/types/comment.ts (new)
-  - web/src/pages/TicketDetail.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Comments endpoint follows same pagination pattern as tickets (page/limit params)
-  - [PATTERN]: Internal comments filtered client-side for customers using user.role check
-  - [PATTERN]: Visual distinction between public (blue) and internal (yellow) comments
-  - [INTEGRATION]: Comment type matches backend Comment model from src/domain/models/Comment.ts
-  - [GOTCHA]: Must check user?.role against UserRole.CUSTOMER to filter internal comments
----
-## 2026-01-24T05:21:30Z - US-011
-- Implemented comment composer with form submission to POST /api/v1/tickets/:id/comments
-- Added textarea for comment body and submit button
-- Agents/admins can choose public vs internal visibility via checkbox
-- Customers always post public comments (checkbox hidden for them)
-- New comments appended to timeline without full page refresh
-- Form clears and resets after successful submission
-- Shows error message if submission fails
-- Files changed:
-  - web/src/pages/TicketDetail.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Comment composer uses controlled form state with commentBody and isPublic
-  - [PATTERN]: Customers forced to post public comments regardless of checkbox
-  - [PATTERN]: New comments appended to state array to avoid full page reload
-  - [INTEGRATION]: POST /api/v1/tickets/:id/comments accepts { body, isPublic } payload
-  - [GOTCHA]: Must check user.role === UserRole.CUSTOMER to hide internal toggle
----
-## 2026-01-24T05:24:00Z - US-012
-- Implemented Create Ticket page with form posting to POST /api/v1/tickets
-- Created CreateTicket.tsx with subject (1-255 chars) and description (1+ chars) validation
-- Supports priority dropdown (Low/Medium/High/Urgent) and tags input (comma-separated)
-- Navigates to new ticket detail page (/tickets/:id) on success
-- Added "Create Ticket" button to Home page and Tickets list page
-- Added /tickets/new route to App.tsx (placed before /tickets/:id to avoid route conflict)
-- Files changed:
-  - web/src/pages/CreateTicket.tsx (new)
-  - web/src/App.tsx
-  - web/src/pages/Home.tsx
-  - web/src/pages/Tickets.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Form pages follow pattern: controlled state, client-side validation, API call, navigation on success
-  - [PATTERN]: Create forms validate required fields before submission (subject 1-255 chars, description 1+ chars)
-  - [PATTERN]: POST /api/v1/tickets returns { id } which is used to navigate to detail page
-  - [GOTCHA]: Route order matters - /tickets/new must come before /tickets/:id in React Router to avoid "new" being treated as an ID
-  - [INTEGRATION]: Priority uses TicketPriority enum from types/ticket.ts
----
-## 2026-01-24T05:27:00Z - US-013
-- Implemented agent/admin ticket update controls on ticket detail page
-- Added Edit Ticket button that shows Save/Cancel actions
-- Added status dropdown with valid transition enforcement (matches backend STATUS_TRANSITIONS)
-- Added priority dropdown with all TicketPriority enum values
-- Added assignee picker that loads agents/admins via GET /api/v1/users
-- Added tags input field accepting comma-separated values
-- Updates sent via PATCH /api/v1/tickets/:id only include changed fields
-- Displays backend validation errors (invalid transitions, missing assignee, etc)
-- Ticket refreshes in real-time after successful update without page reload
-- Edit controls only visible to agents/admins, hidden from customers
-- Files changed:
-  - web/src/pages/TicketDetail.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Ticket updates use PATCH /api/v1/tickets/:id accepting status, priority, assigneeId, tags
-  - [PATTERN]: Status transitions validated client-side using getValidStatusTransitions() matching backend
-  - [PATTERN]: Agent/admin users loaded from GET /api/v1/users with role filter
-  - [INTEGRATION]: Edit mode toggles between display and input controls for each field
-  - [GOTCHA]: Must only send changed fields to avoid unnecessary updates and audit log entries
----
-## 2026-01-24T05:31:00Z - US-014
-- Implemented attachment uploader that posts to POST /api/v1/tickets/:id/attachments
-- Added file input with 10MB size validation before upload
-- Created attachments list section displaying uploaded files with download links
-- Attachments shown in comments timeline with download capability
-- Files changed:
-  - web/src/pages/TicketDetail.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: File upload uses api.uploadFile() with multipart/form-data and 'file' field name
-  - [PATTERN]: File size validation (10MB limit) happens client-side before API call
-  - [PATTERN]: Attachments displayed as downloadable links in timeline and dedicated section
-  - [INTEGRATION]: POST /api/v1/tickets/:id/attachments returns Attachment type with id, fileName, filePath, size, mimeType
-  - [GOTCHA]: Must reset file input value after successful upload to allow re-selecting same file
----
-## 2026-01-24T05:31:30Z - US-015
-- Implemented Admin Users page listing users via GET /api/v1/users
-- Added role filter dropdown to filter users by customer/agent/admin
-- Created user creation form with email, displayName, password, and role fields
-- Form posts to POST /api/v1/users and displays API validation errors
-- Added /admin/users route accessible only to admin users
-- Added "Manage Users" button to Home page for admin users
-- Files changed:
-  - web/src/pages/AdminUsers.tsx (new)
-  - web/src/App.tsx
-  - web/src/pages/Home.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Admin pages check user.role === UserRole.ADMIN and show access denied for non-admins
-  - [PATTERN]: List pages support pagination and filtering with page/limit and role query params
-  - [PATTERN]: Create user form validates email format and password length >= 8
-  - [INTEGRATION]: GET /api/v1/users returns { users, total, page, limit } with optional role filter
-  - [INTEGRATION]: POST /api/v1/users accepts { email, password, displayName, role }
-  - [GOTCHA]: Must reload users list after creating new user to show updated data
----
-## 2026-01-24T05:32:00Z - US-016
-- Implemented Admin SLA Rules page listing rules via GET /api/v1/admin/sla-rules
-- Created SLARule and SLARulesResponse types in web/src/types/sla.ts
-- Added create SLA rule form with name, priority, firstResponseMinutes, resolutionMinutes fields
-- Form posts to POST /api/v1/admin/sla-rules and shows success/error messages
-- Added /admin/sla-rules route accessible only to admin users
-- Added "SLA Rules" button to Home page for admin users
-- Files changed:
-  - web/src/types/sla.ts (new)
-  - web/src/pages/AdminSLARules.tsx (new)
-  - web/src/App.tsx
-  - web/src/pages/Home.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: SLA rule creation requires name, priority, firstResponseMinutes, resolutionMinutes
-  - [PATTERN]: Success messages auto-dismiss after 3 seconds using setTimeout
-  - [PATTERN]: Priority field uses TicketPriority enum matching ticket priorities
-  - [INTEGRATION]: GET /api/v1/admin/sla-rules returns { rules, total, page, limit }
-  - [INTEGRATION]: POST /api/v1/admin/sla-rules accepts { name, priority, firstResponseMinutes, resolutionMinutes }
-  - [GOTCHA]: Must reload rules list after creating new rule to show updated data
----
-## 2026-01-24T05:33:00Z - US-017
-- Implemented edit and delete actions for SLA rules in Admin SLA Rules page
-- Added inline edit mode with Save/Cancel buttons for each rule
-- Edit fields update name, priority, firstResponseMinutes, resolutionMinutes
-- Updates sent via PATCH /api/v1/admin/sla-rules/:id
-- Delete action sends DELETE /api/v1/admin/sla-rules/:id with confirmation dialog
-- List updates without full page refresh after edit/delete operations
-- Files changed:
-  - web/src/pages/AdminSLARules.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Inline edit mode uses state to track editingRuleId and show/hide edit controls
-  - [PATTERN]: Delete operations require confirmation using browser confirm() dialog
-  - [PATTERN]: List updates after edit/delete using state update: setRules(prevRules => ...)
-  - [INTEGRATION]: PATCH /api/v1/admin/sla-rules/:id accepts { name, priority, firstResponseMinutes, resolutionMinutes }
-  - [INTEGRATION]: DELETE /api/v1/admin/sla-rules/:id removes rule
-  - [GOTCHA]: Must track deleting state per rule ID to show loading indicator on correct button
----
-## 2026-01-24T05:34:00Z - US-018
-- Implemented Admin Audit Logs page listing logs via GET /api/v1/admin/audit-logs
-- Created AuditLog and AuditLogsResponse types in web/src/types/audit.ts
-- Added filters for date range (startDate, endDate), user ID, and action
-- Filters update API query params and trigger page reset to 1
-- Displays timestamp, userId, action, resourceType, resourceId, and details columns
-- Shows empty state when no logs match filters
-- Added /admin/audit-logs route accessible only to admin users
-- Added "Audit Logs" button to Home page for admin users
-- Files changed:
-  - web/src/types/audit.ts (new)
-  - web/src/pages/AdminAuditLogs.tsx (new)
-  - web/src/App.tsx
-  - web/src/pages/Home.tsx
-- **Learnings for future iterations:**
-  - [PATTERN]: Audit logs page supports filtering via userId, action, startDate, endDate query params
-  - [PATTERN]: Date filters use HTML5 date input for consistent date selection
-  - [PATTERN]: Details field displays JSON object using <pre> tag with monospace font
-  - [INTEGRATION]: GET /api/v1/admin/audit-logs returns { logs, total, page, limit }
-  - [GOTCHA]: Must set page to 1 when changing filters to avoid empty result pages
----
-## 2026-01-24T05:35:00Z - US-019
-- Configured Firebase hosting to serve frontend SPA from web/dist
-- Updated firebase.json to proxy /api/** requests to backend Cloud Function
-- Added frontend dev (localhost:5173) and prod domains to CORS_ORIGIN in .env.example
-- README.md already contains comprehensive frontend setup/run documentation
-- Updated docs/deployment/firebase-deployment.md with frontend build/deploy steps
-- All typechecks pass (backend and frontend)
-- Files changed:
-  - firebase.json
-  - .env.example
-  - docs/deployment/firebase-deployment.md
-- **Learnings for future iterations:**
-  - [PATTERN]: Firebase hosting serves SPA from web/dist with /api/** rewrite to backend service
-  - [PATTERN]: Frontend production build uses VITE_API_BASE_URL=/api for relative API calls
-  - [PATTERN]: CORS_ORIGIN must include both dev (localhost:5173) and prod domains
-  - [INTEGRATION]: firebase.json rewrites /api/** to Cloud Function, all other routes to index.html for SPA
-  - [GOTCHA]: Must build frontend (cd web && npm run build) before deploying hosting
+  - [PATTERN]: Use createFirestoreLogContext helper for consistent database operation logging with operation name and outcome
+  - [PATTERN]: Firestore adapter logs include operation (connect/disconnect/health_check), outcome (success/failure), and error details when applicable
+  - [GOTCHA]: Pre-existing auth controller test failures continue to exist, unrelated to Firestore adapter logging changes
+  - [INTEGRATION]: Firestore logging context provides structured metadata for database health monitoring and troubleshooting
 ---

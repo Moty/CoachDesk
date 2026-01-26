@@ -1,49 +1,50 @@
-# PRD: Web Frontend for HelpDesk
+# PRD: Comprehensive Application Logging
 
 ## Introduction/Overview
 
-The existing HelpDesk project provides a complete backend API but lacks a web frontend. This PRD defines the addition of a browser-based UI that uses the current REST API, Firebase authentication, and existing deployment patterns. The goal is to deliver a minimal but complete web app for customers, agents, and admins without changing backend behavior.
-
-Project type: brownfield (additive, integrate with existing backend).
+Enhance the existing HelpDesk API logging to provide comprehensive, structured, and consistent logs across all layers (request lifecycle, middleware, controllers, services/adapters, background jobs, and startup/shutdown). The goal is to make end-to-end flow tracing clear (info/debug), highlight warnings, and capture errors with consistent context while preserving existing patterns that use the shared Winston logger.
 
 ## Goals
 
-- Provide a usable web UI for core ticket workflows (create, view, update, comment, attach files).
-- Support role-based experiences for customer, agent, and admin users.
-- Use existing API endpoints and authentication (Firebase JWT) without backend changes.
-- Deploy the frontend alongside existing Firebase Hosting/Cloud Run setup with production-ready configuration.
-- Keep backend compatibility and existing tests unaffected.
+- Provide consistent, structured logs for key application flows and errors across API, jobs, and shared services.
+- Improve traceability of requests and background jobs with correlation identifiers.
+- Standardize log levels (debug/info/warn/error) and message structure to reduce noise and aid analysis.
+- Ensure logging can be tuned via environment configuration without code changes.
+- Maintain backward compatibility and minimal disruption to existing behavior.
 
-## Clarifying Questions (Answered with Defaults)
+## Clarifying Decisions (Defaults)
 
-1. Scope of change: **A. New feature (additive, no changes to existing code)**.
-2. Areas touched: **B. Existing API endpoints**, **C. New UI components**, **D. Shared config/docs**.
-3. Backward compatibility: **A. Must be fully backward compatible**.
-4. Integration approach: **A. Follow existing patterns exactly** (new UI only; no backend refactors).
-5. Testing expectation: **A. Add tests for new code only** (existing backend tests still pass).
+- Scope: Enhancement to existing logging (no refactors beyond logging behavior).
+- Areas touched: API endpoints, shared middleware/utilities, background jobs, adapters (DB/storage/notifications), and startup/shutdown flow.
+- Backward compatibility: Fully backward compatible; no API contract changes.
+- Integration approach: Follow existing logging patterns (Winston logger and middleware).
+- Testing: Update existing tests as needed and add tests for new logging helpers where applicable.
 
 ## Integration Points
 
 ### Existing Components to Modify
-- `firebase.json` - update Hosting config to serve the SPA build and proxy `/api/**` to the existing backend service.
-- `.env.example` - include frontend origin in `CORS_ORIGIN` defaults (e.g., `http://localhost:5173`).
-- `README.md` - add frontend setup/run instructions and URLs.
-- `docs/deployment/firebase-deployment.md` - add frontend build/deploy notes.
+- `src/shared/utils/logger.ts` - Extend logger configuration (levels, formats, default metadata).
+- `src/shared/middleware/requestLogger.middleware.ts` - Add correlation ID and richer request/response logging.
+- `src/shared/middleware/errorHandler.ts` - Ensure consistent error log structure with request context.
+- `src/index.ts` - Log startup/shutdown lifecycle events and include configuration summary using logger.
+- `src/shared/middleware/auth.middleware.ts` - Expand auth success/failure logging with correlation data.
+- `src/shared/middleware/rbac.middleware.ts` - Log authorization results consistently with request context.
+- `src/shared/validation/middleware.ts` - Ensure validation warnings include request and validation metadata.
+- `src/shared/database/adapters/FirestoreAdapter.ts` and `src/shared/database/adapters/firestore/FirestoreAdapter.ts` - Standardize DB connection/health logs.
+- `src/shared/storage/adapters/FirebaseStorageAdapter.ts` - Standardize storage logs and include request context where applicable.
+- `src/shared/notifications/providers/SMTPProvider.ts` - Standardize notification logs with message identifiers and outcomes.
+- `src/shared/events/NotificationHandlers.ts` - Improve flow logging of event handling success/failure.
+- `src/jobs/sla-monitoring.job.ts` - Add run-level correlation and structured logs for job flow.
+- API controllers (e.g. `src/api/controllers/**`) - Ensure consistent success, warning, and error log structure per action.
 
 ### Existing Components to Reuse
-- `docs/api/openapi.yaml` - source of truth for API endpoints and payloads.
-- `src/shared/middleware/auth.middleware.ts` - requires `Authorization: Bearer <token>` from Firebase Auth.
-- `src/api/controllers/*` - existing ticket, comment, attachment, user, SLA rule, and audit log APIs.
+- `src/shared/utils/logger.ts` - Existing Winston logger instance.
+- `src/shared/middleware/requestLogger.middleware.ts` - Existing request logging entry/exit middleware.
 
 ### New Files to Create
-- `web/` (new frontend workspace)
-  - `web/package.json`, `web/vite.config.ts`, `web/tsconfig.json`
-  - `web/src/main.tsx`, `web/src/App.tsx`
-  - `web/src/pages/*` (Tickets, TicketDetail, Admin, etc.)
-  - `web/src/components/*` (shared UI components)
-  - `web/src/api/*` (API client, types)
-  - `web/src/auth/*` (Firebase Auth integration)
-  - `web/.env.example` (Vite envs)
+- `src/shared/middleware/correlationId.middleware.ts` - Assign and propagate correlation/request IDs (if no existing implementation).
+- `src/shared/utils/logContext.ts` - Helper to build standard log context (request/job metadata).
+- `src/shared/types/logging.ts` - Shared types for log context structures.
 
 ### Database Changes
 - None.
@@ -51,242 +52,180 @@ Project type: brownfield (additive, integrate with existing backend).
 ## Compatibility
 
 ### Backward Compatibility
-- No changes to API shapes, auth, or database.
-- Existing backend functionality and tests continue to work.
+- All existing API routes and middleware continue to operate without interface changes.
+- Logging behavior is enhanced but does not alter request/response payloads.
+- New context fields are additive and optional.
 
 ### Migration Requirements
-- Update Firebase Hosting config to serve the frontend build output.
-- Update `CORS_ORIGIN` to allow the frontend origin(s).
-- No data migrations required.
+- None.
 
 ### Deprecations
 - None.
 
 ## User Stories
 
-### US-001: Frontend scaffold and build pipeline
-**Description:** As a developer, I want a frontend project scaffold so the UI can be built and served.
+### US-001: Standardize logger configuration
+**Description:** As a developer, I want a consistent logger configuration so logs are structured and searchable across environments.
 
 **Acceptance Criteria:**
-- [ ] Create `web/` frontend workspace with Vite + React + TypeScript.
-- [ ] `web` has scripts for dev, build, preview, and test (if added).
-- [ ] Build output is placed in `web/dist`.
-- [ ] Existing backend tests still pass.
+- [ ] Logger supports configurable log level via `LOG_LEVEL`.
+- [ ] Logs include consistent base metadata (service, environment).
+- [ ] Log format uses JSON in non-development environments and human-readable in development.
+- [ ] Typecheck passes.
+- [ ] Existing tests still pass.
+
+**Integration Notes:**
+- Modifies: `src/shared/utils/logger.ts`
+- Uses: `src/shared/config/env.config.ts`
+
+### US-002: Add request correlation IDs
+**Description:** As a developer, I want each request to have a correlation ID so I can trace logs for a single request end-to-end.
+
+**Acceptance Criteria:**
+- [ ] Each incoming request gets a correlation ID (uses existing header if present, otherwise generates one).
+- [ ] Correlation ID is included in all request lifecycle logs.
+- [ ] Correlation ID is returned in response headers (e.g. `X-Request-Id`).
+- [ ] Existing tests still pass.
 - [ ] Typecheck passes.
 
 **Integration Notes:**
-- Adds: `web/` workspace and build pipeline
+- Adds: `src/shared/middleware/correlationId.middleware.ts`
+- Modifies: `src/shared/middleware/requestLogger.middleware.ts`
+- Modifies: `src/index.ts`
 
-### US-002: Firebase Auth integration (web)
-**Description:** As a user, I want to sign in with Firebase Auth so the UI can call protected APIs.
-
-**Acceptance Criteria:**
-- [ ] Configure Firebase Web SDK in `web/src/auth`.
-- [ ] Users can sign in/out and refresh tokens.
-- [ ] Auth state is available app-wide for role-based routing.
-- [ ] Tokens are attached to API requests as `Authorization: Bearer <token>`.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: `src/shared/middleware/auth.middleware.ts` expectations for Bearer tokens
-- Adds: `web/src/auth/*`
-
-### US-003: API client and error handling
-**Description:** As a developer, I want a typed API client so UI calls are consistent with existing endpoints.
+### US-003: Enrich request logging
+**Description:** As an operator, I want request start/end logs with consistent context so I can diagnose performance issues and errors.
 
 **Acceptance Criteria:**
-- [ ] API base URL is configurable via `VITE_API_BASE_URL`.
-- [ ] Client handles backend error format `{ code, message, details }` and surfaces user-friendly messages.
-- [ ] Client supports pagination, filtering, and file upload (`multipart/form-data`, field name `file`).
+- [ ] Request start log includes method, path, IP, user agent, and correlation ID.
+- [ ] Request completion log includes status code, duration, response size (if available), and correlation ID.
+- [ ] Warning level is used for 4xx responses; error level for 5xx responses.
+- [ ] Existing tests still pass.
 - [ ] Typecheck passes.
 
 **Integration Notes:**
-- Uses: `docs/api/openapi.yaml` for schemas/endpoints
-- Adds: `web/src/api/*`
+- Modifies: `src/shared/middleware/requestLogger.middleware.ts`
+- Uses: `src/shared/utils/logContext.ts`
 
-### US-004: App shell, navigation, and role-based routing
-**Description:** As a user, I want navigation and role-based access so I only see pages I can use.
-
-**Acceptance Criteria:**
-- [ ] Layout includes global header, navigation, and user menu.
-- [ ] Routes are gated by role (customer, agent, admin).
-- [ ] Unauthorized routes show a clear access denied state.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: user role from `/api/v1/users/me` (existing endpoint) or Firebase claims
-- Adds: `web/src/pages/*`, `web/src/components/*`
-
-### US-005: Ticket list with filters and sorting
-**Description:** As a user, I want to view and filter tickets so I can manage workload.
+### US-004: Standardize error logging
+**Description:** As a developer, I want consistent error logs so failures are easy to triage across layers.
 
 **Acceptance Criteria:**
-- [ ] List tickets using `GET /api/v1/tickets` with pagination.
-- [ ] Filters for status, priority, assignee (agent/admin), and tags.
-- [ ] Sorting by createdAt/updatedAt/priority matches API support.
-- [ ] Empty-state messaging when no tickets match.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: `docs/api/openapi.yaml` tickets list parameters
-- Adds: `web/src/pages/Tickets*`
-
-### US-006: Ticket detail and comments timeline
-**Description:** As a user, I want to view ticket details and comments so I can understand history.
-
-**Acceptance Criteria:**
-- [ ] Detail page loads `GET /api/v1/tickets/:id`.
-- [ ] Comments load via `GET /api/v1/tickets/:id/comments` with pagination.
-- [ ] Public/private comment visibility matches role rules.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: `GET /api/v1/tickets/:id/comments` and comment visibility rules
-- Adds: `web/src/pages/TicketDetail*`
-
-### US-007: Create ticket (customer/agent)
-**Description:** As a user, I want to create a ticket so I can request support.
-
-**Acceptance Criteria:**
-- [ ] Create form posts to `POST /api/v1/tickets`.
-- [ ] Validates subject (1-255 chars) and description (1+ chars) before submit.
-- [ ] Supports priority and tags inputs.
-- [ ] Successful create navigates to the new ticket detail.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: `CreateTicketRequest` schema in `docs/api/openapi.yaml`
-- Adds: `web/src/pages/CreateTicket*`
-
-### US-008: Agent/admin ticket updates
-**Description:** As an agent/admin, I want to update status, priority, and assignee so I can manage tickets.
-
-**Acceptance Criteria:**
-- [ ] Update status/priority/tags via `PATCH /api/v1/tickets/:id`.
-- [ ] Assign ticket via `PATCH /api/v1/tickets/:id/assign`.
-- [ ] UI prevents invalid status transitions (match backend rules).
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: ticket update/assign endpoints
-- Adds: `web/src/components/TicketActions*`
-
-### US-009: Commenting and internal notes
-**Description:** As a user, I want to add comments (and internal notes as agent/admin) so communication is tracked.
-
-**Acceptance Criteria:**
-- [ ] Add comment via `POST /api/v1/tickets/:id/comments`.
-- [ ] Agents/admins can choose public vs internal; customers always public.
-- [ ] Comment list updates after posting (no full page refresh).
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: comment endpoints and role visibility rules
-- Adds: `web/src/components/CommentComposer*`
-
-### US-010: Attachments upload
-**Description:** As a user, I want to upload attachments so I can share files with support.
-
-**Acceptance Criteria:**
-- [ ] Upload to `POST /api/v1/tickets/:id/attachments` with `file` field.
-- [ ] Enforce 10MB file size limit and show errors from API.
-- [ ] Uploaded files appear in the ticket timeline with download links.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: attachment upload endpoint
-- Adds: `web/src/components/AttachmentUploader*`
-
-### US-011: Admin user management
-**Description:** As an admin, I want to manage users so I can onboard agents/customers.
-
-**Acceptance Criteria:**
-- [ ] List users via `GET /api/v1/users` with role filter.
-- [ ] Create users via `POST /api/v1/users`.
-- [ ] UI surfaces validation errors (email/role) from API.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: `GET /api/v1/users` and `POST /api/v1/users`
-- Adds: `web/src/pages/AdminUsers*`
-
-### US-012: Admin SLA rules and audit logs
-**Description:** As an admin, I want to manage SLA rules and view audit logs.
-
-**Acceptance Criteria:**
-- [ ] SLA rule CRUD via `/api/v1/admin/sla-rules` endpoints.
-- [ ] Audit log list via `GET /api/v1/admin/audit-logs` with filters.
-- [ ] Typecheck passes.
-- [ ] Verify in browser using dev-browser skill.
-
-**Integration Notes:**
-- Uses: admin endpoints in `src/api/routes/admin/*`
-- Adds: `web/src/pages/AdminSla*`, `web/src/pages/AdminAudit*`
-
-### US-013: Hosting and deployment integration
-**Description:** As a developer, I want frontend hosting configured so the UI is available in production.
-
-**Acceptance Criteria:**
-- [ ] `firebase.json` serves the SPA build from `web/dist` (or equivalent).
-- [ ] `/api/**` requests are proxied to the existing backend service.
-- [ ] `CORS_ORIGIN` includes frontend domains (dev and prod).
-- [ ] Existing backend tests still pass.
+- [ ] Error logs include correlation ID and request metadata when applicable.
+- [ ] AppError logs include error code and details.
+- [ ] Unknown errors log stack traces.
+- [ ] Existing tests still pass.
 - [ ] Typecheck passes.
 
 **Integration Notes:**
-- Modifies: `firebase.json`, `.env.example`, `docs/deployment/firebase-deployment.md`
+- Modifies: `src/shared/middleware/errorHandler.ts`
+- Uses: `src/shared/utils/logContext.ts`
+
+### US-005: Improve auth and RBAC logging
+**Description:** As a developer, I want authentication and authorization logs to be consistent and structured to diagnose access issues.
+
+**Acceptance Criteria:**
+- [ ] Auth success logs include user id, role, and correlation ID.
+- [ ] Auth failures log reason and request metadata at warn level.
+- [ ] RBAC failures log required roles and request metadata at warn level.
+- [ ] Existing tests still pass.
+- [ ] Typecheck passes.
+
+**Integration Notes:**
+- Modifies: `src/shared/middleware/auth.middleware.ts`
+- Modifies: `src/shared/middleware/rbac.middleware.ts`
+
+### US-006: Standardize adapter/service logging
+**Description:** As a developer, I want storage, database, and notification adapters to log consistent success and failure messages.
+
+**Acceptance Criteria:**
+- [ ] Firestore connection, health, and disconnect logs use consistent structure.
+- [ ] Storage upload/download/delete logs include object identifiers and outcome.
+- [ ] SMTP provider logs include message identifiers and retry attempts.
+- [ ] Existing tests still pass.
+- [ ] Typecheck passes.
+
+**Integration Notes:**
+- Modifies: `src/shared/database/adapters/FirestoreAdapter.ts`
+- Modifies: `src/shared/database/adapters/firestore/FirestoreAdapter.ts`
+- Modifies: `src/shared/storage/adapters/FirebaseStorageAdapter.ts`
+- Modifies: `src/shared/notifications/providers/SMTPProvider.ts`
+
+### US-007: Improve background job logging
+**Description:** As an operator, I want background job logs to clearly show job lifecycle and errors.
+
+**Acceptance Criteria:**
+- [ ] Each job run logs start/end with a run ID and duration.
+- [ ] Warnings are logged for recoverable issues (e.g., missing SLA timers).
+- [ ] Errors include contextual ticket/job data.
+- [ ] Existing tests still pass.
+- [ ] Typecheck passes.
+
+**Integration Notes:**
+- Modifies: `src/jobs/sla-monitoring.job.ts`
+
+### US-008: Standardize controller logging
+**Description:** As a developer, I want API controllers to log consistent success/warn/error entries for key actions.
+
+**Acceptance Criteria:**
+- [ ] Each controller action logs a success message with relevant identifiers.
+- [ ] Warnings are used for invalid input or user-caused issues; errors for server failures.
+- [ ] Logs include correlation ID and user context when available.
+- [ ] Existing tests still pass.
+- [ ] Typecheck passes.
+
+**Integration Notes:**
+- Modifies: `src/api/controllers/**`
+- Uses: `src/shared/utils/logContext.ts`
 
 ## Functional Requirements
 
-- FR-1: The web UI must authenticate via Firebase Auth and use JWTs for API calls.
-- FR-2: The UI must support the full ticket lifecycle: create, view, update, comment, attach files.
-- FR-3: Role-based access must limit pages/actions for customer, agent, admin.
-- FR-4: Ticket list must support status, priority, assignee, requester, and tag filters.
-- FR-5: Ticket detail must show metadata, SLA timers, and comment timeline.
-- FR-6: Comment visibility must follow backend rules (customers see only public).
-- FR-7: Attachment uploads must use multipart/form-data with API limits enforced.
-- FR-8: Admin UI must allow user creation and list users by role.
-- FR-9: Admin UI must allow SLA rule management and audit log viewing.
-- FR-10: Frontend must be deployable via Firebase Hosting with `/api` proxy to backend.
+1. Logging levels must be consistent across layers: debug (fine-grained), info (normal flow), warn (client/expected issues), error (server/unexpected).
+2. All request logs must include correlation IDs and key request metadata.
+3. Errors must include error codes (when present), stack traces (for unexpected errors), and correlation IDs.
+4. Background jobs must log run-level lifecycle with run IDs and durations.
+5. Logging must be configurable via environment without code changes.
+6. No sensitive data (tokens, passwords, raw email bodies) should be logged.
 
 ## Non-Goals (Out of Scope)
 
-- Mobile apps (iOS/Android) or native desktop clients.
-- Realtime push updates (WebSockets) beyond current REST API.
-- New backend endpoints or schema changes.
-- Custom theming, white-labeling, or advanced analytics dashboards.
+- Building a centralized log storage or dashboard.
+- Adding distributed tracing systems (e.g., OpenTelemetry) in this iteration.
+- Changing API response formats for clients.
+- Full audit logging beyond current audit log routes.
 
 ## Technical Considerations
 
-- Frontend stack: Vite + React + TypeScript.
-- Add Firebase Web SDK for authentication.
-- Environment variables (frontend):
-  - `VITE_API_BASE_URL` (default `http://localhost:3000/api/v1`)
-  - `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, etc.
-- Update `CORS_ORIGIN` to include `http://localhost:5173` and production UI domain.
-- Hosting: Firebase Hosting should serve the SPA build and proxy `/api/**` to Cloud Run service `helpdesk-api` (per current `firebase.json`).
-- Ensure error handling aligns with backend `{ code, message, details }` schema.
-- Consider adding CSP adjustments if the UI introduces new asset domains.
+- Use existing Winston logger; avoid introducing new logging dependencies.
+- Add lightweight helpers for log context to avoid repetitive inline objects.
+- Ensure request correlation IDs are propagated through middleware and can be reused by controllers.
+- Verify logging does not expose sensitive data (authorization headers, tokens, passwords).
+- Ensure logging in production remains JSON-formatted for external log collectors.
 
 ## Success Metrics
 
-- Users can create and resolve a ticket end-to-end in under 3 minutes.
-- 0 backend API changes required to support the UI.
-- No regression in existing backend tests.
-- Frontend page load under 2s on a typical broadband connection.
+- 100% of API requests include correlation ID in start/end logs.
+- Error logs include consistent context fields (request ID, route, error code).
+- Reduced mean time to diagnose issues reported by QA/ops.
+- No regressions in response latency attributable to logging.
 
 ## Open Questions
 
-- What is the production domain for the frontend (needed for CORS and Firebase Hosting)?
-- Do we need SSO or only Firebase email/password/OAuth providers?
-- Should the UI include SLA breach indicators on ticket lists by default?
-- What is the desired visual brand (colors/logo) for the UI?
+- Should correlation IDs be included in all downstream calls (e.g., Firestore adapter logs) via explicit context propagation?
+- Is there a preferred header name for correlation IDs (`X-Request-Id` vs `X-Correlation-Id`)?
+- Should debug logs be enabled by default in staging?
+
+---
+
+## Checklist
+
+- [x] Reviewed existing codebase context
+- [x] Asked integration-focused questions (answered with defaults)
+- [x] Documented Integration Points section
+- [x] Documented Compatibility considerations
+- [x] Stories reference specific files to modify
+- [x] Stories include "Existing tests still pass" where applicable
+- [x] Follows existing patterns (or documents deviations)
+- [x] Non-goals prevent scope creep
+- [x] No hardcoded secrets
+- [x] Saved to `tasks/prd-draft.md`

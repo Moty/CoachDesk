@@ -2,6 +2,7 @@ import { Request, Response, NextFunction } from 'express';
 import { AppError, ErrorCode } from '../errors/AppError.js';
 import { logger } from '../utils/logger.js';
 import { UserRole } from '../../domain/models/User.js';
+import { createRbacFailureLogContext, createRbacSuccessLogContext } from '../utils/logContext.js';
 
 /**
  * Role-Based Access Control (RBAC) middleware factory
@@ -32,13 +33,14 @@ export function requireRole(...roles: UserRole[]) {
       const hasRequiredRole = roles.includes(userRole as UserRole);
 
       if (!hasRequiredRole) {
-        logger.warn('Authorization failed: insufficient permissions', {
-          userId: req.user.userId,
+        // Log structured RBAC failure with request metadata and required roles
+        const failureContext = createRbacFailureLogContext(
+          req,
+          req.user.userId,
           userRole,
-          requiredRoles: roles,
-          path: req.path,
-          method: req.method,
-        });
+          roles
+        );
+        logger.warn('Authorization failed: insufficient permissions', failureContext);
 
         throw new AppError(
           ErrorCode.FORBIDDEN,
@@ -48,11 +50,14 @@ export function requireRole(...roles: UserRole[]) {
         );
       }
 
-      logger.debug('Authorization successful', {
-        userId: req.user.userId,
+      // Log successful authorization with structured context
+      const successContext = createRbacSuccessLogContext(
+        req,
+        req.user.userId,
         userRole,
-        requiredRoles: roles,
-      });
+        roles
+      );
+      logger.info('Authorization successful', successContext);
 
       next();
     } catch (error) {

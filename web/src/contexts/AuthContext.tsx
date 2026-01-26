@@ -23,14 +23,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+      console.log('[Auth] onAuthStateChanged:', fbUser ? { uid: fbUser.uid, email: fbUser.email } : null);
       setFirebaseUser(fbUser);
       
       if (fbUser) {
         try {
+          const token = await fbUser.getIdToken();
+          console.log('[Auth] ID token acquired:', token ? 'yes' : 'no');
           const userData = await api.get<User>('/users/me');
+          console.log('[Auth] /users/me response:', userData);
           setUser(userData);
         } catch (error) {
-          console.error('Failed to fetch user data:', error);
+          console.error('[Auth] Failed to fetch user data:', error);
           setUser(null);
         }
       } else {

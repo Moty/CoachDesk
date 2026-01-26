@@ -1,10 +1,8 @@
 import { Request, Response, NextFunction } from 'express';
 import { AuditLogRepository } from '../../../domain/repositories/AuditLogRepository.js';
 import { logger } from '../../../shared/utils/logger.js';
-import { FirestoreAdapter } from '../../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../../shared/database/firestore.js';
 import { QueryOptions } from '../../../shared/database/interfaces/IRepository.js';
-
-const firestoreAdapter = new FirestoreAdapter();
 
 export async function listAuditLogs(
   req: Request,

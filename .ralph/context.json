@@ -2,11 +2,14 @@
   "tasks": [
     {
       "id": "US-001",
-      "title": "Default organization config for registration",
-      "description": "As a system owner, I want new users assigned to a default organization so tenancy rules keep working.",
+      "title": "Standardize logger configuration",
+      "description": "As a developer, I want a consistent logger configuration so logs are structured and searchable across environments.",
       "acceptanceCriteria": [
-        "Add required DEFAULT_ORGANIZATION_ID env config used by registration",
-        "Registration fails with clear error when DEFAULT_ORGANIZATION_ID is missing",
+        "Logger level is configurable via LOG_LEVEL env",
+        "Logs include base metadata fields for service and environment",
+        "Production/non-development logs use JSON format; development logs are human-readable",
+        "Startup and shutdown lifecycle events are logged with configuration summary (non-sensitive)",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 1,
@@ -16,35 +19,31 @@
     },
     {
       "id": "US-002",
-      "title": "Public registration endpoint",
-      "description": "As a new user, I want to register so I can access the system without admin creation.",
+      "title": "Add request correlation IDs",
+      "description": "As a developer, I want each request to have a correlation ID so I can trace logs end-to-end.",
       "acceptanceCriteria": [
-        "Add POST /api/v1/auth/register accepting email, password, displayName",
-        "Creates Firebase Auth user and sets custom claims role and organizationId",
-        "Creates Firestore users document with id, email, displayName, role, organizationId",
-        "Default role is customer for self-service registration",
-        "Responds with sanitized user payload without password",
-        "Typecheck passes",
-        "Tests pass"
+        "Each incoming request uses existing X-Request-Id header or generates a new ID",
+        "Correlation ID is stored on the request and returned in X-Request-Id response header",
+        "Correlation ID is included in request lifecycle logs",
+        "Existing tests still pass",
+        "Typecheck passes"
       ],
       "priority": 2,
-      "blockedBy": [
-        "US-001"
-      ],
+      "blockedBy": [],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Registration UI flow",
-      "description": "As a new user, I want a registration form so I can create an account from the login screen.",
+      "title": "Enrich request logging",
+      "description": "As an operator, I want request start/end logs with consistent context so I can diagnose performance issues and errors.",
       "acceptanceCriteria": [
-        "Add /register route or login toggle with email, display name, and password fields",
-        "Client validates required fields and password length >= 8",
-        "On success, user is signed in and redirected to /",
-        "API errors (email exists, validation, rate limit) display in UI",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Request start logs include method, path, IP, user agent, and correlation ID",
+        "Request completion logs include status code, duration, response size (when available), and correlation ID",
+        "4xx responses log at warn level; 5xx responses log at error level",
+        "Shared log context helper/types exist for request metadata to avoid repeated inline objects",
+        "Existing tests still pass",
+        "Typecheck passes"
       ],
       "priority": 3,
       "blockedBy": [
@@ -55,34 +54,32 @@
     },
     {
       "id": "US-004",
-      "title": "Seed initial admin user",
-      "description": "As a developer, I want an initial admin user so I can access admin features on a fresh environment.",
+      "title": "Standardize error logging",
+      "description": "As a developer, I want consistent error logs so failures are easy to triage across layers.",
       "acceptanceCriteria": [
-        "Add idempotent seed script creating Firebase Auth user moty.moshin@gmail.com with password 12345678",
-        "Script sets custom claims role=admin and organizationId=DEFAULT_ORGANIZATION_ID",
-        "Script creates Firestore users document if missing",
-        "Script is safe to re-run without duplicates",
-        "Document how to run the seed script",
+        "Error handler logs include correlation ID and request metadata when available",
+        "AppError logs include error code and details",
+        "Unknown errors log stack traces",
+        "Validation middleware warning logs include request metadata and validation details",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 4,
       "blockedBy": [
-        "US-002"
+        "US-003"
       ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Typed API client and error handling",
-      "description": "As a developer, I want a consistent API client so UI calls match existing endpoints.",
+      "title": "Improve auth and RBAC logging",
+      "description": "As a developer, I want authentication and authorization logs to be consistent and structured to diagnose access issues.",
       "acceptanceCriteria": [
-        "Create API client using VITE_API_BASE_URL",
-        "Attach Authorization: Bearer <token> from AuthProvider to requests",
-        "Handle backend error format { code, message, details } with user-friendly messages",
-        "Support pagination and filtering query params",
-        "Support multipart/form-data file upload with field name file",
-        "Tests pass",
+        "Auth success logs include user id, role, and correlation ID",
+        "Auth failures log reason and request metadata at warn level",
+        "RBAC failures log required roles and request metadata at warn level",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 5,
@@ -94,255 +91,117 @@
     },
     {
       "id": "US-006",
-      "title": "Role-based routing and access denied state",
-      "description": "As a user, I want role-based access so I only see pages I can use.",
+      "title": "Standardize Firestore adapter logging",
+      "description": "As a developer, I want Firestore adapter logs to be consistent so database health is traceable.",
       "acceptanceCriteria": [
-        "Fetch current user via GET /api/v1/users/me on app load",
-        "Store user role (customer/agent/admin) in auth state",
-        "Gate routes by role and show access denied state when unauthorized",
-        "Verify in browser using dev-browser skill",
+        "Firestore connection, health check, and disconnect logs use consistent structure",
+        "Logs include operation name and outcome",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 6,
-      "blockedBy": [
-        "US-004",
-        "US-005"
-      ],
+      "blockedBy": [],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Ticket list page with pagination",
-      "description": "As a user, I want to view tickets so I can manage workload.",
+      "title": "Standardize Firebase storage logging",
+      "description": "As a developer, I want storage adapter logs to be consistent so storage operations are traceable.",
       "acceptanceCriteria": [
-        "Create Tickets page that calls GET /api/v1/tickets with pagination",
-        "Render ticket rows with subject, status, priority, requester, and updatedAt",
-        "Show empty-state message when no tickets match",
-        "Verify in browser using dev-browser skill",
+        "Upload, download, and delete logs include object identifiers and outcome",
+        "Logs include file size and content type when available",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 7,
-      "blockedBy": [
-        "US-006"
-      ],
-      "passes": true,
+      "blockedBy": [],
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Ticket list filters and sorting",
-      "description": "As a user, I want to filter and sort tickets so I can find work quickly.",
+      "title": "Standardize SMTP provider logging",
+      "description": "As a developer, I want notification logs to include message identifiers and outcomes so email issues are diagnosable.",
       "acceptanceCriteria": [
-        "Add filters for status, priority, assignee, and tags",
-        "Add sorting for createdAt, updatedAt, and priority",
-        "Filters and sorting update API query params",
-        "Verify in browser using dev-browser skill",
+        "SMTP provider logs include message identifiers and outcomes",
+        "Retry attempts are logged with attempt count and error message",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 8,
-      "blockedBy": [
-        "US-007"
-      ],
-      "passes": true,
+      "blockedBy": [],
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Ticket detail page",
-      "description": "As a user, I want to view ticket details so I can understand the request.",
+      "title": "Improve background job logging",
+      "description": "As an operator, I want background job logs to clearly show job lifecycle and errors.",
       "acceptanceCriteria": [
-        "Create Ticket Detail page that loads GET /api/v1/tickets/:id",
-        "Display ticket metadata (status, priority, assignee, requester, tags, SLA timers)",
-        "Show not-found state when ticket does not exist",
-        "Verify in browser using dev-browser skill",
+        "Each job run logs start and end with run ID and duration",
+        "Recoverable issues log warnings with relevant ticket/job context",
+        "Errors include contextual ticket/job data",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 9,
-      "blockedBy": [
-        "US-006"
-      ],
-      "passes": true,
+      "blockedBy": [],
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Ticket comments timeline",
-      "description": "As a user, I want to read ticket comments so I can follow the conversation.",
+      "title": "Standardize auth and user controller logging",
+      "description": "As a developer, I want auth and user controllers to log consistent success/warn/error entries for key actions.",
       "acceptanceCriteria": [
-        "Load comments via GET /api/v1/tickets/:id/comments with pagination",
-        "Render comments timeline with author, timestamp, and visibility label",
-        "Hide internal comments from customers",
-        "Verify in browser using dev-browser skill",
+        "auth.controller logs success messages with relevant identifiers (e.g., user id/email)",
+        "user.controller logs success messages with relevant identifiers",
+        "Warnings are used for invalid input or user-caused issues; errors for server failures",
+        "Logs include correlation ID and user context when available",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 10,
       "blockedBy": [
-        "US-009"
+        "US-003"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-011",
-      "title": "Comment composer",
-      "description": "As a user, I want to add comments so communication is tracked.",
+      "title": "Standardize ticket and comment controller logging",
+      "description": "As a developer, I want ticket, comment, and attachment controllers to log consistent success/warn/error entries for key actions.",
       "acceptanceCriteria": [
-        "Add comment composer that posts to POST /api/v1/tickets/:id/comments",
-        "Allow agents/admins to choose public vs internal; customers always public",
-        "Append new comment to timeline without full page refresh",
-        "Verify in browser using dev-browser skill",
+        "ticket.controller logs success messages with relevant identifiers",
+        "comment.controller, comment-list.controller, and attachment.controller log success messages with relevant identifiers",
+        "Warnings are used for user-caused issues; errors for server failures",
+        "Logs include correlation ID and user context when available",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 11,
       "blockedBy": [
-        "US-010"
+        "US-003"
       ],
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Create ticket page",
-      "description": "As a user, I want to create tickets so I can request support.",
+      "title": "Standardize admin controller logging",
+      "description": "As a developer, I want admin controllers to log consistent success/warn/error entries for key actions.",
       "acceptanceCriteria": [
-        "Create ticket form that posts to POST /api/v1/tickets",
-        "Validate subject (1-255 chars) and description (1+ chars) before submit",
-        "Support priority and tags inputs",
-        "Navigate to new ticket detail on success",
-        "Verify in browser using dev-browser skill",
+        "admin audit-log and sla-rule controllers log success messages with relevant identifiers",
+        "Warnings are used for invalid input or user-caused issues; errors for server failures",
+        "Logs include correlation ID and user context when available",
+        "Existing tests still pass",
         "Typecheck passes"
       ],
       "priority": 12,
       "blockedBy": [
-        "US-006"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-013",
-      "title": "Agent/admin ticket updates",
-      "description": "As an agent/admin, I want to update ticket fields so I can manage tickets.",
-      "acceptanceCriteria": [
-        "Add status/priority/tags update controls using PATCH /api/v1/tickets/:id",
-        "Add assignee picker using PATCH /api/v1/tickets/:id/assign",
-        "Prevent invalid status transitions per backend rules",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
-      ],
-      "priority": 13,
-      "blockedBy": [
-        "US-009"
-      ],
-      "passes": true,
-      "notes": ""
-    },
-    {
-      "id": "US-014",
-      "title": "Attachment uploader",
-      "description": "As a user, I want to upload attachments so I can share files with support.",
-      "acceptanceCriteria": [
-        "Add attachment uploader that posts to POST /api/v1/tickets/:id/attachments with file field",
-        "Enforce 10MB file size limit before upload",
-        "Show uploaded attachments in ticket timeline with download links",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
-      ],
-      "priority": 14,
-      "blockedBy": [
-        "US-009"
-      ],
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-015",
-      "title": "Admin user management",
-      "description": "As an admin, I want to manage users so I can onboard agents and customers.",
-      "acceptanceCriteria": [
-        "Create Admin Users page listing users via GET /api/v1/users with role filter",
-        "Add user creation form posting to POST /api/v1/users",
-        "Surface API validation errors for email and role",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
-      ],
-      "priority": 15,
-      "blockedBy": [
-        "US-006"
-      ],
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-016",
-      "title": "Admin SLA rules list and create",
-      "description": "As an admin, I want to list and create SLA rules so I can manage policies.",
-      "acceptanceCriteria": [
-        "Create Admin SLA Rules page listing rules via GET /api/v1/admin/sla-rules",
-        "Add create SLA rule form posting to POST /api/v1/admin/sla-rules",
-        "Show success and error feedback from API",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
-      ],
-      "priority": 16,
-      "blockedBy": [
-        "US-006"
-      ],
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-017",
-      "title": "Admin SLA rules edit and delete",
-      "description": "As an admin, I want to update and remove SLA rules so policies stay current.",
-      "acceptanceCriteria": [
-        "Add edit and delete actions for SLA rules using PATCH/DELETE /api/v1/admin/sla-rules/:id",
-        "Update list after edits/deletes without full page refresh",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
-      ],
-      "priority": 17,
-      "blockedBy": [
-        "US-016"
-      ],
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-018",
-      "title": "Admin audit logs",
-      "description": "As an admin, I want to view audit logs so I can review actions.",
-      "acceptanceCriteria": [
-        "Create Admin Audit Logs page listing GET /api/v1/admin/audit-logs",
-        "Add filters for date range, user, and action (if supported by API)",
-        "Render empty state when no logs match",
-        "Verify in browser using dev-browser skill",
-        "Typecheck passes"
-      ],
-      "priority": 18,
-      "blockedBy": [
-        "US-006"
-      ],
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-019",
-      "title": "Hosting and deployment integration",
-      "description": "As a developer, I want frontend hosting configured so the UI is available in production.",
-      "acceptanceCriteria": [
-        "Update firebase.json to serve the SPA from web/dist",
-        "Proxy /api/** requests to the existing backend service",
-        "Update .env.example CORS_ORIGIN to include frontend dev and prod domains",
-        "Document frontend setup/run in README.md",
-        "Update docs/deployment/firebase-deployment.md with frontend build/deploy steps",
-        "Tests pass",
-        "Typecheck passes"
-      ],
-      "priority": 19,
-      "blockedBy": [
-        "US-001"
+        "US-003"
       ],
       "passes": false,
       "notes": ""

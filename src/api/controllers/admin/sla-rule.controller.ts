@@ -3,9 +3,7 @@ import { SLARuleRepository } from '../../../domain/repositories/SLARuleRepositor
 import { TicketPriority } from '../../../domain/models/Ticket.js';
 import { AppError, ErrorCode } from '../../../shared/errors/AppError.js';
 import { logger } from '../../../shared/utils/logger.js';
-import { FirestoreAdapter } from '../../../shared/database/adapters/firestore/FirestoreAdapter.js';
-
-const firestoreAdapter = new FirestoreAdapter();
+import { firestoreAdapter } from '../../../shared/database/firestore.js';
 
 export async function createSLARule(
   req: Request,
