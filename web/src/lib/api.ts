@@ -18,7 +18,7 @@ export class ApiException extends Error {
   }
 }
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api/v1';
 
 interface RequestOptions {
   method?: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
@@ -34,7 +34,12 @@ async function getAuthToken(): Promise<string | null> {
 }
 
 function buildUrl(path: string, params?: Record<string, string | number | boolean>): string {
-  const url = new URL(path, API_BASE_URL);
+  // Ensure path doesn't have leading slash when joining with base URL
+  const cleanPath = path.startsWith('/') ? path.slice(1) : path;
+  const baseUrl = API_BASE_URL.endsWith('/') ? API_BASE_URL : `${API_BASE_URL}/`;
+  const fullUrl = `${baseUrl}${cleanPath}`;
+  
+  const url = new URL(fullUrl);
   if (params) {
     Object.entries(params).forEach(([key, value]) => {
       url.searchParams.append(key, String(value));
@@ -60,6 +65,7 @@ function getUserFriendlyMessage(error: ApiError): string {
 async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
   const { method = 'GET', headers = {}, body, params } = options;
 
+  console.log('[API] Request start:', { path, method: options.method || 'GET' });
   const token = await getAuthToken();
   const finalHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -78,6 +84,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
     body: body ? JSON.stringify(body) : undefined,
   });
 
+  console.log('[API] Response:', { path, status: response.status, ok: response.ok });
   const data = await response.json();
 
   if (!response.ok) {

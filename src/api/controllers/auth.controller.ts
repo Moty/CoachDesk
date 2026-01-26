@@ -1,13 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
-import * as admin from 'firebase-admin';
+import { getAuth } from 'firebase-admin/auth';
 import { UserRepository } from '../../domain/repositories/UserRepository.js';
 import { UserRole } from '../../domain/models/User.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
-import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { isValidEmail } from '../../shared/utils/validation.js';
 import { config } from '../../shared/config/env.config.js';
 
-const firestoreAdapter = new FirestoreAdapter();
 const userRepository = new UserRepository(firestoreAdapter);
 
 interface RegisterRequest {
@@ -78,7 +77,7 @@ export async function register(
     // Create user in Firebase Auth
     let firebaseUser;
     try {
-      firebaseUser = await admin.auth().createUser({
+      firebaseUser = await getAuth().createUser({
         email,
         password,
         displayName,
@@ -102,7 +101,7 @@ export async function register(
     }
 
     // Set custom claims for role and organizationId
-    await admin.auth().setCustomUserClaims(firebaseUser.uid, {
+    await getAuth().setCustomUserClaims(firebaseUser.uid, {
       role,
       organizationId,
     });

@@ -3,10 +3,9 @@ import { CommentRepository } from '../../domain/repositories/CommentRepository.j
 import { UserRepository } from '../../domain/repositories/UserRepository.js';
 import { TicketRepository } from '../../domain/repositories/TicketRepository.js';
 import { AppError, ErrorCode } from '../../shared/errors/AppError.js';
-import { FirestoreAdapter } from '../../shared/database/adapters/firestore/FirestoreAdapter.js';
+import { firestoreAdapter } from '../../shared/database/firestore.js';
 import { UserRole } from '../../domain/models/User.js';
 
-const firestoreAdapter = new FirestoreAdapter();
 const commentRepository = new CommentRepository(firestoreAdapter);
 const userRepository = new UserRepository(firestoreAdapter);
 const ticketRepository = new TicketRepository(firestoreAdapter);

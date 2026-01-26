@@ -39,3 +39,65 @@ Started: Sun Jan 25 01:49:52 PST 2026
   - [GOTCHA]: Pre-existing test failures in auth controller are unrelated to logging changes
   - [INTEGRATION]: CORS headers must include X-Request-Id for proper client/server correlation
 ---
+
+## 2026-01-25 02:48:30 - US-003
+- Implemented comprehensive request logging with structured metadata
+- Created shared log context types and helper functions for consistent request metadata structure
+- Added RequestLogContext and RequestCompletionLogContext interfaces for type safety
+- Enhanced request logger to include response size from Content-Length header
+- Fixed log levels: info for 2xx/3xx, warn for 4xx, error for 5xx responses
+- Updated README.md with detailed enhanced request logging documentation
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/requestLogger.middleware.ts, README.md, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Use shared log context helpers (createRequestLogContext, createRequestCompletionLogContext) for consistent request metadata
+  - [PATTERN]: Type-safe logging interfaces prevent metadata structure drift across components
+  - [GOTCHA]: Express req.ip and req.get('user-agent') can be undefined, handle with optional types
+  - [INTEGRATION]: Response size extracted from Content-Length header when available, may be undefined
+---
+
+## 2026-01-25 03:28:30 - US-004
+- Implemented standardized error logging with structured metadata and consistent context
+- Enhanced error handler to include correlation ID and request metadata for both AppError and unknown errors
+- Created ErrorLogContext and ValidationErrorLogContext interfaces for type-safe error logging
+- Added helper functions createErrorLogContext and createValidationErrorLogContext for consistent metadata structure
+- Implemented validation middleware with warning-level logs for user-caused validation failures
+- Added validation middleware exports to shared middleware index
+- Updated README.md with comprehensive error logging documentation including usage examples
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/errorHandler.ts, src/shared/middleware/validation.middleware.ts, src/shared/middleware/index.ts, README.md, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Use createErrorLogContext and createValidationErrorLogContext helpers for consistent error metadata across all error scenarios
+  - [PATTERN]: Validation middleware logs warnings (user-caused) vs error handler logs errors (server failures)
+  - [GOTCHA]: ZodError uses `.issues` property, not `.errors` for validation error details
+  - [INTEGRATION]: Validation middleware provides validateBody, validateQuery, validateParams functions for different request parts
+---
+
+## 2026-01-25 03:30:30 - US-005
+- Implemented structured authentication and authorization (RBAC) logging with enhanced context
+- Added auth success logging with user ID, email, role, and correlation ID at info level
+- Enhanced auth failure logging with structured reason and request metadata at warn level
+- Enhanced RBAC failure logging with user role, required roles, and request metadata at warn level
+- Created AuthSuccessLogContext, AuthFailureLogContext, RbacSuccessLogContext, and RbacFailureLogContext interfaces
+- Added helper functions createAuthSuccessLogContext, createAuthFailureLogContext, createRbacSuccessLogContext, createRbacFailureLogContext
+- Updated README.md with comprehensive authentication and authorization logging documentation
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/auth.middleware.ts, src/shared/middleware/rbac.middleware.ts, README.md, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Use structured auth logging contexts for consistent security event tracking across authentication and authorization layers
+  - [PATTERN]: Auth success logs at info level, auth/RBAC failures at warn level for proper security monitoring
+  - [GOTCHA]: Pre-existing auth controller test failures are unrelated to logging enhancements
+  - [INTEGRATION]: Auth and RBAC logging contexts extend base RequestLogContext for consistent metadata structure
+---
+
+## 2026-01-25 08:18:45 - US-006
+- Implemented standardized Firestore adapter logging with structured metadata and consistent context
+- Added FirestoreLogContext interface for type-safe database operation logging
+- Created createFirestoreLogContext helper function for consistent metadata structure across database operations
+- Enhanced FirestoreAdapter connect, disconnect, and healthCheck methods with structured success/failure logging
+- Added proper error handling and detailed error information in failure scenarios
+- Updated README.md with comprehensive Firestore adapter logging documentation including usage examples
+- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/database/adapters/firestore/FirestoreAdapter.ts, README.md, prd.json
+- **Learnings for future iterations:**
+  - [PATTERN]: Use createFirestoreLogContext helper for consistent database operation logging with operation name and outcome
+  - [PATTERN]: Firestore adapter logs include operation (connect/disconnect/health_check), outcome (success/failure), and error details when applicable
+  - [GOTCHA]: Pre-existing auth controller test failures continue to exist, unrelated to Firestore adapter logging changes
+  - [INTEGRATION]: Firestore logging context provides structured metadata for database health monitoring and troubleshooting
+---

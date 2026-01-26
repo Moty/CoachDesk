@@ -52,7 +52,7 @@
       "blockedBy": [
         "US-002"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -71,7 +71,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -89,7 +89,7 @@
       "blockedBy": [
         "US-003"
       ],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
@@ -104,7 +104,7 @@
       ],
       "priority": 6,
       "blockedBy": [],
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
