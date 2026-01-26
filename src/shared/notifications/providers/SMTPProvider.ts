@@ -10,6 +10,7 @@ interface QueueItem {
   isHtml: boolean;
   retries: number;
   maxRetries: number;
+  messageId: string;
 }
 
 export class SMTPProvider implements INotificationProvider {
@@ -40,6 +41,8 @@ export class SMTPProvider implements INotificationProvider {
     body: string,
     isHtml: boolean = false
   ): Promise<void> {
+    const messageId = `msg-${Date.now()}-${Math.random().toString(36).substring(7)}`;
+    
     // Queue the email for asynchronous processing
     this.queue.push({
       to,
@@ -48,9 +51,16 @@ export class SMTPProvider implements INotificationProvider {
       isHtml,
       retries: 0,
       maxRetries: 3,
+      messageId,
     });
 
-    logger.info('Email queued', { to, subject });
+    logger.info('SMTP email queued', { 
+      operation: 'queueEmail',
+      outcome: 'success',
+      messageId,
+      recipient: to,
+      subject 
+    });
 
     // Start processing queue if not already running
     if (!this.processing) {
@@ -70,18 +80,24 @@ export class SMTPProvider implements INotificationProvider {
         await this.sendEmailInternal(item);
         // Remove from queue on success
         this.queue.shift();
-        logger.info('Email sent successfully', {
-          to: item.to,
+        logger.info('SMTP email sent successfully', {
+          operation: 'sendEmail',
+          outcome: 'success',
+          messageId: item.messageId,
+          recipient: item.to,
           subject: item.subject,
         });
       } catch (error) {
         item.retries++;
         const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-        logger.error('Email send failed', {
-          to: item.to,
+        logger.warn('SMTP email send failed, will retry', {
+          operation: 'sendEmail',
+          outcome: 'retry',
+          messageId: item.messageId,
+          recipient: item.to,
           subject: item.subject,
-          retries: item.retries,
+          attemptNumber: item.retries,
           maxRetries: item.maxRetries,
           error: errorMessage,
         });
@@ -89,10 +105,14 @@ export class SMTPProvider implements INotificationProvider {
         if (item.retries >= item.maxRetries) {
           // Remove from queue after max retries
           this.queue.shift();
-          logger.error('Email send failed after max retries', {
-            to: item.to,
+          logger.error('SMTP email send failed after max retries', {
+            operation: 'sendEmail',
+            outcome: 'failure',
+            messageId: item.messageId,
+            recipient: item.to,
             subject: item.subject,
-            retries: item.retries,
+            attemptNumber: item.retries,
+            error: errorMessage,
           });
         } else {
           // Move to end of queue for retry with exponential backoff
