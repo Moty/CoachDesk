@@ -133,6 +133,18 @@ npm run dev
 
 The frontend will start on `http://localhost:5173` with proxy to the backend API.
 
+### Dark Glass Theme
+
+Both the web frontend and marketing site use a sophisticated dark glass theme with:
+- **CSS Variables**: Consistent color system with `--bg-primary`, `--bg-glass`, `--text-primary`, `--text-secondary`, `--accent-primary`, `--accent-secondary`
+- **Glassmorphism Effects**: Backdrop blur with semi-transparent backgrounds for depth
+- **Animated Gradients**: Dynamic background animations with 15s gradient shifts
+- **Noise Texture Overlay**: Subtle SVG noise for premium texture
+- **Aurora Gradient Blobs**: Animated glowing elements for visual interest
+- **Focus Styles**: Keyboard navigation support with accessible focus rings
+
+The theme is defined using CSS custom properties for easy customization and consistency across all components.
+
 ### Frontend Structure
 
 ```
@@ -182,6 +194,102 @@ From the `web-marketing/` directory:
 | `npm run lint` | Run Next.js linter |
 
 The marketing site is a standalone Next.js app with TypeScript, Tailwind CSS, and Framer Motion.
+
+### Marketing Site Components
+
+The marketing site (`web-marketing/`) features 8 custom components with dark glass theming:
+
+#### **Navbar**
+- Sticky navigation with backdrop blur and glassmorphism
+- Intersection Observer-based active section highlighting
+- Smooth scroll navigation to page sections
+- Responsive design with mobile CTA
+
+#### **Hero**
+- Full-screen hero with animated gradient overlays
+- Respects `prefers-reduced-motion` user preference
+- Aurora gradient blob animations
+- Dual CTAs with gradient borders and hover effects
+
+#### **Destinations**
+- Grid layout showcasing platform capabilities
+- Hover-triggered gradient borders and glow effects
+- Card animations with staggered timing
+- Links to detailed destination pages
+
+#### **MembershipTiers**
+- Three-tier pricing display (Silver, Black, Obsidian)
+- Featured tier with "Most Popular" badge
+- Animated gradient borders on hover
+- Feature list with checkmarks and tier-specific highlights
+
+#### **Testimonials**
+- Client testimonials in grid layout
+- Responsive: 3 columns desktop, horizontal scroll mobile
+- Glass card design with hover effects
+- Company attribution with accent coloring
+
+#### **ConciergeForm**
+- Multi-field contact form with validation
+- Interactive interest selection with toggle buttons
+- Toast notification on submission
+- Accessible form inputs with ARIA labels and error messages
+
+#### **FloatingMobileButton**
+- Fixed position mobile-only CTA
+- Gradient background with shadow
+- Links to concierge form section
+
+#### **Footer**
+- Three-column layout: Logo, Navigation, Credits
+- Gradient text on brand name
+- Year auto-update for copyright
+- Image attribution links
+
+### Key Functions
+
+The marketing site includes three key utility functions:
+
+#### **validateForm()**
+```typescript
+/**
+ * Validates the concierge form inputs.
+ * @returns {boolean} True if all required fields are valid, false otherwise
+ * 
+ * Validation rules:
+ * - name: Required, must not be empty
+ * - email: Required, must match standard email format
+ * - startDate: Required
+ * - budget: Required tier selection
+ * 
+ * Sets error messages in state for invalid fields.
+ */
+```
+
+#### **handleInterestToggle(interest: string)**
+```typescript
+/**
+ * Toggles an interest in the selected interests array.
+ * @param {string} interest - The interest to toggle
+ * 
+ * Adds the interest if not present, removes it if already selected.
+ * Used for multi-select interest checkboxes in the concierge form.
+ */
+```
+
+#### **handleSubmit(e: FormEvent)**
+```typescript
+/**
+ * Handles form submission with validation.
+ * @param {FormEvent} e - The form submit event
+ * 
+ * Workflow:
+ * 1. Prevents default form submission
+ * 2. Validates all form fields
+ * 3. If valid: logs form data, shows success toast, resets form
+ * 4. If invalid: displays error messages for failed fields
+ */
+```
 
 ### Features
 
