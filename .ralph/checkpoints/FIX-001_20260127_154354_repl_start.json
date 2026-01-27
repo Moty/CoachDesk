@@ -1,0 +1,24 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260127_154354",
+    "created_at": "2026-01-27T15:43:54-08:00"
+  },
+  "task": {
+    "id": "FIX-001",
+    "title": "",
+    "description": "",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/coachdesk-marketing-site",
+    "commit": "77496ee3087da33ba411ec036d48cbaf9aa771b2",
+    "dirty_files": 24,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      "web-marketing/package-lock.json"
+    ]
+  }
+}

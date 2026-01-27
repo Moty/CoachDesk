@@ -1,5 +1,7 @@
 {
-  "tasks": [
+  "project": "CoachDesk Marketing Site",
+  "branchName": "ralph/coachdesk-marketing-site",
+  "userStories": [
     {
       "id": "FIX-001",
       "title": "Document new marketing site functions and apply dark glass theme to web frontend",
@@ -14,7 +16,7 @@
       ],
       "priority": 2,
       "source": "filebug",
-      "passes": false,
+      "passes": true,
       "blockedBy": []
     }
   ]

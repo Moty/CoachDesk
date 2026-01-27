@@ -1,0 +1,17 @@
+# Ralph Progress Log
+Started: Mon Jan 26 23:54:24 PST 2026
+---
+
+## 2026-01-27 15:47 - FIX-001
+- Documented marketing site components in README.md
+- Added Marketing Site Components section documenting all 8 components (Navbar, Hero, Destinations, MembershipTiers, Testimonials, ConciergeForm, FloatingMobileButton, Footer)
+- Added JSDoc-style documentation for 3 key functions: validateForm(), handleInterestToggle(), handleSubmit()
+- Applied dark glass theme from web-marketing/app/globals.css to web/src/index.css
+- Updated web frontend components (Home, Login, Register) to use new CSS variables
+- Theme includes: CSS variables, glassmorphism, animated gradients, noise texture, aurora glows, focus styles
+- **Learnings for future iterations:**
+  - [PATTERN]: Marketing site uses dark glass theme with CSS variables for consistent theming
+  - [PATTERN]: CSS variables are defined in :root with RGB values for use with opacity (e.g., rgb(var(--bg-primary)))
+  - [PATTERN]: Frontend components use inline styles that can reference CSS variables
+  - [INTEGRATION]: Both web frontend and marketing site now share the same dark glass theme system
+---
