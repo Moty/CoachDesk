@@ -15,8 +15,21 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "CoachDesk",
-  description: "Premium concierge service platform",
+  title: "CoachDesk - Premium Concierge Service Platform",
+  description: "Experience luxury redefined with CoachDesk's white-glove concierge services. From SLA intelligence to secure automation, we deliver excellence at every touchpoint.",
+  keywords: ["concierge", "luxury service", "SLA management", "incident command", "knowledge management", "automation"],
+  openGraph: {
+    title: "CoachDesk - Premium Concierge Service Platform",
+    description: "Experience luxury redefined with CoachDesk's white-glove concierge services.",
+    type: "website",
+    locale: "en_US",
+    siteName: "CoachDesk",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "CoachDesk - Premium Concierge Service Platform",
+    description: "Experience luxury redefined with CoachDesk's white-glove concierge services.",
+  },
 };
 
 export default function RootLayout({
