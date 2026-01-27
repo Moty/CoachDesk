@@ -336,7 +336,7 @@ validate_agent_yaml() {
     while IFS= read -r cmd_name; do
       [ -z "$cmd_name" ] && continue
       case "$cmd_name" in
-        build|review|prd) ;;
+        build|review|prd|filebug|change) ;;
         *)
           log_warn "Unknown command in commands section: $cmd_name"
           echo -e "${YELLOW}Warning: Unknown command in commands section: $cmd_name${NC}"

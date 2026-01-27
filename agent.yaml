@@ -93,7 +93,7 @@ git:
     # Automatically merge the PR after creation (requires push and pr enabled)
     auto-merge: true
 # Per-command configuration
-# Override agent rotation and permissions per Ralph command (build, review, prd)
+# Override agent rotation and permissions per Ralph command (build, review, prd, filebug, change)
 commands:
   build:
     agent-rotation: [github-copilot, claude-code, gemini, codex]
@@ -103,4 +103,10 @@ commands:
     dangerous-permissions: false
   prd:
     agent-rotation: [github-copilot, claude-code]
+    dangerous-permissions: true
+  filebug:
+    agent-rotation: [claude-code, github-copilot]
+    dangerous-permissions: false
+  change:
+    agent-rotation: [claude-code, github-copilot]
     dangerous-permissions: true
