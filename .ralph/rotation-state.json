@@ -2,14 +2,9 @@
   "version": 1,
   "current_agent_index": 0,
   "current_model_indices": {},
-  "rate_limits": {
-    "claude-code": {
-      "hit_at": 1769404724,
-      "cooldown_until": 1769405024
-    }
-  },
+  "rate_limits": {},
   "stories": {},
   "usage": {},
   "rotations_count": 0,
-  "rate_limits_count": 38
+  "rate_limits_count": 0
 }

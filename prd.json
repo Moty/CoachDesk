@@ -1,17 +1,19 @@
 {
-  "project": "HelpDesk",
-  "branchName": "ralph/comprehensive-application-logging",
-  "description": "Comprehensive application logging for the HelpDesk API with structured request, error, adapter, job, and controller logs.",
+  "project": "CoachDesk Marketing Site",
+  "branchName": "ralph/coachdesk-marketing-site",
+  "description": "Futuristic luxury marketing website for the CoachDesk platform built as a standalone Next.js app with no backend integration.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Standardize logger configuration",
-      "description": "As a developer, I want a consistent logger configuration so logs are structured and searchable across environments.",
+      "title": "Scaffold Next.js marketing app",
+      "description": "As a developer, I want a dedicated Next.js + TypeScript app so the marketing site can be built independently of the existing Vite app.",
       "acceptanceCriteria": [
-        "Logger level is configurable via LOG_LEVEL env",
-        "Logs include base metadata fields for service and environment",
-        "Production/non-development logs use JSON format; development logs are human-readable",
-        "Startup and shutdown lifecycle events are logged with configuration summary (non-sensitive)",
+        "web-marketing/ Next.js App Router + TypeScript app runs with npm run dev",
+        "next build succeeds for the marketing app",
+        "Tailwind CSS is configured and styles compile",
+        "web-marketing/package.json includes Framer Motion dependency",
+        "Marketing site is isolated under web-marketing/ and does not modify the existing /web app",
+        "README.md documents the marketing app location and dev/build commands",
         "Existing tests still pass",
         "Typecheck passes"
       ],
@@ -22,31 +24,33 @@
     },
     {
       "id": "US-002",
-      "title": "Add request correlation IDs",
-      "description": "As a developer, I want each request to have a correlation ID so I can trace logs end-to-end.",
+      "title": "Define global layout, typography, and theme",
+      "description": "As a visitor, I want a cohesive futuristic luxury visual system so the site feels premium.",
       "acceptanceCriteria": [
-        "Each incoming request uses existing X-Request-Id header or generates a new ID",
-        "Correlation ID is stored on the request and returned in X-Request-Id response header",
-        "Correlation ID is included in request lifecycle logs",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "app/layout.tsx loads Space Grotesk and Inter via next/font/google and applies them to headings/body",
+        "app/globals.css defines a dark glass theme with CSS variables and Tailwind utilities",
+        "Global background includes an animated gradient and a noise overlay",
+        "Focus styles are visible for keyboard navigation on links and buttons",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
-      "blockedBy": [],
+      "blockedBy": [
+        "US-001"
+      ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-003",
-      "title": "Enrich request logging",
-      "description": "As an operator, I want request start/end logs with consistent context so I can diagnose performance issues and errors.",
+      "title": "Configure SEO metadata and image domains",
+      "description": "As a product owner, I want SEO-ready metadata and image configuration for the marketing site.",
       "acceptanceCriteria": [
-        "Request start logs include method, path, IP, user agent, and correlation ID",
-        "Request completion logs include status code, duration, response size (when available), and correlation ID",
-        "4xx responses log at warn level; 5xx responses log at error level",
-        "Shared log context helper/types exist for request metadata to avoid repeated inline objects",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "app/layout.tsx exports metadata with title, description, OpenGraph, and Twitter/social fields",
+        "app/icon.svg exists and is used as the favicon",
+        "next.config.ts allows remote images from images.unsplash.com, source.unsplash.com, and images.pexels.com",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 3,
       "blockedBy": [
@@ -57,154 +61,165 @@
     },
     {
       "id": "US-004",
-      "title": "Standardize error logging",
-      "description": "As a developer, I want consistent error logs so failures are easy to triage across layers.",
+      "title": "Add sticky glass navbar with scroll spy",
+      "description": "As a visitor, I want a premium sticky navbar with scroll-aware section highlighting for easy navigation.",
       "acceptanceCriteria": [
-        "Error handler logs include correlation ID and request metadata when available",
-        "AppError logs include error code and details",
-        "Unknown errors log stack traces",
-        "Validation middleware warning logs include request metadata and validation details",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "Navbar renders a glassmorphism bar with logo, section links, and Request Itinerary CTA",
+        "Active section is highlighted while scrolling using IntersectionObserver",
+        "CTA anchors to the concierge form section",
+        "Keyboard navigation and focus rings work for all links",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
       "blockedBy": [
-        "US-003"
+        "US-002"
       ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-005",
-      "title": "Improve auth and RBAC logging",
-      "description": "As a developer, I want authentication and authorization logs to be consistent and structured to diagnose access issues.",
+      "title": "Build cinematic hero section",
+      "description": "As a visitor, I want a cinematic hero section that feels futuristic and luxurious.",
       "acceptanceCriteria": [
-        "Auth success logs include user id, role, and correlation ID",
-        "Auth failures log reason and request metadata at warn level",
-        "RBAC failures log required roles and request metadata at warn level",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "Hero includes headline, subtext, primary CTA, and secondary CTA",
+        "Background uses next/image with https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=2000&q=80 plus animated gradient overlay and noise texture",
+        "Aurora gradient blob renders behind hero text",
+        "Framer Motion entrance/parallax effects respect prefers-reduced-motion",
+        "Primary CTA uses an animated conic-gradient border via GradientBorder",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 5,
       "blockedBy": [
-        "US-003"
+        "US-002"
       ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-006",
-      "title": "Standardize Firestore adapter logging",
-      "description": "As a developer, I want Firestore adapter logs to be consistent so database health is traceable.",
+      "title": "Create destinations grid section",
+      "description": "As a visitor, I want a grid of CoachDesk destinations that communicate key product strengths.",
       "acceptanceCriteria": [
-        "Firestore connection, health check, and disconnect logs use consistent structure",
-        "Logs include operation name and outcome",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "data/destinations.ts defines 6 destinations: Omni-Channel Concierge, SLA Intelligence, Incident Command, Knowledge Nexus, Secure Automation, Client Insights",
+        "Destination images use the required URLs for the six cards",
+        "Destinations grid renders 6 cards with hover shimmer, subtle tilt, and quick facts reveal",
+        "Cards use next/image and include animated gradient borders with glow rings",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "blockedBy": [],
+      "blockedBy": [
+        "US-002"
+      ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-007",
-      "title": "Standardize Firebase storage logging",
-      "description": "As a developer, I want storage adapter logs to be consistent so storage operations are traceable.",
+      "title": "Add destination detail route",
+      "description": "As a visitor, I want destination detail pages so I can explore each capability.",
       "acceptanceCriteria": [
-        "Upload, download, and delete logs include object identifiers and outcome",
-        "Logs include file size and content type when available",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "app/destinations/[slug]/page.tsx renders destination title, description, and image from data",
+        "Clicking a destination card navigates to the matching slug route",
+        "Detail page uses next/image for the destination image",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
-      "blockedBy": [],
+      "blockedBy": [
+        "US-006"
+      ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-008",
-      "title": "Standardize SMTP provider logging",
-      "description": "As a developer, I want notification logs to include message identifiers and outcomes so email issues are diagnosable.",
+      "title": "Add membership tiers section",
+      "description": "As a visitor, I want to compare premium membership tiers to understand service levels.",
       "acceptanceCriteria": [
-        "SMTP provider logs include message identifiers and outcomes",
-        "Retry attempts are logged with attempt count and error message",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "data/tiers.ts defines Silver, Black, and Obsidian tiers with pricing placeholders and benefits",
+        "Membership tiers section renders three cards and highlights the featured tier with elevated styling and animated border",
+        "Cards lift and glow on hover",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "blockedBy": [],
+      "blockedBy": [
+        "US-002"
+      ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-009",
-      "title": "Improve background job logging",
-      "description": "As an operator, I want background job logs to clearly show job lifecycle and errors.",
+      "title": "Add testimonials section",
+      "description": "As a visitor, I want to see social proof from luxury clients.",
       "acceptanceCriteria": [
-        "Each job run logs start and end with run ID and duration",
-        "Recoverable issues log warnings with relevant ticket/job context",
-        "Errors include contextual ticket/job data",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "data/testimonials.ts defines 4-6 testimonials with client name, role, and quote",
+        "Testimonials section renders cards and is horizontally scrollable on mobile",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 9,
-      "blockedBy": [],
+      "blockedBy": [
+        "US-002"
+      ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-010",
-      "title": "Standardize auth and user controller logging",
-      "description": "As a developer, I want auth and user controllers to log consistent success/warn/error entries for key actions.",
+      "title": "Build concierge request form with validation",
+      "description": "As a visitor, I want to submit a concierge request with immediate feedback.",
       "acceptanceCriteria": [
-        "auth.controller logs success messages with relevant identifiers (e.g., user id/email)",
-        "user.controller logs success messages with relevant identifiers",
-        "Warnings are used for invalid input or user-caused issues; errors for server failures",
-        "Logs include correlation ID and user context when available",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "Form fields include name, email, dates, travelers, interests chips, budget select, and notes",
+        "Client-side validation shows inline error messages",
+        "Submitting the form shows a Request received toast without backend integration",
+        "Form fields have accessible labels and aria descriptors",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
       "blockedBy": [
-        "US-003"
+        "US-002"
       ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-011",
-      "title": "Standardize ticket and comment controller logging",
-      "description": "As a developer, I want ticket, comment, and attachment controllers to log consistent success/warn/error entries for key actions.",
+      "title": "Add floating mobile request button",
+      "description": "As a mobile visitor, I want a floating request button so I can quickly reach the concierge form.",
       "acceptanceCriteria": [
-        "ticket.controller logs success messages with relevant identifiers",
-        "comment.controller, comment-list.controller, and attachment.controller log success messages with relevant identifiers",
-        "Warnings are used for user-caused issues; errors for server failures",
-        "Logs include correlation ID and user context when available",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "Floating Request Help button appears only on mobile viewports",
+        "Button scrolls or anchors to the concierge form section",
+        "Button uses premium glass or gradient styling and stays above content",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 11,
       "blockedBy": [
-        "US-003"
+        "US-010"
       ],
       "passes": true,
       "notes": ""
     },
     {
       "id": "US-012",
-      "title": "Standardize admin controller logging",
-      "description": "As a developer, I want admin controllers to log consistent success/warn/error entries for key actions.",
+      "title": "Create footer with image credits",
+      "description": "As a visitor, I want a minimal footer with image credits and a premium finish.",
       "acceptanceCriteria": [
-        "admin audit-log and sla-rule controllers log success messages with relevant identifiers",
-        "Warnings are used for invalid input or user-caused issues; errors for server failures",
-        "Logs include correlation ID and user context when available",
-        "Existing tests still pass",
-        "Typecheck passes"
+        "Footer includes logo, minimal nav, and Image Credits list with text: Images via Unsplash Source / Pexels.",
+        "Footer maintains the dark glass aesthetic",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
       ],
       "priority": 12,
       "blockedBy": [
-        "US-003"
+        "US-002"
       ],
       "passes": true,
       "notes": ""
