@@ -65,6 +65,15 @@
     }
   }
 
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-space-grotesk), sans-serif;
     font-weight: 700;
@@ -78,5 +87,11 @@
   select:focus-visible {
     outline: none;
     box-shadow: 0 0 0 2px rgb(var(--bg-primary)), 0 0 0 4px rgb(var(--accent-primary));
+  }
+}
+
+@layer utilities {
+  .animate-gradient-shift {
+    animation: gradient-shift 3s linear infinite;
   }
 }

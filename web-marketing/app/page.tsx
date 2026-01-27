@@ -1,9 +1,9 @@
+import Hero from "@/components/Hero";
+
 export default function HomePage() {
   return (
     <main>
-      <section id="hero" className="min-h-screen flex items-center justify-center">
-        <h1 className="text-4xl font-bold">CoachDesk Marketing</h1>
-      </section>
+      <Hero />
       <section id="destinations" className="min-h-screen flex items-center justify-center bg-[rgb(var(--bg-glass)_/_0.3)]">
         <h2 className="text-3xl font-bold">Destinations</h2>
       </section>
