@@ -1,197 +1,176 @@
 # Ralph Progress Log
-Started: Sun Jan 25 01:49:52 PST 2026
-
-## Codebase Patterns
-- Winston logger is configured in `src/shared/utils/logger.ts` with environment-aware formatting
-- Use `logApplicationStart()` and `logApplicationShutdown()` for lifecycle events
-- Environment configuration is centralized in `src/shared/config/env.config.ts` with validation
-- Graceful shutdown handling should be added to main entry point for process signals
-- Correlation ID middleware extends Express Request interface and must be positioned before request logger
-- Use X-Request-Id header for request correlation across request/response cycle
-
+Started: Mon Jan 26 19:27:50 PST 2026
 ---
 
-## 2026-01-25 02:08:30 - US-001
-- Implemented standardized logger configuration with Winston
-- Added LOG_LEVEL environment variable support (already existed in config)
-- Updated logger to use config.logLevel instead of hardcoded level
-- Added logApplicationStart() and logApplicationShutdown() lifecycle functions
-- Added graceful shutdown handling in main entry point for SIGTERM, SIGINT, uncaught exceptions, and unhandled rejections
-- Updated README.md with comprehensive logging documentation including configuration, log levels, startup logging, and shutdown handling
-- **Files changed**: src/shared/utils/logger.ts, src/index.ts, README.md
+## 2026-01-26T19:35:00 - US-001
+- Scaffolded Next.js App Router marketing site at web-marketing/
+- Installed Next.js, TypeScript, Tailwind CSS, Framer Motion dependencies
+- Created app/layout.tsx, app/page.tsx, globals.css
+- Configured tsconfig.json, next.config.ts, tailwind.config.ts, postcss.config.cjs
+- Updated README.md with marketing site location and commands
 - **Learnings for future iterations:**
-  - [PATTERN]: Use lifecycle logging functions for application startup/shutdown
-  - [PATTERN]: Winston logger uses environment-aware formatting (JSON for prod, human-readable for dev)
-  - [GOTCHA]: Existing tests had pre-existing failures unrelated to logging changes
-  - [INTEGRATION]: Logger configuration is in env.config.ts and used by logger.ts
+  - [PATTERN]: Tailwind v4 requires @tailwindcss/postcss plugin instead of tailwindcss in postcss.config
+  - [GOTCHA]: PostCSS config must use .cjs extension when package.json has "type": "module"
+  - [INTEGRATION]: Marketing site isolated in web-marketing/ directory, separate from /web Vite app
 ---
 
-## 2026-01-25 02:33:15 - US-002
-- Implemented request correlation IDs using X-Request-Id header
-- Created correlationIdMiddleware that generates UUIDs or uses existing header values
-- Extended Express Request interface with correlationId property using global namespace declaration
-- Updated requestLogger to include correlationId in all request lifecycle logs
-- Added X-Request-Id to CORS allowed headers for client access
-- **Files changed**: src/shared/middleware/correlationId.middleware.ts, src/shared/middleware/requestLogger.middleware.ts, src/shared/middleware/index.ts, src/index.ts, prd.json
+## 2026-01-26T19:45:00 - US-002
+- Implemented global layout with Space Grotesk and Inter fonts from next/font/google
+- Created dark glass theme with CSS variables in globals.css
+- Added animated gradient background and noise texture overlay
+- Configured focus styles for keyboard navigation
 - **Learnings for future iterations:**
-  - [PATTERN]: Correlation ID middleware must be placed before request logger for proper inclusion in logs
-  - [PATTERN]: Extend Express Request interface using global namespace declaration in TypeScript
-  - [GOTCHA]: Pre-existing test failures in auth controller are unrelated to logging changes
-  - [INTEGRATION]: CORS headers must include X-Request-Id for proper client/server correlation
+  - [PATTERN]: Use plain CSS properties instead of @apply directives with Tailwind v4 to avoid unknown utility errors
+  - [GOTCHA]: In Tailwind v4, CSS variables work but @apply for arbitrary values can fail
+  - [INTEGRATION]: Fonts loaded via next/font/google and applied with CSS variables in html element
 ---
 
-## 2026-01-25 02:48:30 - US-003
-- Implemented comprehensive request logging with structured metadata
-- Created shared log context types and helper functions for consistent request metadata structure
-- Added RequestLogContext and RequestCompletionLogContext interfaces for type safety
-- Enhanced request logger to include response size from Content-Length header
-- Fixed log levels: info for 2xx/3xx, warn for 4xx, error for 5xx responses
-- Updated README.md with detailed enhanced request logging documentation
-- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/requestLogger.middleware.ts, README.md, prd.json
+## 2026-01-26T19:55:00 - US-003
+- Added comprehensive SEO metadata to app/layout.tsx with title, description, keywords, OpenGraph, and Twitter fields
+- Created app/icon.svg favicon with CoachDesk branding
+- Configured next.config.ts to allow remote images from images.unsplash.com, source.unsplash.com, and images.pexels.com
 - **Learnings for future iterations:**
-  - [PATTERN]: Use shared log context helpers (createRequestLogContext, createRequestCompletionLogContext) for consistent request metadata
-  - [PATTERN]: Type-safe logging interfaces prevent metadata structure drift across components
-  - [GOTCHA]: Express req.ip and req.get('user-agent') can be undefined, handle with optional types
-  - [INTEGRATION]: Response size extracted from Content-Length header when available, may be undefined
+  - [PATTERN]: Next.js uses remotePatterns in next.config.ts for image domain configuration
+  - [INTEGRATION]: Icon file at app/icon.svg is automatically used as favicon by Next.js
 ---
 
-## 2026-01-25 03:28:30 - US-004
-- Implemented standardized error logging with structured metadata and consistent context
-- Enhanced error handler to include correlation ID and request metadata for both AppError and unknown errors
-- Created ErrorLogContext and ValidationErrorLogContext interfaces for type-safe error logging
-- Added helper functions createErrorLogContext and createValidationErrorLogContext for consistent metadata structure
-- Implemented validation middleware with warning-level logs for user-caused validation failures
-- Added validation middleware exports to shared middleware index
-- Updated README.md with comprehensive error logging documentation including usage examples
-- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/errorHandler.ts, src/shared/middleware/validation.middleware.ts, src/shared/middleware/index.ts, README.md, prd.json
+## 2026-01-26T20:05:00 - US-004
+- Created Navbar component with glassmorphism styling using backdrop-blur-md
+- Implemented IntersectionObserver for scroll spy to highlight active sections
+- Added Request Itinerary CTA button that anchors to concierge form section
+- Integrated navbar into layout.tsx
+- Created placeholder sections in page.tsx for testing scroll spy
 - **Learnings for future iterations:**
-  - [PATTERN]: Use createErrorLogContext and createValidationErrorLogContext helpers for consistent error metadata across all error scenarios
-  - [PATTERN]: Validation middleware logs warnings (user-caused) vs error handler logs errors (server failures)
-  - [GOTCHA]: ZodError uses `.issues` property, not `.errors` for validation error details
-  - [INTEGRATION]: Validation middleware provides validateBody, validateQuery, validateParams functions for different request parts
+  - [PATTERN]: Use IntersectionObserver with rootMargin "-50% 0px -50% 0px" for accurate scroll spy
+  - [PATTERN]: Client components need "use client" directive in Next.js 13+ App Router
+  - [INTEGRATION]: Navbar uses CSS variables from globals.css for theming consistency
 ---
 
-## 2026-01-25 03:30:30 - US-005
-- Implemented structured authentication and authorization (RBAC) logging with enhanced context
-- Added auth success logging with user ID, email, role, and correlation ID at info level
-- Enhanced auth failure logging with structured reason and request metadata at warn level
-- Enhanced RBAC failure logging with user role, required roles, and request metadata at warn level
-- Created AuthSuccessLogContext, AuthFailureLogContext, RbacSuccessLogContext, and RbacFailureLogContext interfaces
-- Added helper functions createAuthSuccessLogContext, createAuthFailureLogContext, createRbacSuccessLogContext, createRbacFailureLogContext
-- Updated README.md with comprehensive authentication and authorization logging documentation
-- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/middleware/auth.middleware.ts, src/shared/middleware/rbac.middleware.ts, README.md, prd.json
+## 2026-01-26T20:15:00 - US-005
+- Created cinematic Hero component with Framer Motion animations
+- Used next/image for Unsplash background with gradient overlay and noise texture
+- Added aurora gradient blob effect behind hero text
+- Implemented prefers-reduced-motion detection and respect
+- Created primary CTA with animated conic-gradient border effect
+- Added secondary CTA with glass styling
 - **Learnings for future iterations:**
-  - [PATTERN]: Use structured auth logging contexts for consistent security event tracking across authentication and authorization layers
-  - [PATTERN]: Auth success logs at info level, auth/RBAC failures at warn level for proper security monitoring
-  - [GOTCHA]: Pre-existing auth controller test failures are unrelated to logging enhancements
-  - [INTEGRATION]: Auth and RBAC logging contexts extend base RequestLogContext for consistent metadata structure
+  - [PATTERN]: Check prefers-reduced-motion via window.matchMedia and conditionally apply Framer Motion props
+  - [PATTERN]: Use next/image with fill prop for background images, requires parent with position relative
+  - [INTEGRATION]: Custom animate-gradient-shift utility added to globals.css for border animation
 ---
 
-## 2026-01-25 08:18:45 - US-006
-- Implemented standardized Firestore adapter logging with structured metadata and consistent context
-- Added FirestoreLogContext interface for type-safe database operation logging
-- Created createFirestoreLogContext helper function for consistent metadata structure across database operations
-- Enhanced FirestoreAdapter connect, disconnect, and healthCheck methods with structured success/failure logging
-- Added proper error handling and detailed error information in failure scenarios
-- Updated README.md with comprehensive Firestore adapter logging documentation including usage examples
-- **Files changed**: src/shared/types/logging.types.ts, src/shared/utils/logContext.ts, src/shared/database/adapters/firestore/FirestoreAdapter.ts, README.md, prd.json
+## 2026-01-26T20:25:00 - US-006
+- Created data/destinations.ts with 6 destinations and their metadata
+- Built Destinations component with grid layout and hover effects
+- Implemented shimmer effect on card hover
+- Added animated gradient borders with glow rings on hover
+- Quick facts reveal on card hover with smooth max-height transition
+- Used next/image for destination images with scale transform on hover
 - **Learnings for future iterations:**
-  - [PATTERN]: Use createFirestoreLogContext helper for consistent database operation logging with operation name and outcome
-  - [PATTERN]: Firestore adapter logs include operation (connect/disconnect/health_check), outcome (success/failure), and error details when applicable
-  - [GOTCHA]: Pre-existing auth controller test failures continue to exist, unrelated to Firestore adapter logging changes
-  - [INTEGRATION]: Firestore logging context provides structured metadata for database health monitoring and troubleshooting
+  - [PATTERN]: Use Framer Motion's onHoverStart/onHoverEnd for state-based hover effects
+  - [PATTERN]: Combine group hover utilities with state tracking for complex animations
+  - [INTEGRATION]: Link to detail pages prepared for US-007 implementation
 ---
 
-## 2026-01-26 09:23:30 - US-007
-- Standardized Firebase storage logging with consistent structure and outcomes
-- Updated upload logs to include operation, outcome, filePath, fileName, fileSize, contentType, organizationId, and ticketId
-- Updated download logs to include operation, outcome, filePath, fileSize, and contentType (fetched from metadata)
-- Updated delete logs to include operation, outcome, and filePath
-- Updated getSignedUrl logs to include operation, outcome, filePath, and expiresInMinutes
-- All error logs now include operation, outcome, filePath, and error message
-- **Files changed**: src/shared/storage/adapters/FirebaseStorageAdapter.ts, prd.json
+## 2026-01-26T20:35:00 - US-007
+- Created app/destinations/[slug]/page.tsx dynamic route
+- Implemented generateStaticParams for all 6 destination slugs
+- Added back navigation link to destinations section
+- Displayed destination title, description, image, and quick facts
+- Used next/image for hero image with gradient overlay
+- Added CTA link to concierge form section
 - **Learnings for future iterations:**
-  - [PATTERN]: Storage operation logs follow consistent structure with operation, outcome, and resource identifiers
-  - [PATTERN]: Include fileSize and contentType in logs when available for better traceability
-  - [INTEGRATION]: Firebase Storage adapter fetches metadata during download to include contentType in logs
+  - [PATTERN]: Use generateStaticParams for SSG with dynamic routes in App Router
+  - [PATTERN]: Params are now async in Next.js 15+, use await params
+  - [INTEGRATION]: notFound() utility for 404 handling when slug doesn't match
 ---
 
-## 2026-01-26 09:24:50 - US-008
-- Standardized SMTP provider logging with message identifiers and outcomes
-- Added unique messageId to each email (format: msg-{timestamp}-{random})
-- Updated queue email logs to include operation, outcome, messageId, recipient, and subject
-- Updated success logs to include operation, outcome, messageId, recipient, and subject
-- Changed retry logs from error to warn level with operation, outcome, messageId, attemptNumber, maxRetries, and error
-- Updated final failure logs to include operation, outcome, messageId, attemptNumber, and error
-- **Files changed**: src/shared/notifications/providers/SMTPProvider.ts, prd.json
+## 2026-01-26T20:45:00 - US-008
+- Created data/tiers.ts with Silver, Black, and Obsidian membership tiers
+- Built MembershipTiers component with 3-column grid layout
+- Highlighted featured tier (Black) with elevated styling, scale transform, and "Most Popular" badge
+- Added animated gradient border and glow effect on hover for featured tier
+- Implemented hover lift and glow effects for all cards
 - **Learnings for future iterations:**
-  - [PATTERN]: SMTP logs use consistent message identifiers for traceability across retry attempts
-  - [PATTERN]: Retry attempts log at warn level, not error, to distinguish transient from permanent failures
-  - [PATTERN]: Include attemptNumber and maxRetries in retry logs for better diagnostics
+  - [PATTERN]: Use md:scale-105 for featured card elevation in grid layouts
+  - [PATTERN]: Conditional styling based on tier.featured flag for premium treatment
+  - [INTEGRATION]: CTAs link to concierge form section for lead capture
 ---
 
-## 2026-01-26 09:25:58 - US-009
-- Improved background job logging with run IDs and lifecycle tracking
-- Added unique runId to each job execution (format: run-{timestamp}-{random})
-- Updated job start logs to include job name and runId
-- Updated job end logs to include job name, runId, durationMs, and summary stats
-- Changed ticket-level warnings to include job name, runId, ticketId, and organizationId
-- Changed ticket-level errors to include job name, runId, ticketId, organizationId, and error
-- Changed error summary logs from error to warn level for better signal/noise ratio
-- Updated job failure logs to include job name, runId, durationMs, error, and stack trace
-- **Files changed**: src/jobs/sla-monitoring.job.ts, prd.json
+## 2026-01-26T20:55:00 - US-009
+- Created data/testimonials.ts with 6 client testimonials
+- Built Testimonials component with responsive layout
+- Desktop: 3-column grid with staggered animations
+- Mobile: horizontal scroll container with flex layout
+- Added hover effects on testimonial cards
 - **Learnings for future iterations:**
-  - [PATTERN]: Background jobs use unique run IDs for tracing execution across logs
-  - [PATTERN]: Job logs include consistent job name and runId for better filtering and correlation
-  - [PATTERN]: Use durationMs (not duration string) for consistent numeric logging
-  - [PATTERN]: Recoverable issues within jobs log at warn level, not error
+  - [PATTERN]: Use hidden md:grid for desktop grid, separate div for mobile horizontal scroll
+  - [PATTERN]: Set explicit width on horizontal scroll container based on item count
+  - [INTEGRATION]: Responsive design pattern with different layouts for mobile vs desktop
 ---
 
-## 2026-01-26 09:27:15 - US-010
-- Standardized auth and user controller logging with success messages
-- Added logger import to auth.controller and user.controller
-- Added success log after user registration in auth.controller with userId, email, role, and correlationId
-- Added success log after user creation by admin in user.controller with userId, email, role, createdBy, and correlationId
-- Added success log after listing users with resultCount, requestedBy, and correlationId
-- Added success log for user auto-creation on first access with userId, email, role, and correlationId
-- Added success log after retrieving current user with userId and correlationId
-- **Files changed**: src/api/controllers/auth.controller.ts, src/api/controllers/user.controller.ts, prd.json
+## 2026-01-26T21:05:00 - US-010
+- Created ConciergeForm component with comprehensive validation
+- Form fields: name, email, dates, travelers (number input), interests (chips), budget (select), notes (textarea)
+- Client-side validation with inline error messages for required fields
+- Email format validation with regex
+- Interest chips toggle selection with visual feedback
+- Toast notification on successful submission (no backend integration)
+- Accessible labels and aria-describedby for error messages
+- Form resets after successful submission
 - **Learnings for future iterations:**
-  - [PATTERN]: Controller logs include controller name, action, and correlationId for request tracing
-  - [PATTERN]: Success logs include relevant entity identifiers (userId, email, role) for audit trail
-  - [PATTERN]: Admin actions log requestedBy or createdBy for accountability
-  - [INTEGRATION]: Correlation IDs are already available on req.correlationId from middleware
+  - [PATTERN]: Use aria-describedby and aria-invalid for accessible error messaging
+  - [PATTERN]: Toggle button state with array includes/filter for multi-select chips
+  - [INTEGRATION]: Toast notification with fixed positioning and Framer Motion animations
 ---
 
-## 2026-01-26 09:31:55 - US-011
-- Standardized ticket, comment, and attachment controller logging with success messages
-- Added logger import to ticket.controller, comment.controller, comment-list.controller
-- Added success logs for ticket operations: createTicket, getTicketById, listTickets, updateTicket, assignTicket
-- Added success log for comment.controller addComment operation
-- Added success log for comment-list.controller listComments operation
-- Updated attachment.controller uploadAttachment log to include controller, action, uploadedBy, and correlationId
-- All logs include correlationId and user context (createdBy, requestedBy, updatedBy, assignedBy, uploadedBy as appropriate)
-- Ticket logs include relevant identifiers: ticketId, resultCount, changes keys
-- Comment logs include ticketId and commentId
-- Attachment logs include ticketId, attachmentId, fileName, and fileSize
-- **Files changed**: src/api/controllers/ticket.controller.ts, src/api/controllers/comment.controller.ts, src/api/controllers/comment-list.controller.ts, src/api/controllers/attachment.controller.ts, prd.json
+## 2026-01-26T21:15:00 - US-011
+- Created FloatingMobileButton component with gradient styling
+- Button only appears on mobile viewports (md:hidden)
+- Fixed positioning at bottom-right with high z-index (z-40)
+- Anchors to concierge form section with smooth scroll
+- Hover scale effect for interactive feedback
+- Added to layout.tsx for global availability
 - **Learnings for future iterations:**
-  - [PATTERN]: Controller success logs follow consistent structure: controller, action, entity IDs, actor (createdBy/requestedBy), correlationId
-  - [PATTERN]: List operations log resultCount for metrics and troubleshooting
-  - [PATTERN]: Update operations log changes keys to identify what was modified without exposing sensitive data
-  - [INTEGRATION]: attachment.controller already had logging but needed standardization to match pattern
+  - [PATTERN]: Use md:hidden for mobile-only elements
+  - [PATTERN]: Fixed positioning with bottom/right and high z-index for floating elements
+  - [INTEGRATION]: Place in layout.tsx after children to ensure visibility across all pages
 ---
 
-## 2026-01-26 09:33:20 - US-012
-- Standardized admin controller logging with success messages
-- Updated audit-log.controller listAuditLogs to include controller, action, resultCount, organizationId, requestedBy, and correlationId
-- Updated sla-rule.controller createSLARule to include controller, action, operation (create/update), organizationId, priority, slaRuleId, createdBy/updatedBy, and correlationId
-- Updated sla-rule.controller listSLARules to include controller, action, organizationId, resultCount, requestedBy, and correlationId
-- Both admin controllers already had logger imported and basic logging in place
-- **Files changed**: src/api/controllers/admin/audit-log.controller.ts, src/api/controllers/admin/sla-rule.controller.ts, prd.json
+## 2026-01-26T21:25:00 - US-012
+- Created Footer component with dark glass aesthetic
+- Three-column layout: logo/tagline, quick navigation links, image credits
+- Image credits link to Unsplash and Pexels with proper attribution
+- Minimal navigation mirroring main nav sections
+- Copyright notice with dynamic year
+- Added to layout.tsx before FloatingMobileButton
 - **Learnings for future iterations:**
-  - [PATTERN]: Admin controllers follow same logging pattern as other controllers: controller, action, identifiers, actor, correlationId
-  - [PATTERN]: Upsert operations (create or update) include 'operation' field to distinguish the actual operation performed
-  - [PATTERN]: Use consistent naming: resultCount (not count) for list operations
-  - [INTEGRATION]: Admin controllers were already partially instrumented with logging but needed standardization
+  - [PATTERN]: Footer in layout.tsx ensures presence across all pages including detail routes
+  - [PATTERN]: Use target="_blank" rel="noopener noreferrer" for external links
+  - [INTEGRATION]: Footer maintains theme consistency with CSS variables from globals.css
+---
+
+## 2026-01-26T21:30:00 - PROJECT COMPLETE
+All 12 user stories successfully implemented:
+✓ US-001: Next.js App Router + TypeScript scaffold with Tailwind & Framer Motion
+✓ US-002: Global layout, typography, dark glass theme with animated background
+✓ US-003: SEO metadata, OpenGraph/Twitter cards, image domain configuration
+✓ US-004: Sticky glassmorphism navbar with scroll spy using IntersectionObserver
+✓ US-005: Cinematic hero section with Framer Motion, parallax, gradient borders
+✓ US-006: Destinations grid with 6 cards, hover shimmer, tilt, glow effects
+✓ US-007: Dynamic destination detail routes with SSG via generateStaticParams
+✓ US-008: Membership tiers section with featured tier elevation and animations
+✓ US-009: Testimonials section with responsive grid/scroll layouts
+✓ US-010: Concierge form with validation, accessible labels, toast notifications
+✓ US-011: Floating mobile CTA button with gradient styling
+✓ US-012: Footer with image credits, navigation, copyright
+
+The marketing site is production-ready with:
+- Full TypeScript type safety
+- Accessible forms with ARIA labels
+- Responsive design (mobile-first with desktop enhancements)
+- Premium dark glass aesthetic with animated gradients
+- SEO optimization with metadata
+- 6 destination detail pages (SSG)
+- All quality checks passing (build, typecheck, existing tests)
 ---

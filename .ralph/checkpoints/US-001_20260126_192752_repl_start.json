@@ -1,0 +1,27 @@
+{
+  "checkpoint": {
+    "name": "repl_start",
+    "timestamp": "20260126_192752",
+    "created_at": "2026-01-26T19:27:52-08:00"
+  },
+  "task": {
+    "id": "US-001",
+    "title": "Scaffold Next.js marketing app",
+    "description": "As a developer, I want a dedicated Next.js + TypeScript app so the marketing site can be built independently of the existing Vite app.",
+    "status": "in_progress",
+    "notes": "Starting REPL cycle"
+  },
+  "git": {
+    "branch": "ralph/coachdesk-marketing-site",
+    "commit": "6d303503d0f99a6bd12684202170198f52222b56",
+    "dirty_files": 5,
+    "staged_files": [],
+    "modified_files": [
+      ".ralph/context.json",
+      ".ralph/rotation-state.json",
+      "prd.json",
+      "progress.txt",
+      "tasks/prd-draft.md"
+    ]
+  }
+}

@@ -1,50 +1,46 @@
-# PRD: Comprehensive Application Logging
+# PRD: CoachDesk Futuristic Luxury Marketing Website
 
 ## Introduction/Overview
 
-Enhance the existing HelpDesk API logging to provide comprehensive, structured, and consistent logs across all layers (request lifecycle, middleware, controllers, services/adapters, background jobs, and startup/shutdown). The goal is to make end-to-end flow tracing clear (info/debug), highlight warnings, and capture errors with consistent context while preserving existing patterns that use the shared Winston logger.
+Create a production-ready, visually stunning marketing website for the fictional ultra-premium Coach Desk / Help Desk app, “CoachDesk.” This is a brownfield addition to the existing CoachDesk repository (backend + Vite app), delivered as a new Next.js + TypeScript site that showcases the brand with a futuristic luxury aesthetic, premium UX, and performance-first implementation. The marketing site is informational only (no backend integration) and must coexist without disrupting the existing HelpDesk web app in `web/`.
 
 ## Goals
 
-- Provide consistent, structured logs for key application flows and errors across API, jobs, and shared services.
-- Improve traceability of requests and background jobs with correlation identifiers.
-- Standardize log levels (debug/info/warn/error) and message structure to reduce noise and aid analysis.
-- Ensure logging can be tuned via environment configuration without code changes.
-- Maintain backward compatibility and minimal disruption to existing behavior.
+- Launch a premium, futuristic-luxury marketing site that reflects CoachDesk’s ultra-premium brand.
+- Deliver smooth, performant animations and micro-interactions without heavy libraries.
+- Provide a clean, accessible, mobile-first experience that scales to 4K displays.
+- Implement a structured, reusable component system aligned with Next.js + Tailwind + Framer Motion.
+- Ensure SEO-ready metadata, optimized images, and clear image attribution.
 
 ## Clarifying Decisions (Defaults)
 
-- Scope: Enhancement to existing logging (no refactors beyond logging behavior).
-- Areas touched: API endpoints, shared middleware/utilities, background jobs, adapters (DB/storage/notifications), and startup/shutdown flow.
-- Backward compatibility: Fully backward compatible; no API contract changes.
-- Integration approach: Follow existing logging patterns (Winston logger and middleware).
-- Testing: Update existing tests as needed and add tests for new logging helpers where applicable.
+- Scope: **New marketing site (additive)**; no changes to the existing Vite app behavior.
+- Areas touched: New Next.js app + minimal doc updates; no backend/API changes.
+- Backward compatibility: Fully backward compatible; existing `/web` app and APIs remain unchanged.
+- Integration approach: Follow repo conventions; keep marketing site isolated in a new top-level directory.
+- Testing: No new automated tests required; rely on TypeScript checks, Next.js build, and manual QA/Lighthouse.
 
 ## Integration Points
 
 ### Existing Components to Modify
-- `src/shared/utils/logger.ts` - Extend logger configuration (levels, formats, default metadata).
-- `src/shared/middleware/requestLogger.middleware.ts` - Add correlation ID and richer request/response logging.
-- `src/shared/middleware/errorHandler.ts` - Ensure consistent error log structure with request context.
-- `src/index.ts` - Log startup/shutdown lifecycle events and include configuration summary using logger.
-- `src/shared/middleware/auth.middleware.ts` - Expand auth success/failure logging with correlation data.
-- `src/shared/middleware/rbac.middleware.ts` - Log authorization results consistently with request context.
-- `src/shared/validation/middleware.ts` - Ensure validation warnings include request and validation metadata.
-- `src/shared/database/adapters/FirestoreAdapter.ts` and `src/shared/database/adapters/firestore/FirestoreAdapter.ts` - Standardize DB connection/health logs.
-- `src/shared/storage/adapters/FirebaseStorageAdapter.ts` - Standardize storage logs and include request context where applicable.
-- `src/shared/notifications/providers/SMTPProvider.ts` - Standardize notification logs with message identifiers and outcomes.
-- `src/shared/events/NotificationHandlers.ts` - Improve flow logging of event handling success/failure.
-- `src/jobs/sla-monitoring.job.ts` - Add run-level correlation and structured logs for job flow.
-- API controllers (e.g. `src/api/controllers/**`) - Ensure consistent success, warning, and error log structure per action.
+- `README.md` - Add marketing site development/build instructions and location.
+- `docs/deployment/*` (if present) - Document separate deployment target for the marketing site.
 
 ### Existing Components to Reuse
-- `src/shared/utils/logger.ts` - Existing Winston logger instance.
-- `src/shared/middleware/requestLogger.middleware.ts` - Existing request logging entry/exit middleware.
+- None directly; the marketing site is a standalone Next.js app.
 
 ### New Files to Create
-- `src/shared/middleware/correlationId.middleware.ts` - Assign and propagate correlation/request IDs (if no existing implementation).
-- `src/shared/utils/logContext.ts` - Helper to build standard log context (request/job metadata).
-- `src/shared/types/logging.ts` - Shared types for log context structures.
+- `web-marketing/` (new Next.js app)
+  - `package.json`, `next.config.ts`, `tsconfig.json`, `postcss.config.js`, `tailwind.config.ts`
+  - `app/layout.tsx` - global layout, fonts, metadata
+  - `app/page.tsx` - main landing page sections
+  - `app/destinations/[slug]/page.tsx` - optional destination detail route
+  - `app/globals.css` - Tailwind base + custom theme utilities
+  - `app/icon.svg` - simple SVG favicon mark
+  - `components/Navbar.tsx`, `Hero.tsx`, `DestinationsGrid.tsx`, `MembershipTiers.tsx`, `Testimonials.tsx`, `ConciergeForm.tsx`, `Footer.tsx`
+  - `components/SectionReveal.tsx`, `components/GradientBorder.tsx`, `components/ScrollSpy.tsx`
+  - `data/destinations.ts`, `data/testimonials.ts`, `data/tiers.ts`
+  - `lib/scroll.ts`, `lib/validation.ts`, `lib/constants.ts`
 
 ### Database Changes
 - None.
@@ -52,9 +48,8 @@ Enhance the existing HelpDesk API logging to provide comprehensive, structured, 
 ## Compatibility
 
 ### Backward Compatibility
-- All existing API routes and middleware continue to operate without interface changes.
-- Logging behavior is enhanced but does not alter request/response payloads.
-- New context fields are additive and optional.
+- Existing API routes and the Vite-based HelpDesk app remain unchanged.
+- The marketing site is deployed independently (e.g., `marketing.coachdesk.com` or `/marketing`).
 
 ### Migration Requirements
 - None.
@@ -64,156 +59,191 @@ Enhance the existing HelpDesk API logging to provide comprehensive, structured, 
 
 ## User Stories
 
-### US-001: Standardize logger configuration
-**Description:** As a developer, I want a consistent logger configuration so logs are structured and searchable across environments.
+### US-001: Scaffold Next.js marketing app
+**Description:** As a developer, I want a dedicated Next.js + TypeScript app so the marketing site can be built independently of the existing Vite app.
 
 **Acceptance Criteria:**
-- [ ] Logger supports configurable log level via `LOG_LEVEL`.
-- [ ] Logs include consistent base metadata (service, environment).
-- [ ] Log format uses JSON in non-development environments and human-readable in development.
+- [ ] New `web-marketing/` app boots with `next dev` and builds with `next build`.
+- [ ] Tailwind CSS is configured and functional.
 - [ ] Typecheck passes.
 - [ ] Existing tests still pass.
 
 **Integration Notes:**
-- Modifies: `src/shared/utils/logger.ts`
-- Uses: `src/shared/config/env.config.ts`
+- Adds: `web-marketing/` app structure and configs.
+- Modifies: `README.md` (document new app).
 
-### US-002: Add request correlation IDs
-**Description:** As a developer, I want each request to have a correlation ID so I can trace logs for a single request end-to-end.
-
-**Acceptance Criteria:**
-- [ ] Each incoming request gets a correlation ID (uses existing header if present, otherwise generates one).
-- [ ] Correlation ID is included in all request lifecycle logs.
-- [ ] Correlation ID is returned in response headers (e.g. `X-Request-Id`).
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
-
-**Integration Notes:**
-- Adds: `src/shared/middleware/correlationId.middleware.ts`
-- Modifies: `src/shared/middleware/requestLogger.middleware.ts`
-- Modifies: `src/index.ts`
-
-### US-003: Enrich request logging
-**Description:** As an operator, I want request start/end logs with consistent context so I can diagnose performance issues and errors.
+### US-002: Global layout, typography, and theme
+**Description:** As a user, I want a futuristic luxury visual system so the site feels premium and cohesive.
 
 **Acceptance Criteria:**
-- [ ] Request start log includes method, path, IP, user agent, and correlation ID.
-- [ ] Request completion log includes status code, duration, response size (if available), and correlation ID.
-- [ ] Warning level is used for 4xx responses; error level for 5xx responses.
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
+- [ ] Space Grotesk (headings) and Inter (body) loaded via `next/font/google`.
+- [ ] Dark-mode, glassmorphism theme implemented via Tailwind + CSS variables.
+- [ ] Global background includes subtle animated gradient and noise overlay.
+- [ ] Focus states and keyboard navigation are visible and accessible.
+- [ ] Verify in browser using dev-browser skill.
 
 **Integration Notes:**
-- Modifies: `src/shared/middleware/requestLogger.middleware.ts`
-- Uses: `src/shared/utils/logContext.ts`
+- Modifies: `web-marketing/app/layout.tsx`, `web-marketing/app/globals.css`.
 
-### US-004: Standardize error logging
-**Description:** As a developer, I want consistent error logs so failures are easy to triage across layers.
+### US-003: Sticky glass navbar with active section tracking
+**Description:** As a visitor, I want a premium sticky navbar with scroll-aware section highlighting for easy navigation.
 
 **Acceptance Criteria:**
-- [ ] Error logs include correlation ID and request metadata when applicable.
-- [ ] AppError logs include error code and details.
-- [ ] Unknown errors log stack traces.
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
+- [ ] Glassmorphism navbar with logo, section links, and “Request Itinerary” CTA.
+- [ ] Active section is highlighted while scrolling (IntersectionObserver-based).
+- [ ] CTA anchors to the concierge form section.
+- [ ] Keyboard navigation and focus rings work for all links.
+- [ ] Verify in browser using dev-browser skill.
 
 **Integration Notes:**
-- Modifies: `src/shared/middleware/errorHandler.ts`
-- Uses: `src/shared/utils/logContext.ts`
+- Adds: `components/Navbar.tsx`, `components/ScrollSpy.tsx`, `lib/scroll.ts`.
 
-### US-005: Improve auth and RBAC logging
-**Description:** As a developer, I want authentication and authorization logs to be consistent and structured to diagnose access issues.
+### US-004: Cinematic hero with parallax and aurora
+**Description:** As a visitor, I want a cinematic hero section that feels futuristic and luxurious.
 
 **Acceptance Criteria:**
-- [ ] Auth success logs include user id, role, and correlation ID.
-- [ ] Auth failures log reason and request metadata at warn level.
-- [ ] RBAC failures log required roles and request metadata at warn level.
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
+- [ ] Hero includes headline, subtext, primary CTA, secondary CTA.
+- [ ] Background image uses `next/image` with animated gradient overlay + subtle noise.
+- [ ] Animated “aurora” gradient blob behind hero text.
+- [ ] Parallax-like motion on hero elements and smooth entrance reveal.
+- [ ] Primary CTA has animated conic-gradient border.
+- [ ] Verify in browser using dev-browser skill.
 
 **Integration Notes:**
-- Modifies: `src/shared/middleware/auth.middleware.ts`
-- Modifies: `src/shared/middleware/rbac.middleware.ts`
+- Adds: `components/Hero.tsx`, `components/GradientBorder.tsx`.
+- Uses: `next/image`, Framer Motion.
 
-### US-006: Standardize adapter/service logging
-**Description:** As a developer, I want storage, database, and notification adapters to log consistent success and failure messages.
+### US-005: Destinations grid (CoachDesk key topics)
+**Description:** As a visitor, I want a grid of CoachDesk “destinations” that communicate key product strengths.
 
 **Acceptance Criteria:**
-- [ ] Firestore connection, health, and disconnect logs use consistent structure.
-- [ ] Storage upload/download/delete logs include object identifiers and outcome.
-- [ ] SMTP provider logs include message identifiers and retry attempts.
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
+- [ ] 6 cards with topics like: Omni-Channel Concierge, SLA Intelligence, Incident Command, Knowledge Nexus, Secure Automation, Client Insights.
+- [ ] Hover shimmer, slight tilt, and quick facts reveal.
+- [ ] Clicking a card navigates to `/destinations/[slug]` (static data) by default.
+- [ ] Cards include animated gradient borders and subtle glow rings.
+- [ ] Verify in browser using dev-browser skill.
 
 **Integration Notes:**
-- Modifies: `src/shared/database/adapters/FirestoreAdapter.ts`
-- Modifies: `src/shared/database/adapters/firestore/FirestoreAdapter.ts`
-- Modifies: `src/shared/storage/adapters/FirebaseStorageAdapter.ts`
-- Modifies: `src/shared/notifications/providers/SMTPProvider.ts`
+- Adds: `components/DestinationsGrid.tsx`, `app/destinations/[slug]/page.tsx`, `data/destinations.ts`.
 
-### US-007: Improve background job logging
-**Description:** As an operator, I want background job logs to clearly show job lifecycle and errors.
+### US-006: Membership tiers section
+**Description:** As a visitor, I want to compare premium membership tiers to understand service levels.
 
 **Acceptance Criteria:**
-- [ ] Each job run logs start/end with a run ID and duration.
-- [ ] Warnings are logged for recoverable issues (e.g., missing SLA timers).
-- [ ] Errors include contextual ticket/job data.
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
+- [ ] Three tiers: Silver, Black, Obsidian with distinct benefits and pricing placeholders.
+- [ ] Featured tier uses elevated styling and animated border.
+- [ ] Cards respond to hover with lift + glow.
+- [ ] Verify in browser using dev-browser skill.
 
 **Integration Notes:**
-- Modifies: `src/jobs/sla-monitoring.job.ts`
+- Adds: `components/MembershipTiers.tsx`, `data/tiers.ts`.
 
-### US-008: Standardize controller logging
-**Description:** As a developer, I want API controllers to log consistent success/warn/error entries for key actions.
+### US-007: Testimonials section
+**Description:** As a visitor, I want to see social proof from luxury clients.
 
 **Acceptance Criteria:**
-- [ ] Each controller action logs a success message with relevant identifiers.
-- [ ] Warnings are used for invalid input or user-caused issues; errors for server failures.
-- [ ] Logs include correlation ID and user context when available.
-- [ ] Existing tests still pass.
-- [ ] Typecheck passes.
+- [ ] Display 4–6 testimonials (cards or simple carousel).
+- [ ] Cards are horizontally scrollable on mobile.
+- [ ] Include client name, role, and quote.
+- [ ] Verify in browser using dev-browser skill.
 
 **Integration Notes:**
-- Modifies: `src/api/controllers/**`
-- Uses: `src/shared/utils/logContext.ts`
+- Adds: `components/Testimonials.tsx`, `data/testimonials.ts`.
+
+### US-008: Concierge request form with client validation
+**Description:** As a visitor, I want to submit a concierge request with immediate feedback.
+
+**Acceptance Criteria:**
+- [ ] Fields: name, email, dates, travelers, interests (chips), budget (select), notes.
+- [ ] Client-side validation and inline error messaging.
+- [ ] Submit shows toast “Request received” (no backend).
+- [ ] Form fields are accessible with labels and aria descriptors.
+- [ ] Verify in browser using dev-browser skill.
+
+**Integration Notes:**
+- Adds: `components/ConciergeForm.tsx`, `lib/validation.ts`.
+
+### US-009: Footer with image credits and premium finish
+**Description:** As a visitor, I want a minimal footer with credits and final CTA.
+
+**Acceptance Criteria:**
+- [ ] Footer includes logo, minimal nav, and “Image Credits” list.
+- [ ] Image credits text: “Images via Unsplash Source / Pexels.”
+- [ ] Footer maintains dark glass aesthetic.
+- [ ] Verify in browser using dev-browser skill.
+
+**Integration Notes:**
+- Adds: `components/Footer.tsx`.
+
+### US-010: SEO, metadata, and performance
+**Description:** As a product owner, I want SEO-ready metadata and optimized imagery.
+
+**Acceptance Criteria:**
+- [ ] Metadata includes title, description, OpenGraph, and social preview.
+- [ ] Favicon is an inline SVG mark (`app/icon.svg`).
+- [ ] `next/image` used for all remote imagery with proper `sizes`/`priority`.
+- [ ] `next.config.ts` allows remote domains for Unsplash/Pexels.
+- [ ] Lighthouse scores 90+ for Performance and Accessibility (target).
+
+**Integration Notes:**
+- Modifies: `web-marketing/app/layout.tsx`, `next.config.ts`.
 
 ## Functional Requirements
 
-1. Logging levels must be consistent across layers: debug (fine-grained), info (normal flow), warn (client/expected issues), error (server/unexpected).
-2. All request logs must include correlation IDs and key request metadata.
-3. Errors must include error codes (when present), stack traces (for unexpected errors), and correlation IDs.
-4. Background jobs must log run-level lifecycle with run IDs and durations.
-5. Logging must be configurable via environment without code changes.
-6. No sensitive data (tokens, passwords, raw email bodies) should be logged.
+1. The marketing site must use **Next.js (latest stable)** with TypeScript.
+2. Styling must use **Tailwind CSS** with a futuristic luxury theme and glassmorphism.
+3. Entrance/scroll animations must use **Framer Motion** with respect for `prefers-reduced-motion`.
+4. All imagery must be remote and rendered via **next/image** with lazy loading.
+5. The site must be fully responsive (mobile-first) and look excellent on iPhone and 4K displays.
+6. Provide sticky glass navbar with active section highlighting and a “Request Itinerary” CTA.
+7. Provide hero with cinematic background, animated gradient overlay, noise texture, and aurora blob.
+8. Provide destinations grid of 6 cards with hover shimmer, tilt, and quick facts reveal.
+9. Provide membership tiers (Silver/Black/Obsidian) and testimonials.
+10. Provide concierge form with client-side validation and toast success.
+11. Provide floating “Request Help” button on mobile viewports.
+12. Provide SEO metadata, OpenGraph tags, and SVG favicon.
+13. Footer must include image credits and maintain premium visual style.
+
+## Remote Imagery (Required URLs)
+
+Use these remote image URLs for backgrounds/cards:
+
+- Hero background: `https://images.unsplash.com/photo-1489515217757-5fd1be406fef?auto=format&fit=crop&w=2000&q=80`
+- Destination 1: `https://images.unsplash.com/photo-1498050108023-c5249f4df085?auto=format&fit=crop&w=1200&q=80`
+- Destination 2: `https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1200&q=80`
+- Destination 3: `https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?auto=format&fit=crop&w=1200&q=80`
+- Destination 4: `https://images.unsplash.com/photo-1496307042754-b4aa456c4a2d?auto=format&fit=crop&w=1200&q=80`
+- Destination 5: `https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=1200&q=80`
+- Destination 6: `https://images.pexels.com/photos/373543/pexels-photo-373543.jpeg?auto=compress&cs=tinysrgb&dpr=2&w=1200`
 
 ## Non-Goals (Out of Scope)
 
-- Building a centralized log storage or dashboard.
-- Adding distributed tracing systems (e.g., OpenTelemetry) in this iteration.
-- Changing API response formats for clients.
-- Full audit logging beyond current audit log routes.
+- No backend integration or data persistence.
+- No user authentication or account creation.
+- No CMS integration or admin editing.
+- No multi-language support in this iteration.
 
 ## Technical Considerations
 
-- Use existing Winston logger; avoid introducing new logging dependencies.
-- Add lightweight helpers for log context to avoid repetitive inline objects.
-- Ensure request correlation IDs are propagated through middleware and can be reused by controllers.
-- Verify logging does not expose sensitive data (authorization headers, tokens, passwords).
-- Ensure logging in production remains JSON-formatted for external log collectors.
+- Use Next.js App Router with server components where appropriate.
+- Use `next/font/google` to load Space Grotesk + Inter with proper font-display.
+- Define a theme in Tailwind with CSS variables for gradients and gold accents.
+- Implement conic-gradient borders via CSS and a reusable `GradientBorder` component.
+- Use IntersectionObserver-based scroll spy for navbar active state.
+- Provide accessible focus outlines and semantic headings hierarchy.
+- Keep animations GPU-friendly; avoid heavy runtime libraries.
+- Ensure `next.config.ts` allows `images.unsplash.com`, `source.unsplash.com`, and `images.pexels.com`.
 
 ## Success Metrics
 
-- 100% of API requests include correlation ID in start/end logs.
-- Error logs include consistent context fields (request ID, route, error code).
-- Reduced mean time to diagnose issues reported by QA/ops.
-- No regressions in response latency attributable to logging.
+- Lighthouse scores ≥ 90 for Performance and Accessibility.
+- Mobile layout feels premium with no layout shifts or jank.
+- Average page load (4G simulated) under 3s.
+- All images load via `next/image` with no console warnings.
 
 ## Open Questions
 
-- Should correlation IDs be included in all downstream calls (e.g., Firestore adapter logs) via explicit context propagation?
-- Is there a preferred header name for correlation IDs (`X-Request-Id` vs `X-Correlation-Id`)?
-- Should debug logs be enabled by default in staging?
+- None (defaults assumed).
 
 ---
 
