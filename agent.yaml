@@ -9,7 +9,7 @@
 agent:
   # Options: github-copilot, claude-code, gemini, codex, auto (auto-detect based on availability)
   primary: github-copilot
-  fallback: claude-code
+  fallback: codex
 # Rotation configuration - intelligent model/agent rotation on failures
 rotation:
   enabled: true
@@ -26,8 +26,9 @@ agent-rotation:
 claude-code:
   model: claude-sonnet-4-20250514 # or: claude-3-5-sonnet, claude-3-opus, etc.
   models:
+    - claude-sonnet-4-5-20250929
+    - claude-opus-4-5-20251101
     - claude-sonnet-4-20250514
-    - claude-opus-4-20250514
     - claude-3-5-haiku-20241022
     # Additional CLI flags (optional)
     # flags: "--verbose"
