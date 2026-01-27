@@ -34,6 +34,7 @@ Cloud-agnostic enterprise-ready customer support and ticketing platform.
 - JWT-based authentication
 - Comprehensive OpenAPI documentation
 - Audit logging for compliance
+- Marketing site: Standalone Next.js marketing website at `web-marketing/` showcasing CoachDesk platform
 
 ## Prerequisites
 
@@ -168,6 +169,19 @@ VITE_FIREBASE_APP_ID=your_app_id
 | `npm run build` | Build for production |
 | `npm run preview` | Preview production build |
 | `npm run typecheck` | Run TypeScript type checking |
+
+### Marketing Site Commands
+
+From the `web-marketing/` directory:
+
+| Command | Description |
+|---------|-------------|
+| `npm run dev` | Start Next.js development server on port 3000 |
+| `npm run build` | Build marketing site for production |
+| `npm run start` | Start production server |
+| `npm run lint` | Run Next.js linter |
+
+The marketing site is a standalone Next.js app with TypeScript, Tailwind CSS, and Framer Motion.
 
 ### Features
 
